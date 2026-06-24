@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendora | Admin Console</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav id="main-navbar">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-mark">V</div>
+      <span class="nav-logo-text">Vendora</span>
+    </a>
+    <div style="flex:1;"></div>
+    <div class="nav-actions">
+      <a href="index.html" style="font-size:13px;color:#94A3B8;padding:7px 14px;border-radius:6px;">Katalog</a>
+      <span id="user-display" style="font-size:12px;font-weight:700;color:#EF4444;padding:5px 12px;background:rgba(239,68,68,0.12);border-radius:6px;">Admin Console</span>
+      <button type="button" id="logout-btn" style="padding:7px 14px;border:1.5px solid rgba(239,68,68,0.4);color:#EF4444;border-radius:6px;background:transparent;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);">Keluar</button>
+    </div>
+  </nav>
+
+  <div class="page-container">
+    <!-- Header info -->
+    <div style="margin-bottom: 40px;">
+      <h1 class="page-title">Admin Console</h1>
+      <p class="sub-title">Monitor rented store units (ruko), review licenses, and configure ecosystem operations.</p>
+    </div>
+
+    <!-- Alert notifications -->
+    <div id="alert-container"></div>
+
+    <!-- Section 1: Dashboard Stats -->
+    <div id="admin-dashboard-section" style="display: none;">
+      <div class="grid-3" style="margin-bottom: 40px;">
+        <!-- Stat 1 -->
+        <div class="glass-panel stat-card">
+          <span class="stat-label">Total Shops Rented</span>
+          <span id="stat-shops" class="stat-value" style="color: var(--primary);">0</span>
+        </div>
+        <!-- Stat 2 -->
+        <div class="glass-panel stat-card">
+          <span class="stat-label">Total Revenue</span>
+          <span id="stat-revenue" class="stat-value" style="color: var(--accent);">Rp 0</span>
+        </div>
+        <!-- Stat 3 -->
+        <div class="glass-panel stat-card">
+          <span class="stat-label">Completed Sales</span>
+          <span id="stat-transactions" class="stat-value" style="color: var(--text-primary);">0</span>
+        </div>
+      </div>
+
+      <!-- Shop Space Rental List -->
+      <div class="glass-panel">
+        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+          Verifikasi Pembayaran & Sewa Ruko
+        </h2>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;" id="admin-shops-table">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 14px;">
+                <th style="padding: 12px 10px;">Nama Toko</th>
+                <th style="padding: 12px 10px;">Pemilik</th>
+                <th style="padding: 12px 10px;">Durasi Sewa</th>
+                <th style="padding: 12px 10px;">Status Pembayaran</th>
+                <th style="padding: 12px 10px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="shops-list-tbody" style="font-size: 14px;">
+              <!-- Dynamically populated table body -->
+              <tr>
+                <td colspan="7" style="padding: 20px 10px; text-align: center; color: var(--text-secondary);">
+                  Loading rented shops list...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Access Denied / Auth callout -->
+    <div id="admin-auth-callout" class="glass-panel" style="text-align: center; padding: 40px 20px; max-width: 600px; margin: 40px auto;">
+      <h2 style="font-size: 28px; margin-bottom: 12px;">Access Admin Workspace</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        You must be signed in with a registered Administrator account to manage store rentals and ecosystem status.
+      </p>
+      <a href="login.html" class="btn btn-primary">Sign In / Join</a>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

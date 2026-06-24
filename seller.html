@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendora | Seller Space</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav id="main-navbar">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-mark">V</div>
+      <span class="nav-logo-text">Vendora</span>
+    </a>
+    <div style="flex:1;"></div>
+    <div class="nav-actions">
+      <a href="index.html" style="font-size:13px;color:#94A3B8;padding:7px 14px;border-radius:6px;">Katalog</a>
+      <span id="user-display" style="font-size:12px;font-weight:700;color:var(--primary);padding:5px 12px;background:rgba(16,185,129,0.12);border-radius:6px;">Seller Hub</span>
+      <button type="button" id="logout-btn" style="padding:7px 14px;border:1.5px solid rgba(239,68,68,0.4);color:#EF4444;border-radius:6px;background:transparent;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);">Keluar</button>
+    </div>
+  </nav>
+
+  <div class="page-container">
+    <!-- Header info -->
+    <div style="margin-bottom: 40px;">
+      <h1 class="page-title">Seller Hub</h1>
+      <p class="sub-title">Rent virtual ruko spaces, upload premium goods, and control store inventories.</p>
+    </div>
+
+    <!-- Alert triggers -->
+    <div id="alert-container"></div>
+
+    <!-- Section 1: Rent Shop Form (Shown when Seller doesn't have a shop yet) -->
+    <div id="rent-shop-section" class="glass-panel" style="display: none; max-width: 600px; margin: 0 auto;">
+      <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+        Sewa Ruko Virtual (Rent Shop Space)
+      </h2>
+      <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">
+        Start selling on Vendora! Renting a shop space gives you access to catalog management. The cost is calculated daily (Rp 15.000/day).
+      </p>
+
+      <form id="rent-shop-form">
+        <div class="form-group">
+          <label for="shop-name">Shop Name</label>
+          <input type="text" id="shop-name" class="form-control" placeholder="My Cool Shop" required>
+        </div>
+        <div class="form-group">
+          <label for="shop-desc">Shop Description</label>
+          <textarea id="shop-desc" class="form-control" rows="3" placeholder="Describe what you specialize in..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="rental-days">Rental Term</label>
+          <select id="rental-days" class="form-control" required>
+            <option value="30">30 Days (Rp 450.000)</option>
+            <option value="90">90 Days (Rp 1.350.000)</option>
+            <option value="365">365 Days (Rp 5.475.000)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 10px;">Lease Shop Space</button>
+      </form>
+    </div>
+
+    <!-- Section 2: Active Shop Dashboard (Shown when Seller HAS a shop registered) -->
+    <div id="active-shop-dashboard" style="display: none;">
+      <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+        
+        <!-- Shop Details & Subscription status -->
+        <div style="flex: 1; min-width: 320px;" class="glass-panel">
+          <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 10px; color: var(--primary);" id="dashboard-shop-name">My Shop Space</h2>
+          <p id="dashboard-shop-desc" style="color: var(--text-secondary); font-size: 14px; margin-bottom: 24px;">Shop description...</p>
+          
+          <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px;">
+              <span style="color: var(--text-secondary);">Shop Space Status:</span>
+              <span id="shop-status-badge" style="font-weight: 700; color: var(--accent);">Active</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px;">
+              <span style="color: var(--text-secondary);">Lease Expiration:</span>
+              <span id="shop-expires-badge" style="font-weight: 600;">MM-DD-YYYY</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px;">
+              <span style="color: var(--text-secondary);">Rental Cost:</span>
+              <span id="shop-price-badge" style="font-weight: 600;">Rp 0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Product Form -->
+        <div style="flex: 2; min-width: 320px;" class="glass-panel">
+          <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 20px;">Add New Product</h2>
+          <form id="add-product-form">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <div class="form-group">
+                <label for="prod-name">Product Name</label>
+                <input type="text" id="prod-name" class="form-control" placeholder="E.g. Vintage Leather Jacket" required>
+              </div>
+              <div class="form-group">
+                <label for="prod-price">Price (IDR / Rp)</label>
+                <input type="number" id="prod-price" class="form-control" placeholder="150000" required>
+              </div>
+              <div class="form-group">
+                <label for="prod-stock">Available Stock</label>
+                <input type="number" id="prod-stock" class="form-control" placeholder="10" required>
+              </div>
+              <div class="form-group">
+                <label for="prod-image">Image URL</label>
+                <input type="text" id="prod-image" class="form-control" placeholder="https://..." value="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="prod-desc">Product Description</label>
+              <textarea id="prod-desc" class="form-control" rows="2" placeholder="Tell buyers more about your product..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top: 10px;">List Product</button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Seller's Listed Catalog -->
+      <div style="margin-top: 40px;">
+        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 20px;">My Product Listings</h2>
+        <div id="seller-products" class="grid-3">
+          <!-- Dynamically loaded listed products -->
+          <div class="glass-panel" style="text-align: center; color: var(--text-secondary);">
+            No items listed yet.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Not Logged In Callout -->
+    <div id="seller-auth-callout" class="glass-panel" style="text-align: center; padding: 40px 20px; max-width: 600px; margin: 40px auto;">
+      <h2 style="font-size: 28px; margin-bottom: 12px;">Access Seller Workspace</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        You must be signed in as a registered Seller to lease online store space and configure products.
+      </p>
+      <a href="login.html" class="btn btn-primary">Sign In / Join</a>
+    </div>
+
+  </div>
+
+  <!-- Edit Product Modal (Overlay) -->
+  <div id="edit-product-modal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 style="font-size: 20px; font-weight: 700;">Edit Product Details</h2>
+        <button id="close-modal-btn" type="button" class="modal-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <form id="edit-product-form">
+        <input type="hidden" id="edit-prod-id">
+        <div class="modal-body">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group">
+              <label for="edit-prod-name">Product Name</label>
+              <input type="text" id="edit-prod-name" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-prod-price">Price (IDR / Rp)</label>
+              <input type="number" id="edit-prod-price" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-prod-stock">Available Stock</label>
+              <input type="number" id="edit-prod-stock" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-prod-image">Image URL</label>
+              <input type="text" id="edit-prod-image" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-prod-desc">Product Description</label>
+            <textarea id="edit-prod-desc" class="form-control" rows="3" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="cancel-modal-btn" class="btn btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
