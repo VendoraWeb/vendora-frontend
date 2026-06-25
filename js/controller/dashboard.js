@@ -178,6 +178,14 @@ function checkSellerShop(ownerId) {
         // Save active shop id
         localStorage.setItem('vendora_active_shop_id', myShop.id);
         
+        // Sinkronisasi status ruko user di session localStorage
+        const session = getActiveSession();
+        if (session && session.user) {
+          session.user.has_shop = true;
+          session.user.shop_id = myShop.id;
+          localStorage.setItem('vendora_session', JSON.stringify(session));
+        }
+        
         document.getElementById('rent-shop-section').style.display = 'none';
         document.getElementById('active-shop-dashboard').style.display = 'block';
 
