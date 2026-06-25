@@ -36,14 +36,31 @@ function initNavbarSession() {
       roleBadgeEl.className    = `nav-role-badge ${session.user.role}`;
     }
 
+    const profileBtn = $('#nav-profile-btn');
     const shopActionBtn = $('#dropdown-shop-action');
-    if (shopActionBtn) {
-      if (session.user.has_shop) {
-        shopActionBtn.querySelector('span').textContent = 'Switch ke Hub Penjual';
-        shopActionBtn.href = 'seller.html';
-      } else {
-        shopActionBtn.querySelector('span').textContent = 'Buka Ruko Vendora';
-        shopActionBtn.href = 'seller.html'; // In a real app this would go to a shop creation page
+
+    if (session.user.role === 'admin') {
+      if (profileBtn) profileBtn.style.display = 'none'; // Sembunyikan pengaturan profil untuk admin
+      if (shopActionBtn) {
+        shopActionBtn.style.display = 'flex';
+        shopActionBtn.querySelector('span').textContent = 'Masuk ke Konsol Admin';
+        shopActionBtn.href = 'admin.html';
+      }
+    } else {
+      if (profileBtn) profileBtn.style.display = 'flex';
+      if (shopActionBtn) {
+        if (session.user.role === 'seller') {
+          shopActionBtn.style.display = 'flex';
+          if (session.user.has_shop) {
+            shopActionBtn.querySelector('span').textContent = 'Switch ke Hub Penjual';
+            shopActionBtn.href = 'seller.html';
+          } else {
+            shopActionBtn.querySelector('span').textContent = 'Buka Ruko Vendora';
+            shopActionBtn.href = 'seller.html';
+          }
+        } else {
+          shopActionBtn.style.display = 'none'; // Sembunyikan untuk pembeli (buyer) biasa
+        }
       }
     }
   } else {

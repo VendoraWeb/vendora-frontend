@@ -31,7 +31,7 @@ export function initSellerDashboard() {
   // Check if seller already has an active shop lease
   checkSellerShop(session.user.id);
 
-  // Setup form listener for renting a shop space
+  // Setup form listener for renting a shop space (requires virtual payment first)
   const rentForm = document.getElementById('rent-shop-form');
   if (rentForm) {
     rentForm.addEventListener('submit', (e) => {
@@ -39,30 +39,67 @@ export function initSellerDashboard() {
       const name = getValue('shop-name');
       const description = getValue('shop-desc');
       const rentalDays = parseInt(getValue('rental-days'), 10);
+      const totalCost = rentalDays * 15000;
 
-      fetch(`${BASE_URL}/shop/rent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          description,
-          owner_id: session.user.id,
-          rental_days: rentalDays
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 201) {
-          showAlert("Shop space successfully leased! Setting up ruko.", "success");
-          setTimeout(() => checkSellerShop(session.user.id), 1500);
-        } else {
-          showAlert(data.message || "Failed to lease shop space.", "error");
+      // Show Snap Modal
+      const snapModal = document.getElementById('snap-modal');
+      const snapAmountDisplay = document.getElementById('snap-amount-display');
+
+      if (snapModal && snapAmountDisplay) {
+        snapAmountDisplay.textContent = 'Rp ' + totalCost.toLocaleString('id-ID');
+        snapModal.classList.add('active');
+
+        // Close button handler
+        const closeBtn = document.getElementById('snap-close-btn');
+        if (closeBtn) {
+          closeBtn.onclick = () => {
+            snapModal.classList.remove('active');
+            showAlert("Pembayaran biaya sewa ruko dibatalkan.", "error");
+          };
         }
-      })
-      .catch(err => {
-        console.error(err);
-        showAlert("Failed to lease shop. Connection error.", "error");
-      });
+
+        // Define global snapProcess callback for shop space lease
+        window.snapProcess = (method) => {
+          showAlert(`Pembayaran sewa ruko via ${method} Sukses! Memproses aktivasi ruko...`, "success");
+          snapModal.classList.remove('active');
+
+          fetch(`${BASE_URL}/shop/rent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name,
+              description,
+              owner_id: session.user.id,
+              rental_days: rentalDays
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 201) {
+              showAlert("Ruko berhasil disewa! Membuka Seller Hub...", "success");
+              setTimeout(() => {
+                checkSellerShop(session.user.id);
+                // Sinkronisasi session lokal baru agar menu profil menyadari has_shop = true
+                const updatedSession = getActiveSession();
+                if (updatedSession && updatedSession.user) {
+                  updatedSession.user.has_shop = true;
+                  updatedSession.user.shop_id = data.data.id;
+                  localStorage.setItem('vendora_session', JSON.stringify(updatedSession));
+                }
+              }, 1500);
+            } else {
+              showAlert(data.message || "Gagal menyewa ruko.", "error");
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            showAlert("Gagal melakukan transaksi sewa ruko. Koneksi error.", "error");
+          });
+        };
+      } else {
+        // Fallback if modal elements aren't found
+        showAlert("Jalur pembayaran aman tidak termuat.", "error");
+      }
     });
   }
 
