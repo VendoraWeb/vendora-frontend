@@ -1,5 +1,5 @@
 import { BASE_URL } from "../config/api.js";
-import { addToCart, updateCartUI } from "./transaction.js";
+import { addToCart, updateCartUI, executeCheckout } from "./transaction.js";
 
 // ─── Alert helper ──────────────────────────────────────────────────────────
 function showAlert(message, type) {
@@ -14,6 +14,7 @@ function showAlert(message, type) {
 
 // ─── Shop cache (avoids repeated fetches) ────────────────────────────────────
 let shopCache = {};
+export let shopDetailCache = {};
 
 async function getShopName(shopId) {
   if (!shopId) return '';
@@ -21,7 +22,10 @@ async function getShopName(shopId) {
   try {
     const res  = await fetch(`${BASE_URL}/shops`);
     const data = await res.json();
-    (data.data || []).forEach(s => { shopCache[s.id] = s.name; });
+    (data.data || []).forEach(s => { 
+      shopCache[s.id] = s.name; 
+      shopDetailCache[s.id] = s;
+    });
     return shopCache[shopId] || '';
   } catch { return ''; }
 }
@@ -53,30 +57,51 @@ function renderCard(p, shopName) {
       </div>
       <div class="product-body">
         ${shopName ? `
-          <div class="product-shop-tag">
-            <span class="verified-dot"></span>
-            <span>${shopName}</span>
+          <div class="product-shop-tag shop-clickable" data-shop-id="${p.shop_id || ''}" style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: rgba(96, 165, 250, 0.08); border-radius: 12px; transition: all 0.2s ease;">
+            <span class="verified-dot" style="background-color: #10B981; width: 6px; height: 6px; border-radius: 50%; display: inline-block;"></span>
+            <span style="text-decoration: underline; color: #2563EB; font-weight: 600;">${shopName}</span>
           </div>` : ''}
         <div class="product-name">${p.name}</div>
         <div class="product-desc">${p.description || 'Tidak ada deskripsi produk.'}</div>
         <div class="product-price">${priceStr}</div>
         <div class="product-stock-text">${stockStr}</div>
-        <button
-          class="btn-add-cart"
-          data-id="${p.id}"
-          data-name="${p.name}"
-          data-price="${p.price}"
-          data-image="${image}"
-          data-shop="${shopName || ''}"
-          ${inStock ? '' : 'disabled'}
-          type="button"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-            <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
-          </svg>
-          ${inStock ? 'Tambah ke Keranjang' : 'Stok Habis'}
-        </button>
+        <div class="product-actions" style="display: flex; gap: 8px; margin-top: 12px; width: 100%;">
+          <button
+            class="btn-add-cart"
+            data-id="${p.id}"
+            data-name="${p.name}"
+            data-price="${p.price}"
+            data-image="${image}"
+            data-shop="${shopName || ''}"
+            data-shop-id="${p.shop_id || ''}"
+            ${inStock ? '' : 'disabled'}
+            type="button"
+            style="margin-top: 0; flex: 1; padding: 10px 4px; font-size: 11.5px; border-radius: var(--r-md); justify-content: center; gap: 4px;"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
+            </svg>
+            ${inStock ? 'Keranjang' : 'Stok Habis'}
+          </button>
+          <button
+            class="btn-buy-now"
+            data-id="${p.id}"
+            data-name="${p.name}"
+            data-price="${p.price}"
+            data-image="${image}"
+            data-shop="${shopName || ''}"
+            data-shop-id="${p.shop_id || ''}"
+            ${inStock ? '' : 'disabled'}
+            type="button"
+            style="flex: 1; padding: 10px 4px; background: ${inStock ? 'var(--primary)' : 'var(--surface-2)'}; color: ${inStock ? 'white' : 'var(--text-placeholder)'}; border: 1.5px solid ${inStock ? 'var(--primary)' : 'var(--border)'}; border-radius: var(--r-md); font-family: var(--font); font-size: 11.5px; font-weight: 700; cursor: ${inStock ? 'pointer' : 'not-allowed'}; pointer-events: ${inStock ? 'auto' : 'none'}; transition: all var(--dur-fast) var(--ease); display: flex; align-items: center; justify-content: center; gap: 4px;"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Beli Sekarang
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -186,7 +211,10 @@ export async function loadCatalogProducts(filter = 'all') {
       try {
         const shopRes  = await fetch(`${BASE_URL}/shops`);
         const shopData = await shopRes.json();
-        (shopData.data || []).forEach(s => { shopCache[s.id] = s.name; });
+        (shopData.data || []).forEach(s => { 
+          shopCache[s.id] = s.name; 
+          shopDetailCache[s.id] = s;
+        });
       } catch { /* shop names are optional */ }
     }
 
@@ -197,27 +225,73 @@ export async function loadCatalogProducts(filter = 'all') {
     grid.querySelectorAll('.btn-add-cart').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const { id, name, price, image, shop: shopName } = btn.dataset;
-        addToCart({ id, name, price: parseFloat(price), image, shopName });
+        const { id, name, price, image, shop: shopName, shopId } = btn.dataset;
+        const added = addToCart({ id, name, price: parseFloat(price), image, shopName, shopId });
+        if (!added) return;
+
         updateCartUI();
         showAlert(`"${name}" ditambahkan ke keranjang!`, "success");
-
-        // Open cart drawer via event (avoids circular import)
-        document.dispatchEvent(new CustomEvent('vendora:open-cart'));
 
         // Brief button feedback
         btn.classList.add('pulse-add');
         btn.textContent = '✓ Dimasukkan';
         setTimeout(() => {
           btn.innerHTML = `
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
               <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
             </svg>
-            Tambah ke Keranjang
+            Keranjang
           `;
           btn.classList.remove('pulse-add');
         }, 1000);
+      });
+    });
+
+    // Bind Buy Now buttons
+    grid.querySelectorAll('.btn-buy-now').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const { id, name, price, image, shop: shopName, shopId } = btn.dataset;
+        const added = addToCart({ id, name, price: parseFloat(price), image, shopName, shopId });
+        if (!added) return;
+
+        updateCartUI();
+        
+        // Open cart drawer
+        document.dispatchEvent(new CustomEvent('vendora:open-cart'));
+        
+        // Directly trigger checkout process
+        await executeCheckout();
+      });
+    });
+
+    // Bind Shop click events to show shop details modal
+    grid.querySelectorAll('.shop-clickable').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const { shopId } = el.dataset;
+        const name = el.querySelector('span:not(.verified-dot)').textContent.trim();
+        
+        let shop = shopDetailCache[shopId];
+        if (!shop) {
+          // Fallback untuk mock shop
+          shop = {
+            name: name,
+            description: `Toko mitra resmi ${name} yang menyediakan berbagai produk berkualitas premium untuk Anda.`,
+            owner_phone: "08123456789",
+            owner_address: "Kawasan Ruko Sentral Bisnis Blok A, Jakarta"
+          };
+        } else {
+          // If real shop but address/phone is empty (not updated yet by seller)
+          if (!shop.owner_phone) shop.owner_phone = "08123456789";
+          if (!shop.owner_address) shop.owner_address = "Kawasan Ruko Sentral Bisnis Blok A, Jakarta";
+        }
+        
+        // Memanggil fungsi global showShopDetailModal di main.js
+        if (typeof window.showShopDetailModal === 'function') {
+          window.showShopDetailModal(shop);
+        }
       });
     });
 

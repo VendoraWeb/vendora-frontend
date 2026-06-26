@@ -232,18 +232,87 @@ function checkSellerShop(ownerId) {
         setInner('shop-status-badge', myShop.status.toUpperCase());
         
         const expiresDate = new Date(myShop.rental_expires);
-        setInner('shop-expires-badge', expiresDate.toLocaleDateString());
+        setInner('shop-expires-badge', expiresDate.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }));
         setInner('shop-price-badge', `Rp ${myShop.rental_price.toLocaleString()}`);
 
+        // Countdown hari sewa
+        const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
+        const daysEl = document.getElementById('seller-stat-days');
+        if (daysEl) {
+          daysEl.textContent = daysLeft > 0 ? `${daysLeft} hari` : 'Sudah habis';
+          daysEl.style.color = daysLeft <= 7 ? 'var(--danger)' : '#FBBF24';
+        }
+
         const statusBadge = document.getElementById('shop-status-badge');
+        const suspendedBanner = document.getElementById('shop-suspended-banner');
+        const addProductForm = document.getElementById('add-product-form');
+
         if (myShop.status === 'active') {
           statusBadge.style.color = 'var(--accent)';
+          if (suspendedBanner) suspendedBanner.style.display = 'none';
+          if (addProductForm) {
+            Array.from(addProductForm.elements).forEach(el => el.disabled = false);
+          }
         } else {
           statusBadge.style.color = 'var(--danger)';
+          if (suspendedBanner) suspendedBanner.style.display = 'flex';
+          if (addProductForm) {
+            Array.from(addProductForm.elements).forEach(el => el.disabled = true);
+          }
         }
 
         // Load catalog
         loadSellerProducts(myShop.id);
+
+        // Load seller stats (order masuk + pendapatan)
+        loadSellerStats(myShop.id);
+
+        // Bind tombol perpanjang sewa
+        const renewBtn = document.getElementById('btn-renew-shop');
+        if (renewBtn) {
+          renewBtn.addEventListener('click', () => {
+            const renewDays = parseInt(document.getElementById('renew-days').value, 10);
+            const totalCost = renewDays * 15000;
+
+            const snapModal = document.getElementById('snap-modal');
+            const snapAmountDisplay = document.getElementById('snap-amount-display');
+
+            if (snapModal && snapAmountDisplay) {
+              snapAmountDisplay.textContent = 'Rp ' + totalCost.toLocaleString('id-ID');
+              snapModal.classList.add('active');
+
+              const closeBtn = document.getElementById('snap-close-btn');
+              if (closeBtn) {
+                closeBtn.onclick = () => {
+                  snapModal.classList.remove('active');
+                  showAlert('Perpanjangan sewa dibatalkan.', 'error');
+                };
+              }
+
+              window.snapProcess = (method) => {
+                showAlert(`Pembayaran via ${method} sukses! Memproses perpanjangan...`, 'success');
+                snapModal.classList.remove('active');
+
+                fetch(`${BASE_URL}/shop/${myShop.id}/renew`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ rental_days: renewDays })
+                })
+                .then(res => res.json())
+                .then(result => {
+                  if (result.status === 200) {
+                    showAlert(`Ruko berhasil diperpanjang! Berlaku hingga ${result.data.new_expiry}.`, 'success');
+                    setTimeout(() => checkSellerShop(ownerId), 1500);
+                  } else {
+                    showAlert(result.message || 'Gagal perpanjang sewa.', 'error');
+                  }
+                })
+                .catch(() => showAlert('Koneksi error saat perpanjang sewa.', 'error'));
+              };
+            }
+          });
+        }
+
       } else {
         document.getElementById('rent-shop-section').style.display = 'block';
         document.getElementById('active-shop-dashboard').style.display = 'none';
@@ -255,6 +324,83 @@ function checkSellerShop(ownerId) {
     });
 }
 
+function loadSellerStats(shopId) {
+  // Step 1: Ambil semua produk milik shop ini dulu
+  fetch(`${BASE_URL}/products?shop_id=${shopId}`)
+    .then(res => res.json())
+    .then(prodData => {
+      const myProducts = prodData.data || [];
+      // Buat Set dari product IDs milik shop ini untuk lookup cepat
+      const myProductIds = new Set(myProducts.map(p => p.id));
+
+      // Step 2: Ambil transaksi yang mengandung produk dari shop ini
+      return fetch(`${BASE_URL}/transactions?shop_id=${shopId}`)
+        .then(res => res.json())
+        .then(txData => {
+          const txs = txData.data || [];
+
+          let revenue = 0;
+          let orderCount = 0;
+          const tbody = document.getElementById('seller-orders-tbody');
+
+          const statusColors = {
+            'pending_payment': '#FBBF24', 'paid': '#60A5FA',
+            'success': '#34D399', 'cancelled': '#F87171'
+          };
+          const statusLabels = {
+            'pending_payment': 'Pending', 'paid': 'Paid',
+            'success': 'Selesai', 'cancelled': 'Dibatalkan'
+          };
+
+          let html = '';
+
+          txs.forEach(t => {
+            // Filter hanya item yang milik shop ini
+            const myItems = (t.items || []).filter(i => myProductIds.has(i.product_id));
+            if (myItems.length === 0) return; // transaksi ini tidak ada produk kita
+
+            // Hitung revenue hanya dari item milik shop ini
+            const myRevenue = myItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+            revenue += myRevenue;
+            orderCount++;
+
+            const date = t.created_at ? new Date(t.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }) : '-';
+            const itemsText = myItems.map(i => `${i.name} ×${i.quantity}`).join(', ');
+            const sc = statusColors[t.status] || '#94A3B8';
+            const sl = statusLabels[t.status] || t.status;
+            const shortId = t.id ? t.id.toString().slice(-8).toUpperCase() : '-';
+
+            html += `
+              <tr style="border-bottom:1px solid var(--border-color);">
+                <td style="padding:12px 10px;font-family:monospace;font-size:12px;color:var(--text-secondary);">...${shortId}</td>
+                <td style="padding:12px 10px;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${itemsText}">${itemsText}</td>
+                <td style="padding:12px 10px;font-weight:700;">Rp ${myRevenue.toLocaleString('id-ID')}</td>
+                <td style="padding:12px 10px;"><span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:${sc}22;color:${sc};">${sl}</span></td>
+                <td style="padding:12px 10px;color:var(--text-secondary);">${date}</td>
+              </tr>`;
+          });
+
+          // Update stat cards
+          const orderEl = document.getElementById('seller-stat-orders');
+          const revenueEl = document.getElementById('seller-stat-revenue');
+          if (orderEl) orderEl.textContent = orderCount;
+          if (revenueEl) revenueEl.textContent = `Rp ${revenue.toLocaleString('id-ID')}`;
+
+          // Populate order history table
+          if (tbody) {
+            tbody.innerHTML = html || `<tr><td colspan="5" style="padding:20px 10px;text-align:center;color:var(--text-secondary);">Belum ada order masuk.</td></tr>`;
+          }
+        });
+    })
+    .catch(() => {
+      const tbody = document.getElementById('seller-orders-tbody');
+      if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="padding:20px 10px;text-align:center;color:var(--danger);">Gagal memuat order.</td></tr>`;
+    });
+}
+
+
+
+
 function loadSellerProducts(shopId) {
   const listContainer = document.getElementById('seller-products');
   if (!listContainer) return;
@@ -263,6 +409,11 @@ function loadSellerProducts(shopId) {
     .then(res => res.json())
     .then(data => {
       const products = data.data || [];
+
+      // Update stat card
+      const statProd = document.getElementById('seller-stat-products');
+      if (statProd) statProd.textContent = products.length;
+
       if (products.length === 0) {
         setInner('seller-products', `
           <div class="glass-panel" style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px 10px;">
@@ -371,7 +522,182 @@ export function initAdminDashboard() {
 
   // Fetch admin dashboards metrics and shops lists
   loadAdminEcosystem();
+
+  // Load new panels
+  loadAdminTransactions('');
+  loadAdminUsers('');
+
+  // Filter: Transaksi by status
+  const txFilter = document.getElementById('tx-filter-status');
+  if (txFilter) {
+    txFilter.addEventListener('change', () => loadAdminTransactions(txFilter.value));
+  }
+
+  // Filter: User by role
+  const userFilter = document.getElementById('user-filter-role');
+  if (userFilter) {
+    userFilter.addEventListener('change', () => loadAdminUsers(userFilter.value));
+  }
 }
+
+function loadAdminTransactions(statusFilter) {
+  const tbody = document.getElementById('tx-list-tbody');
+  const countBadge = document.getElementById('tx-count-badge');
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="6" style="padding:20px 10px;text-align:center;color:var(--text-secondary);">Memuat...</td></tr>`;
+
+  fetch(`${BASE_URL}/transactions`)
+    .then(res => res.json())
+    .then(data => {
+      let txs = data.data || [];
+
+      // Filter by status if selected
+      if (statusFilter) {
+        txs = txs.filter(t => t.status === statusFilter);
+      }
+
+      if (countBadge) countBadge.textContent = `${txs.length} transaksi`;
+
+      if (txs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:20px 10px;text-align:center;color:var(--text-secondary);">Tidak ada transaksi ditemukan.</td></tr>`;
+        return;
+      }
+
+      const statusColors = {
+        'pending_payment': '#FBBF24',
+        'paid': '#60A5FA',
+        'success': '#34D399',
+        'cancelled': '#F87171'
+      };
+      const statusLabels = {
+        'pending_payment': 'Pending',
+        'paid': 'Paid',
+        'success': 'Success',
+        'cancelled': 'Cancelled'
+      };
+
+      let html = '';
+      txs.forEach(t => {
+        const date = t.created_at ? new Date(t.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }) : '-';
+        const itemSummary = (t.items || []).map(i => `${i.name} ×${i.quantity}`).join(', ') || '-';
+        const statusColor = statusColors[t.status] || '#94A3B8';
+        const statusLabel = statusLabels[t.status] || t.status;
+        const shortId = t.id ? t.id.toString().slice(-8).toUpperCase() : '-';
+        const shortBuyer = t.buyer_id ? t.buyer_id.toString().slice(-8) : '-';
+
+        html += `
+          <tr style="border-bottom:1px solid var(--border-color);">
+            <td style="padding:12px 10px; font-family:monospace; font-size:12px; color:var(--text-secondary);">...${shortId}</td>
+            <td style="padding:12px 10px; font-family:monospace; font-size:12px; color:var(--text-secondary);">...${shortBuyer}</td>
+            <td style="padding:12px 10px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-secondary);" title="${itemSummary}">${itemSummary}</td>
+            <td style="padding:12px 10px; font-weight:700;">Rp ${t.total_amount.toLocaleString('id-ID')}</td>
+            <td style="padding:12px 10px;">
+              <span style="padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; background:${statusColor}22; color:${statusColor};">${statusLabel}</span>
+            </td>
+            <td style="padding:12px 10px; color:var(--text-secondary);">${date}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    })
+    .catch(err => {
+      console.error(err);
+      tbody.innerHTML = `<tr><td colspan="6" style="padding:20px 10px;text-align:center;color:var(--danger);">Gagal memuat transaksi.</td></tr>`;
+    });
+}
+
+function loadAdminUsers(roleFilter) {
+  const tbody = document.getElementById('users-list-tbody');
+  const countBadge = document.getElementById('user-count-badge');
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="6" style="padding:20px 10px;text-align:center;color:var(--text-secondary);">Memuat...</td></tr>`;
+
+  const url = roleFilter ? `${BASE_URL}/users?role=${roleFilter}` : `${BASE_URL}/users`;
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      const users = data.data || [];
+
+      if (countBadge) countBadge.textContent = `${users.length} user`;
+
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:20px 10px;text-align:center;color:var(--text-secondary);">Tidak ada user ditemukan.</td></tr>`;
+        return;
+      }
+
+      const roleColors = { admin: '#F472B6', seller: '#60A5FA', buyer: '#34D399' };
+
+      let html = '';
+      users.forEach(u => {
+        const joinDate = u.created_at ? new Date(u.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }) : '-';
+        const roleColor = roleColors[u.role] || '#94A3B8';
+        const isBanned = u.banned === true;
+        const statusBadge = isBanned
+          ? `<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(248,113,113,0.15);color:#F87171;">Banned</span>`
+          : `<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(52,211,153,0.15);color:#34D399;">Aktif</span>`;
+        const actionBtn = isBanned
+          ? `<button class="btn btn-accent btn-ban-user" data-id="${u.id}" data-banned="false" style="padding:5px 12px;font-size:12px;">Unban</button>`
+          : `<button class="btn btn-outline btn-ban-user" data-id="${u.id}" data-banned="true" style="padding:5px 12px;font-size:12px;color:var(--danger);border-color:rgba(239,68,68,0.4);">Ban</button>`;
+
+        // Don't show ban button for admins
+        const actionCell = u.role === 'admin' ? `<span style="color:var(--text-secondary);font-size:12px;">—</span>` : actionBtn;
+
+        html += `
+          <tr style="border-bottom:1px solid var(--border-color);">
+            <td style="padding:12px 10px; font-weight:600;">${u.name || '-'}</td>
+            <td style="padding:12px 10px; color:var(--text-secondary); font-size:12px;">${u.email || '-'}</td>
+            <td style="padding:12px 10px;">
+              <span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:${roleColor}22;color:${roleColor};">${u.role}</span>
+            </td>
+            <td style="padding:12px 10px;">${statusBadge}</td>
+            <td style="padding:12px 10px; color:var(--text-secondary);">${joinDate}</td>
+            <td style="padding:12px 10px;">${actionCell}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+
+      // Bind ban/unban buttons
+      document.querySelectorAll('.btn-ban-user').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const userId = e.currentTarget.getAttribute('data-id');
+          const shouldBan = e.currentTarget.getAttribute('data-banned') === 'true';
+          const confirmMsg = shouldBan
+            ? 'Ban user ini? Mereka tidak bisa login.'
+            : 'Unban user ini?';
+
+          if (!confirm(confirmMsg)) return;
+
+          fetch(`${BASE_URL}/user/${userId}/ban`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ banned: shouldBan })
+          })
+          .then(res => res.json())
+          .then(result => {
+            if (result.status === 200) {
+              showAlert(shouldBan ? 'User berhasil di-ban.' : 'User berhasil di-unban.', 'success');
+              loadAdminUsers(document.getElementById('user-filter-role')?.value || '');
+            } else {
+              showAlert(result.message || 'Gagal update status user.', 'error');
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            showAlert('Koneksi error saat update status user.', 'error');
+          });
+        });
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      tbody.innerHTML = `<tr><td colspan="6" style="padding:20px 10px;text-align:center;color:var(--danger);">Gagal memuat data user.</td></tr>`;
+    });
+}
+
 
 function loadAdminEcosystem() {
   Promise.all([

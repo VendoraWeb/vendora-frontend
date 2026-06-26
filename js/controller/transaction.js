@@ -11,15 +11,32 @@ function showAlert(message, type) {
   setTimeout(() => div.remove(), 4000);
 }
 
-// ─── Cart state (localStorage persisted) ────────────────────────────────────
-let cart = JSON.parse(localStorage.getItem('vendora_cart') || '[]');
+// ─── Cart key per-user (buyer dan seller) ──────────────────────────────────
+function getCartKey() {
+  const session = getActiveSession();
+  if (!session || !session.user || (session.user.role !== 'buyer' && session.user.role !== 'seller')) return null;
+  return `vendora_cart_${session.user.id}`;
+}
+
+function loadCart() {
+  const key = getCartKey();
+  if (!key) return [];
+  return JSON.parse(localStorage.getItem(key) || '[]');
+}
+
+let cart = loadCart();
 
 function saveCart() {
-  localStorage.setItem('vendora_cart', JSON.stringify(cart));
+  const key = getCartKey();
+  if (!key) return; // admin tidak bisa save cart
+  localStorage.setItem(key, JSON.stringify(cart));
 }
+
 
 // ─── Public: init (attaches checkout button) ────────────────────────────────
 export function initCart() {
+  // Reload cart dari key yang benar sesuai user yang sedang login
+  cart = loadCart();
   updateCartUI();
 
   const checkoutBtn = document.getElementById('checkout-btn');
@@ -30,6 +47,26 @@ export function initCart() {
 
 // ─── Public: add item ────────────────────────────────────────────────────────
 export function addToCart(product) {
+  const session = getActiveSession();
+  if (!session || !session.user) {
+    showAlert('Silakan login terlebih dahulu untuk belanja.', 'error');
+    return false;
+  }
+
+  // Hanya buyer dan seller yang bisa tambah ke keranjang
+  if (session.user.role !== 'buyer' && session.user.role !== 'seller') {
+    showAlert('Role Anda tidak memiliki akses untuk berbelanja.', 'error');
+    return false;
+  }
+
+  // Jika seller, tidak boleh membeli produk dari toko sendiri
+  if (session.user.role === 'seller' && session.user.shop_id) {
+    if (product.shopId && product.shopId === session.user.shop_id) {
+      showAlert('Anda tidak dapat membeli produk dari toko Anda sendiri.', 'error');
+      return false;
+    }
+  }
+
   const existing = cart.find(item => item.id === product.id);
   if (existing) {
     existing.quantity += 1;
@@ -40,15 +77,17 @@ export function addToCart(product) {
       price:    product.price,
       image:    product.image  || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80',
       shopName: product.shopName || '',
+      shopId:   product.shopId   || '',
       quantity: 1
     });
   }
   saveCart();
   updateCartUI();
+  return true;
 }
 
 // ─── Public: update UI ──────────────────────────────────────────────────────
-export function updateCartUI() {
+export async function updateCartUI() {
   const cartItemsEl   = document.getElementById('cart-items');
   const cartEmptyEl   = document.getElementById('cart-empty-state');
   const cartCountEl   = document.getElementById('cart-count');
@@ -160,10 +199,84 @@ export function updateCartUI() {
       updateCartUI();
     });
   });
+
+  // ─── Real-time Stock Validation ──────────────────────────────────────────
+  if (cart.length === 0) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/products`);
+    const data = await res.json();
+    const products = data.data || [];
+    const stockMap = {};
+    products.forEach(p => stockMap[p.id] = p.stock);
+
+    let hasOutOfStock = false;
+    let hasInvalidQuantity = false;
+
+    cart.forEach(item => {
+      // Abaikan cek stok real-time untuk item mockup
+      if (typeof item.id === 'string' && item.id.startsWith('m')) {
+        return;
+      }
+
+      const itemEl = cartItemsEl.querySelector(`.cart-item[data-cart-id="${item.id}"]`);
+      if (!itemEl) return;
+
+      const stock = stockMap[item.id];
+      // Jika produk tidak ada di database (dihapus) atau stoknya 0
+      if (stock === undefined || stock === 0) {
+        hasOutOfStock = true;
+        itemEl.style.opacity = '0.6';
+        itemEl.style.border = '1.5px solid #F87171';
+        
+        let badge = itemEl.querySelector('.stock-warning-badge');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'stock-warning-badge';
+          badge.style = 'background:#EF4444; color:white; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-top:4px; display:inline-block;';
+          badge.textContent = 'Stok Habis';
+          itemEl.querySelector('.cart-item-info').appendChild(badge);
+        }
+      } else if (stock < item.quantity) {
+        hasInvalidQuantity = true;
+        itemEl.style.border = '1.5px solid #FBBF24';
+        
+        let badge = itemEl.querySelector('.stock-warning-badge');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'stock-warning-badge';
+          badge.style = 'background:#F59E0B; color:white; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-top:4px; display:inline-block;';
+          itemEl.querySelector('.cart-item-info').appendChild(badge);
+        }
+        badge.textContent = `Hanya sisa ${stock}!`;
+      } else {
+        itemEl.style.opacity = '1';
+        itemEl.style.border = '';
+        const badge = itemEl.querySelector('.stock-warning-badge');
+        if (badge) badge.remove();
+      }
+    });
+
+    if (checkoutBtn) {
+      if (hasOutOfStock) {
+        checkoutBtn.disabled = true;
+        checkoutBtn.textContent = 'Ada Barang Habis';
+      } else if (hasInvalidQuantity) {
+        checkoutBtn.disabled = true;
+        checkoutBtn.textContent = 'Stok Tidak Cukup';
+      } else {
+        checkoutBtn.disabled = false;
+        checkoutBtn.textContent = 'Lanjut ke Pembayaran';
+      }
+    }
+
+  } catch (err) {
+    console.warn('Real-time stock validation failed:', err);
+  }
 }
 
 // ─── Checkout ────────────────────────────────────────────────────────────────
-async function executeCheckout() {
+export async function executeCheckout() {
   const session = getActiveSession();
   if (!session) {
     showAlert("Silakan login terlebih dahulu untuk melanjutkan checkout.", "error");

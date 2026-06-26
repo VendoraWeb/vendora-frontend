@@ -80,6 +80,102 @@
           </table>
         </div>
       </div>
+
+      <!-- Support Ticket Desk -->
+      <div class="glass-panel" style="margin-top: 40px;">
+        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+          Pusat Pengaduan Seller (CS Ticket Desk)
+        </h2>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;" id="admin-tickets-table">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 14px;">
+                <th style="padding: 12px 10px;">Seller</th>
+                <th style="padding: 12px 10px;">Subjek</th>
+                <th style="padding: 12px 10px;">Pesan Pengaduan</th>
+                <th style="padding: 12px 10px;">Balasan Admin</th>
+                <th style="padding: 12px 10px;">Status</th>
+                <th style="padding: 12px 10px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tickets-list-tbody" style="font-size: 14px;">
+              <tr>
+                <td colspan="6" style="padding: 20px 10px; text-align: center; color: var(--text-secondary);">
+                  Memuat pengaduan seller...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Laporan Transaksi -->
+      <div class="glass-panel" style="margin-top: 40px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:10px; flex-wrap:wrap; gap:12px;">
+          <h2 style="font-size:24px; font-weight:700; margin:0;">📋 Laporan Transaksi</h2>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select id="tx-filter-status" style="padding:6px 12px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface); color:var(--text-primary); font-size:13px; cursor:pointer;">
+              <option value="">Semua Status</option>
+              <option value="pending_payment">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="success">Success</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <span id="tx-count-badge" style="font-size:12px; padding:4px 10px; background:rgba(99,102,241,0.15); color:#818CF8; border-radius:20px; font-weight:700;"></span>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; text-align:left;" id="admin-tx-table">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border-color); color:var(--text-secondary); font-size:13px;">
+                <th style="padding:12px 10px;">ID Transaksi</th>
+                <th style="padding:12px 10px;">Buyer ID</th>
+                <th style="padding:12px 10px;">Item</th>
+                <th style="padding:12px 10px;">Total</th>
+                <th style="padding:12px 10px;">Status</th>
+                <th style="padding:12px 10px;">Tanggal</th>
+              </tr>
+            </thead>
+            <tbody id="tx-list-tbody" style="font-size:13px;">
+              <tr><td colspan="6" style="padding:20px 10px; text-align:center; color:var(--text-secondary);">Memuat transaksi...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Manajemen User & Seller -->
+      <div class="glass-panel" style="margin-top:40px; margin-bottom:40px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:10px; flex-wrap:wrap; gap:12px;">
+          <h2 style="font-size:24px; font-weight:700; margin:0;">👥 Manajemen User</h2>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="user-filter-role" style="padding:6px 12px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface); color:var(--text-primary); font-size:13px; cursor:pointer;">
+              <option value="">Semua Role</option>
+              <option value="buyer">Buyer</option>
+              <option value="seller">Seller</option>
+              <option value="admin">Admin</option>
+            </select>
+            <span id="user-count-badge" style="font-size:12px; padding:4px 10px; background:rgba(16,185,129,0.15); color:#34D399; border-radius:20px; font-weight:700;"></span>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; text-align:left;" id="admin-users-table">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border-color); color:var(--text-secondary); font-size:13px;">
+                <th style="padding:12px 10px;">Nama</th>
+                <th style="padding:12px 10px;">Email</th>
+                <th style="padding:12px 10px;">Role</th>
+                <th style="padding:12px 10px;">Status</th>
+                <th style="padding:12px 10px;">Bergabung</th>
+                <th style="padding:12px 10px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="users-list-tbody" style="font-size:13px;">
+              <tr><td colspan="6" style="padding:20px 10px; text-align:center; color:var(--text-secondary);">Memuat data user...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
     <!-- Section 2: Access Denied / Auth callout -->
@@ -91,6 +187,41 @@
       <a href="login.html" class="btn btn-primary">Sign In / Join</a>
     </div>
 
+  </div>
+
+  <!-- Reply Ticket Modal (Overlay) -->
+  <div id="reply-ticket-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 style="font-size: 20px; font-weight: 700;">Balas Pengaduan Seller</h2>
+        <button id="close-reply-modal-btn" type="button" class="modal-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <form id="reply-ticket-form">
+        <input type="hidden" id="reply-ticket-id">
+        <div class="modal-body" style="display:flex; flex-direction:column; gap:16px; text-align:left;">
+          <div>
+            <strong style="font-size:13px; color:var(--text-main); display:block;">Dari Seller:</strong>
+            <span id="reply-ticket-seller" style="font-size:13px; color:var(--text-muted);"></span>
+          </div>
+          <div>
+            <strong style="font-size:13px; color:var(--text-main); display:block;">Subjek:</strong>
+            <span id="reply-ticket-subject" style="font-size:13px; color:var(--text-muted); font-weight:600;"></span>
+          </div>
+          <div>
+            <strong style="font-size:13px; color:var(--text-main); display:block;">Pesan Pengaduan:</strong>
+            <p id="reply-ticket-message" style="font-size:13px; color:var(--text-muted); margin-top:4px; background:#F8FAFC; padding:10px; border-radius:6px; border:1px solid var(--border); max-height:120px; overflow-y:auto; white-space:pre-wrap;"></p>
+          </div>
+          <div class="form-group" style="display:flex; flex-direction:column; gap:6px;">
+            <label for="reply-ticket-text" style="font-size:13px; font-weight:700; color:var(--text-main);">Tulis Balasan CS</label>
+            <textarea id="reply-ticket-text" class="form-control" rows="4" placeholder="Ketik jawaban/bantuan di sini..." required style="width:100%; font-family:var(--font); font-size:13px; padding:8px; border:1px solid var(--border); border-radius:6px; background:white;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px; padding: 15px 20px;">
+          <button type="button" id="cancel-reply-modal-btn" class="btn btn-outline" style="padding: 8px 16px;">Batal</button>
+          <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Kirim Balasan</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script type="module" src="js/main.js"></script>
