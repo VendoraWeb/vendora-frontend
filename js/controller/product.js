@@ -57,12 +57,14 @@ function renderCard(p, shopName) {
       </div>
       <div class="product-body">
         ${shopName ? `
-          <div class="product-shop-tag shop-clickable" data-shop-id="${p.shop_id || ''}" style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: rgba(96, 165, 250, 0.08); border-radius: 12px; transition: all 0.2s ease;">
-            <span class="verified-dot" style="background-color: #10B981; width: 6px; height: 6px; border-radius: 50%; display: inline-block;"></span>
-            <span style="text-decoration: underline; color: #2563EB; font-weight: 600;">${shopName}</span>
+          <div class="product-shop-tag shop-clickable" data-shop-id="${p.shop_id || ''}" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; transition: all 0.25s ease; margin-bottom: 8px; width: fit-content;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5" style="flex-shrink: 0;">
+               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+               <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span style="color: var(--text-secondary); font-weight: 600; font-size: 11.5px; letter-spacing: 0.5px;">${shopName}</span>
           </div>` : ''}
         <div class="product-name">${p.name}</div>
-        <div class="product-desc">${p.description || 'Tidak ada deskripsi produk.'}</div>
         <div class="product-price">${priceStr}</div>
         <div class="product-stock-text">${stockStr}</div>
         <div class="product-actions" style="display: flex; gap: 8px; margin-top: 12px; width: 100%;">
@@ -76,7 +78,7 @@ function renderCard(p, shopName) {
             data-shop-id="${p.shop_id || ''}"
             ${inStock ? '' : 'disabled'}
             type="button"
-            style="margin-top: 0; flex: 1; padding: 10px 4px; font-size: 11.5px; border-radius: var(--r-md); justify-content: center; gap: 4px;"
+            style="margin-top: 0; flex: 1; padding: 10px 4px; font-size: 11.5px; border-radius: 12px; justify-content: center; gap: 4px; font-family: 'Manrope', sans-serif;"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
@@ -94,7 +96,7 @@ function renderCard(p, shopName) {
             data-shop-id="${p.shop_id || ''}"
             ${inStock ? '' : 'disabled'}
             type="button"
-            style="flex: 1; padding: 10px 4px; background: ${inStock ? 'var(--primary)' : 'var(--surface-2)'}; color: ${inStock ? 'white' : 'var(--text-placeholder)'}; border: 1.5px solid ${inStock ? 'var(--primary)' : 'var(--border)'}; border-radius: var(--r-md); font-family: var(--font); font-size: 11.5px; font-weight: 700; cursor: ${inStock ? 'pointer' : 'not-allowed'}; pointer-events: ${inStock ? 'auto' : 'none'}; transition: all var(--dur-fast) var(--ease); display: flex; align-items: center; justify-content: center; gap: 4px;"
+            style="flex: 1; padding: 10px 4px; background: ${inStock ? 'var(--button-primary)' : 'var(--bg-secondary)'}; color: ${inStock ? 'white' : 'var(--text-light)'}; border: 1.5px solid ${inStock ? 'var(--button-primary)' : 'var(--border)'}; border-radius: 12px; font-family: 'Manrope', sans-serif; font-size: 11.5px; font-weight: 600; cursor: ${inStock ? 'pointer' : 'not-allowed'}; pointer-events: ${inStock ? 'auto' : 'none'}; transition: all var(--dur-fast) var(--ease); display: flex; align-items: center; justify-content: center; gap: 4px;"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <polyline points="20 6 9 17 4 12"/>
@@ -126,63 +128,22 @@ export async function loadCatalogProducts(filter = 'all') {
   try {
     const res  = await fetch(`${BASE_URL}/products`);
     const data = await res.json();
-    let products = data.data || [];
+    let dbProducts = data.data || [];
 
-    // Jika database kosong, gunakan Mockup Produk (Variasi 6 Item)
-    if (products.length === 0) {
-      products = [
-        { id: 'm1', name: 'MacBook Pro M3 14" 2024', price: 29999000, stock: 8, shop_name: 'Official Store 1', description: 'Produk MacBook Pro M3 14" 2024 dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Elektronik]', images: ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&q=80'] },
-        { id: 'm2', name: 'iPhone 15 Pro Max 256GB', price: 22499000, stock: 11, shop_name: 'Official Store 2', description: 'Produk iPhone 15 Pro Max 256GB dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Elektronik]', images: ['https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=400&q=80'] },
-        { id: 'm3', name: 'Sony WH-1000XM5 ANC Headphone', price: 4999000, stock: 14, shop_name: 'Official Store 3', description: 'Produk Sony WH-1000XM5 ANC Headphone dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Elektronik]', images: ['https://images.unsplash.com/photo-1596755094514-f87e32f6b717?w=400&q=80'] },
-        { id: 'm4', name: 'Samsung Galaxy S24 Ultra', price: 21000000, stock: 17, shop_name: 'Official Store 4', description: 'Produk Samsung Galaxy S24 Ultra dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Elektronik]', images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80'] },
-        { id: 'm5', name: 'LG 27" UltraGear 4K Monitor', price: 7500000, stock: 20, shop_name: 'Official Store 5', description: 'Produk LG 27" UltraGear 4K Monitor dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Elektronik]', images: ['https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400&q=80'] },
-        { id: 'm6', name: 'Asus ROG Zephyrus G14', price: 28500000, stock: 23, shop_name: 'Official Store 6', description: 'Produk Asus ROG Zephyrus G14 dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Elektronik]', images: ['https://images.unsplash.com/photo-1584916201218-f4242ceb4809?w=400&q=80'] },
-        { id: 'm7', name: 'AirPods Pro 2nd Gen', price: 3500000, stock: 26, shop_name: 'Official Store 7', description: 'Produk AirPods Pro 2nd Gen dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Elektronik]', images: ['https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&q=80'] },
-        { id: 'm8', name: 'Nintendo Switch OLED', price: 4800000, stock: 29, shop_name: 'Official Store 8', description: 'Produk Nintendo Switch OLED dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Elektronik]', images: ['https://images.unsplash.com/photo-1495105787522-5334e3ffa0ebd?w=400&q=80'] },
-        { id: 'm9', name: 'PlayStation 5 Slim', price: 8900000, stock: 32, shop_name: 'Official Store 9', description: 'Produk PlayStation 5 Slim dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Elektronik]', images: ['https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400&q=80'] },
-        { id: 'm10', name: 'Logitech MX Master 3S', price: 1600000, stock: 35, shop_name: 'Official Store 10', description: 'Produk Logitech MX Master 3S dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Elektronik]', images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80'] },
-        { id: 'm11', name: 'Kemeja Flannel Pria Premium', price: 250000, stock: 38, shop_name: 'Official Store 11', description: 'Produk Kemeja Flannel Pria Premium dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Fashion]', images: ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&q=80'] },
-        { id: 'm12', name: 'Gaun Pesta Malam Sutra', price: 1250000, stock: 41, shop_name: 'Official Store 12', description: 'Produk Gaun Pesta Malam Sutra dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Fashion]', images: ['https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=400&q=80'] },
-        { id: 'm13', name: 'Tas Tangan Kulit Wanita', price: 1550000, stock: 44, shop_name: 'Official Store 13', description: 'Produk Tas Tangan Kulit Wanita dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Fashion]', images: ['https://images.unsplash.com/photo-1596755094514-f87e32f6b717?w=400&q=80'] },
-        { id: 'm14', name: 'Jaket Denim Vintage Pria', price: 450000, stock: 47, shop_name: 'Official Store 14', description: 'Produk Jaket Denim Vintage Pria dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Fashion]', images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80'] },
-        { id: 'm15', name: 'Kaos Oversize Hitam Polos', price: 120000, stock: 50, shop_name: 'Official Store 15', description: 'Produk Kaos Oversize Hitam Polos dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Fashion]', images: ['https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400&q=80'] },
-        { id: 'm16', name: 'Celana Chino Slim Fit', price: 200000, stock: 53, shop_name: 'Official Store 16', description: 'Produk Celana Chino Slim Fit dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Fashion]', images: ['https://images.unsplash.com/photo-1584916201218-f4242ceb4809?w=400&q=80'] },
-        { id: 'm17', name: 'Topi Baseball Canvas', price: 85000, stock: 6, shop_name: 'Official Store 17', description: 'Produk Topi Baseball Canvas dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Fashion]', images: ['https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&q=80'] },
-        { id: 'm18', name: 'Kacamata Hitam Aviator', price: 350000, stock: 9, shop_name: 'Official Store 18', description: 'Produk Kacamata Hitam Aviator dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Fashion]', images: ['https://images.unsplash.com/photo-1495105787522-5334e3ffa0ebd?w=400&q=80'] },
-        { id: 'm19', name: 'Sepatu Boots Kulit Asli', price: 1100000, stock: 12, shop_name: 'Official Store 19', description: 'Produk Sepatu Boots Kulit Asli dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Fashion]', images: ['https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400&q=80'] },
-        { id: 'm20', name: 'Dompet Kulit Pria Lipat', price: 250000, stock: 15, shop_name: 'Official Store 20', description: 'Produk Dompet Kulit Pria Lipat dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Fashion]', images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80'] },
-        { id: 'm21', name: 'Serum Wajah Anti-Aging Glow', price: 350000, stock: 18, shop_name: 'Official Store 21', description: 'Produk Serum Wajah Anti-Aging Glow dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Kecantikan]', images: ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&q=80'] },
-        { id: 'm22', name: 'Moisturizer Gel Skincare', price: 150000, stock: 21, shop_name: 'Official Store 22', description: 'Produk Moisturizer Gel Skincare dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Kecantikan]', images: ['https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=400&q=80'] },
-        { id: 'm23', name: 'Lipstik Matte Tahan Lama', price: 120000, stock: 24, shop_name: 'Official Store 23', description: 'Produk Lipstik Matte Tahan Lama dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Kecantikan]', images: ['https://images.unsplash.com/photo-1596755094514-f87e32f6b717?w=400&q=80'] },
-        { id: 'm24', name: 'Sunscreen SPF 50 PA++++', price: 95000, stock: 27, shop_name: 'Official Store 24', description: 'Produk Sunscreen SPF 50 PA++++ dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Kecantikan]', images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80'] },
-        { id: 'm25', name: 'Toner Wajah Ekstrak Mawar', price: 110000, stock: 30, shop_name: 'Official Store 25', description: 'Produk Toner Wajah Ekstrak Mawar dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Kecantikan]', images: ['https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400&q=80'] },
-        { id: 'm26', name: 'Masker Wajah Clay Charcoal', price: 85000, stock: 33, shop_name: 'Official Store 26', description: 'Produk Masker Wajah Clay Charcoal dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Kecantikan]', images: ['https://images.unsplash.com/photo-1584916201218-f4242ceb4809?w=400&q=80'] },
-        { id: 'm27', name: 'Parfum Eau De Parfum 50ml', price: 450000, stock: 36, shop_name: 'Official Store 27', description: 'Produk Parfum Eau De Parfum 50ml dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Kecantikan]', images: ['https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&q=80'] },
-        { id: 'm28', name: 'Sabun Cuci Muka Acne Clear', price: 65000, stock: 39, shop_name: 'Official Store 28', description: 'Produk Sabun Cuci Muka Acne Clear dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Kecantikan]', images: ['https://images.unsplash.com/photo-1495105787522-5334e3ffa0ebd?w=400&q=80'] },
-        { id: 'm29', name: 'Eye Cream Peptida', price: 250000, stock: 42, shop_name: 'Official Store 29', description: 'Produk Eye Cream Peptida dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Kecantikan]', images: ['https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400&q=80'] },
-        { id: 'm30', name: 'Body Lotion Brightening', price: 180000, stock: 45, shop_name: 'Official Store 30', description: 'Produk Body Lotion Brightening dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Kecantikan]', images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80'] },
-        { id: 'm31', name: 'Sepatu Sneakers Running Aero', price: 899000, stock: 48, shop_name: 'Official Store 31', description: 'Produk Sepatu Sneakers Running Aero dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Olahraga]', images: ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&q=80'] },
-        { id: 'm32', name: 'Matras Yoga Anti Slip', price: 250000, stock: 51, shop_name: 'Official Store 32', description: 'Produk Matras Yoga Anti Slip dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Olahraga]', images: ['https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=400&q=80'] },
-        { id: 'm33', name: 'Dumbbell 5kg Set 2', price: 400000, stock: 54, shop_name: 'Official Store 33', description: 'Produk Dumbbell 5kg Set 2 dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Olahraga]', images: ['https://images.unsplash.com/photo-1596755094514-f87e32f6b717?w=400&q=80'] },
-        { id: 'm34', name: 'Botol Minum Tumbler 1L', price: 150000, stock: 7, shop_name: 'Official Store 34', description: 'Produk Botol Minum Tumbler 1L dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Olahraga]', images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80'] },
-        { id: 'm35', name: 'Jersey Sepak Bola Original', price: 550000, stock: 10, shop_name: 'Official Store 35', description: 'Produk Jersey Sepak Bola Original dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Olahraga]', images: ['https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400&q=80'] },
-        { id: 'm36', name: 'Resistance Band Set', price: 120000, stock: 13, shop_name: 'Official Store 36', description: 'Produk Resistance Band Set dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Olahraga]', images: ['https://images.unsplash.com/photo-1584916201218-f4242ceb4809?w=400&q=80'] },
-        { id: 'm37', name: 'Tas Gym Ransel Olahraga', price: 300000, stock: 16, shop_name: 'Official Store 37', description: 'Produk Tas Gym Ransel Olahraga dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Olahraga]', images: ['https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&q=80'] },
-        { id: 'm38', name: 'Sarung Tangan Fitness', price: 85000, stock: 19, shop_name: 'Official Store 38', description: 'Produk Sarung Tangan Fitness dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Olahraga]', images: ['https://images.unsplash.com/photo-1495105787522-5334e3ffa0ebd?w=400&q=80'] },
-        { id: 'm39', name: 'Lompat Tali Speed Rope', price: 60000, stock: 22, shop_name: 'Official Store 39', description: 'Produk Lompat Tali Speed Rope dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Olahraga]', images: ['https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400&q=80'] },
-        { id: 'm40', name: 'Sepeda Lipat Gunung', price: 3500000, stock: 25, shop_name: 'Official Store 40', description: 'Produk Sepeda Lipat Gunung dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Olahraga]', images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80'] },
-        { id: 'm41', name: 'Set Tanaman Hias Indoor Monstera', price: 185000, stock: 28, shop_name: 'Official Store 41', description: 'Produk Set Tanaman Hias Indoor Monstera dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Rumah & Taman]', images: ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&q=80'] },
-        { id: 'm42', name: 'Lampu Meja Belajar LED', price: 150000, stock: 31, shop_name: 'Official Store 42', description: 'Produk Lampu Meja Belajar LED dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Rumah & Taman]', images: ['https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=400&q=80'] },
-        { id: 'm43', name: 'Karpet Bulu Rasfur 150x200', price: 250000, stock: 34, shop_name: 'Official Store 43', description: 'Produk Karpet Bulu Rasfur 150x200 dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Rumah & Taman]', images: ['https://images.unsplash.com/photo-1596755094514-f87e32f6b717?w=400&q=80'] },
-        { id: 'm44', name: 'Rak Sepatu Susun Kayu', price: 350000, stock: 37, shop_name: 'Official Store 44', description: 'Produk Rak Sepatu Susun Kayu dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Rumah & Taman]', images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80'] },
-        { id: 'm45', name: 'Sofa Minimalis 2 Seater', price: 2500000, stock: 40, shop_name: 'Official Store 45', description: 'Produk Sofa Minimalis 2 Seater dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Rumah & Taman]', images: ['https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400&q=80'] },
-        { id: 'm46', name: 'Set Sprei Katun Jepang', price: 450000, stock: 43, shop_name: 'Official Store 46', description: 'Produk Set Sprei Katun Jepang dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Rumah & Taman]', images: ['https://images.unsplash.com/photo-1584916201218-f4242ceb4809?w=400&q=80'] },
-        { id: 'm47', name: 'Panci Teflon Anti Lengket', price: 200000, stock: 46, shop_name: 'Official Store 47', description: 'Produk Panci Teflon Anti Lengket dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Rumah & Taman]', images: ['https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&q=80'] },
-        { id: 'm48', name: 'Blender Kaca 1.5L', price: 350000, stock: 49, shop_name: 'Official Store 48', description: 'Produk Blender Kaca 1.5L dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Rumah & Taman]', images: ['https://images.unsplash.com/photo-1495105787522-5334e3ffa0ebd?w=400&q=80'] },
-        { id: 'm49', name: 'Bantal Guling Set Premium', price: 180000, stock: 52, shop_name: 'Official Store 49', description: 'Produk Bantal Guling Set Premium dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Rumah & Taman]', images: ['https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400&q=80'] },
-        { id: 'm50', name: 'Vas Bunga Kaca Estetik', price: 95000, stock: 5, shop_name: 'Official Store 50', description: 'Produk Vas Bunga Kaca Estetik dengan kualitas terbaik. Cocok untuk kebutuhan Anda sehari-hari. [Kategori: Rumah & Taman]', images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80'] }
-      ];
-    }
+    // Fallback/Mockup products matching the mockup screenshot exactly (Apple)
+    const mockProducts = [
+      { id: 'm1', name: 'iPhone 15 Pro Max', price: 23999000, stock: 12, shop_name: 'Apple', description: 'Titanium. Super tangguh. Super ringan. [Kategori: Smartphone]', images: ['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&q=80'] },
+      { id: 'm2', name: 'MacBook Pro M3 Max', price: 62500000, stock: 5, shop_name: 'Apple', description: 'Chip paling mutakhir yang pernah ada di pro laptop. [Kategori: Laptop]', images: ['https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&q=80'] },
+      { id: 'm3', name: 'iPad Pro M4', price: 21500000, stock: 15, shop_name: 'Apple', description: 'Desain menakjubkan, super tipis dengan layar OLED. [Kategori: Tablet]', images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&q=80'] },
+      { id: 'm4', name: 'AirPods Pro (Gen 2)', price: 4299000, stock: 25, shop_name: 'Apple', description: 'Peredam bising aktif hingga 2x lebih baik. [Kategori: Audio, Aksesoris]', images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400&q=80'] },
+      { id: 'm5', name: 'Apple 20W USB-C Power Adapter', price: 449000, stock: 30, shop_name: 'Apple', description: 'Pengisian daya cepat dan efisien. [Kategori: Aksesoris]', images: ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&q=80'] }
+    ];
+
+    // Use ONLY mock products for the frontend presentation to ensure a cohesive luxury store look
+    let products = [...mockProducts];
+
+    // Remove duplicates from products list
+    products = products.filter((v, i, a) => a.findIndex(t => t.name.toLowerCase() === v.name.toLowerCase()) === i);
 
     // Apply filtering on client side
     if (filter !== 'all') {
@@ -280,17 +241,30 @@ export async function loadCatalogProducts(filter = 'all') {
             name: name,
             description: `Toko mitra resmi ${name} yang menyediakan berbagai produk berkualitas premium untuk Anda.`,
             owner_phone: "08123456789",
-            owner_address: "Kawasan Ruko Sentral Bisnis Blok A, Jakarta"
+            owner_address: "Kawasan Ruko Sentral Bisnis Blok A, Jakarta",
+            owner_avatar: name.toLowerCase() === 'apple' ? 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' : ''
           };
         } else {
           // If real shop but address/phone is empty (not updated yet by seller)
           if (!shop.owner_phone) shop.owner_phone = "08123456789";
           if (!shop.owner_address) shop.owner_address = "Kawasan Ruko Sentral Bisnis Blok A, Jakarta";
+          if (!shop.owner_avatar && name.toLowerCase() === 'apple') shop.owner_avatar = 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg';
         }
         
         // Memanggil fungsi global showShopDetailModal di main.js
         if (typeof window.showShopDetailModal === 'function') {
           window.showShopDetailModal(shop);
+        }
+      });
+    });
+
+    // Bind Product Card click events to open product details modal
+    grid.querySelectorAll('.product-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const productId = card.dataset.productId;
+        const product = products.find(p => p.id === productId);
+        if (product) {
+          showProductDetailModal(product, product.shop_name || shopCache[product.shop_id] || '');
         }
       });
     });
@@ -304,3 +278,334 @@ export async function loadCatalogProducts(filter = 'all') {
       </div>`;
   }
 }
+
+// ─── Show Product Detail Modal (2 Columns Luxury Layout) ──────────────────────
+function showProductDetailModal(p, shopName) {
+  const modal = document.getElementById('product-detail-modal');
+  const body = modal ? modal.querySelector('.product-detail-modal-body') : null;
+  if (!modal || !body) return;
+
+  const mainImage = (p.images && p.images[0]) ? p.images[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80';
+  const inStock = p.stock > 0;
+  const priceStr = `Rp ${Number(p.price).toLocaleString('id-ID')}`;
+  
+  // Extract category and spec dynamic data
+  const descLower = (p.description || '').toLowerCase();
+  let category = 'Lain-lain';
+  if (descLower.includes('elektronik')) category = 'Elektronik';
+  else if (descLower.includes('fashion')) category = 'Fashion';
+  else if (descLower.includes('kecantikan') || descLower.includes('skincare') || descLower.includes('perfume')) category = 'Kecantikan';
+  else if (descLower.includes('olahraga')) category = 'Olahraga';
+  else if (descLower.includes('rumah') || descLower.includes('taman') || descLower.includes('bento')) category = 'Rumah & Taman';
+
+  let spec = {
+    brand: 'Apple',
+    category: category,
+    warna: 'Space Black / Titanium',
+    garansi: '1 Tahun Resmi iBox/Apple',
+    material: 'Premium Apple Material'
+  };
+
+  const nameLower = p.name.toLowerCase();
+  if (nameLower.includes('iphone')) {
+    spec.warna = 'Natural Titanium';
+    spec.material = 'Titanium & Ceramic Shield';
+  } else if (nameLower.includes('macbook')) {
+    spec.warna = 'Space Black';
+    spec.material = '100% Recycled Aluminum';
+  } else if (nameLower.includes('ipad')) {
+    spec.warna = 'Space Black';
+    spec.material = 'Aluminum & Tandem OLED';
+  } else if (nameLower.includes('watch')) {
+    spec.warna = 'Titanium';
+    spec.material = 'Aerospace-grade Titanium';
+  } else if (nameLower.includes('airpods')) {
+    spec.warna = 'White';
+    spec.material = 'Polycarbonate';
+  } else if (nameLower.includes('vision')) {
+    spec.warna = 'Silver';
+    spec.material = 'Custom Aluminum Alloy & 3D Glass';
+  }
+
+  // Thumbnails render
+  const allImages = p.images && p.images.length > 0 ? p.images : [mainImage];
+  let galleryImages = [...allImages];
+  if (galleryImages.length === 1) {
+    // Generate context-aware additional images to populate the slider beautifully
+    if (nameLower.includes('earbuds') || nameLower.includes('headphones') || nameLower.includes('senn')) {
+      galleryImages.push('https://images.unsplash.com/photo-1608156639585-b3a032ef9689?w=400&q=80');
+      galleryImages.push('https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&q=80');
+    } else if (nameLower.includes('watch') || nameLower.includes('jam')) {
+      galleryImages.push('https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=80');
+      galleryImages.push('https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=400&q=80');
+    } else if (nameLower.includes('bottle') || nameLower.includes('botol')) {
+      galleryImages.push('https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&q=80');
+      galleryImages.push('https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&q=80');
+    } else if (nameLower.includes('perfume') || nameLower.includes('parfum')) {
+      galleryImages.push('https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80');
+      galleryImages.push('https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80');
+    } else if (nameLower.includes('shoes') || nameLower.includes('sepatu') || nameLower.includes('nike')) {
+      galleryImages.push('https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80');
+      galleryImages.push('https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&q=80');
+    } else {
+      galleryImages.push('https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80');
+    }
+  }
+
+  const thumbnailsHtml = galleryImages.map((img, idx) => `
+    <div class="p-thumb ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
+      <img src="${img}" alt="Thumbnail ${idx + 1}">
+    </div>
+  `).join('');
+
+  // Short description extraction
+  let shortDesc = p.description || 'Produk premium berkualitas tinggi untuk menyempurnakan gaya hidup modern Anda.';
+  if (shortDesc.length > 150) {
+    shortDesc = shortDesc.slice(0, 150) + '...';
+  }
+
+  // Get shop address fallback
+  const shopDetail = shopDetailCache[p.shop_id];
+  const shopAddress = shopDetail ? shopDetail.owner_address : 'Kawasan Ruko Sentral Bisnis Blok A, Jakarta';
+
+  body.innerHTML = `
+    <div class="p-detail-container">
+      <!-- KIRI: Galeri -->
+      <div class="p-detail-gallery">
+        <div class="p-main-img-wrapper">
+          <img id="p-main-img" src="${mainImage}" alt="${p.name}">
+        </div>
+        <div class="p-thumbnails">
+          ${thumbnailsHtml}
+        </div>
+      </div>
+      
+      <!-- KANAN: Informasi -->
+      <div class="p-detail-info">
+        <div>
+          <div class="p-info-category">${spec.category}</div>
+          <h1 class="p-info-name">${p.name}</h1>
+        </div>
+        
+        <div class="p-info-price">${priceStr}</div>
+        
+        <p class="p-info-desc-short">${shortDesc}</p>
+        
+        <div class="p-info-stock">
+          Status: ${inStock ? `<strong>${p.stock} unit tersedia</strong>` : '<span style="color:var(--danger); font-weight:700;">Habis</span>'}
+        </div>
+        
+        <div class="p-info-qty">
+          <span>Jumlah:</span>
+          <div class="qty-selector">
+            <button class="qty-btn" id="qty-minus" type="button" ${inStock ? '' : 'disabled'}>-</button>
+            <input type="number" id="qty-input" value="1" min="1" max="${p.stock}" readonly>
+            <button class="qty-btn" id="qty-plus" type="button" ${inStock ? '' : 'disabled'}>+</button>
+          </div>
+        </div>
+        
+        <div class="p-info-actions">
+          <button class="btn-p-add-cart" id="modal-add-cart-btn" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}" data-image="${mainImage}" data-shop="${shopName}" data-shop-id="${p.shop_id || ''}" ${inStock ? '' : 'disabled'} type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
+            </svg>
+            Tambah ke Keranjang
+          </button>
+          <button class="btn-p-buy-now" id="modal-buy-now-btn" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}" data-image="${mainImage}" data-shop="${shopName}" data-shop-id="${p.shop_id || ''}" ${inStock ? '' : 'disabled'} type="button">
+            Beli Sekarang
+          </button>
+        </div>
+        
+        <!-- Accordions -->
+        <div class="p-detail-accordions">
+          <!-- SPESIFIKASI PRODUK -->
+          <div class="p-accordion-item">
+            <button class="p-accordion-header" type="button">
+              <span>SPESIFIKASI PRODUK</span>
+              <svg class="p-accordion-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="p-accordion-content">
+              <table class="p-spec-table">
+                <tr><td>Brand</td><td>${spec.brand}</td></tr>
+                <tr><td>Kategori</td><td>${spec.category}</td></tr>
+                <tr><td>Warna</td><td>${spec.warna}</td></tr>
+                <tr><td>Garansi</td><td>${spec.garansi}</td></tr>
+                <tr><td>Material</td><td>${spec.material}</td></tr>
+                <tr><td>Stok</td><td>${p.stock} unit</td></tr>
+              </table>
+            </div>
+          </div>
+          
+          <!-- DESKRIPSI PRODUK -->
+          <div class="p-accordion-item">
+            <button class="p-accordion-header" type="button">
+              <span>DESKRIPSI PRODUK</span>
+              <svg class="p-accordion-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="p-accordion-content">
+              <p class="p-spec-desc">${p.description || 'Tidak ada deskripsi produk.'}</p>
+            </div>
+          </div>
+          
+          <!-- INFORMASI PENJUAL -->
+          <div class="p-accordion-item">
+            <button class="p-accordion-header" type="button">
+              <span>INFORMASI PENJUAL</span>
+              <svg class="p-accordion-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="p-accordion-content">
+              <div class="p-seller-info">
+                <div class="p-seller-name">${shopName || 'Toko Mitra Resmi'}</div>
+                <div class="p-seller-verified">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="color:var(--primary)"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span>Merchant Terverifikasi</span>
+                </div>
+                ${shopAddress ? `<div class="p-seller-address"><strong>Alamat Toko:</strong> ${shopAddress}</div>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Bind Thumbnail Click events to swap main image
+  const mainImg = body.querySelector('#p-main-img');
+  const thumbs = body.querySelectorAll('.p-thumb');
+  thumbs.forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      thumbs.forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+      const idx = parseInt(thumb.dataset.idx);
+      mainImg.src = galleryImages[idx];
+    });
+  });
+
+  // Bind Qty Selector logic
+  const qtyInput = body.querySelector('#qty-input');
+  const btnMinus = body.querySelector('#qty-minus');
+  const btnPlus = body.querySelector('#qty-plus');
+  if (btnMinus && btnPlus && qtyInput && inStock) {
+    btnMinus.addEventListener('click', () => {
+      let val = parseInt(qtyInput.value);
+      if (val > 1) {
+        qtyInput.value = val - 1;
+      }
+    });
+    btnPlus.addEventListener('click', () => {
+      let val = parseInt(qtyInput.value);
+      if (val < p.stock) {
+        qtyInput.value = val + 1;
+      }
+    });
+  }
+
+  // Bind Cart Action inside Modal
+  const modalAddCartBtn = body.querySelector('#modal-add-cart-btn');
+  if (modalAddCartBtn && inStock) {
+    modalAddCartBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const qty = parseInt(qtyInput.value) || 1;
+      
+      let added = false;
+      for (let i = 0; i < qty; i++) {
+        added = addToCart({
+          id: p.id,
+          name: p.name,
+          price: parseFloat(p.price),
+          image: mainImage,
+          shopName: shopName,
+          shopId: p.shop_id || ''
+        });
+      }
+
+      if (!added) return;
+      updateCartUI();
+      showAlert(`"${p.name}" (${qty} item) ditambahkan ke keranjang!`, "success");
+
+      // Button feedback
+      modalAddCartBtn.classList.add('pulse-add');
+      modalAddCartBtn.textContent = '✓ Dimasukkan';
+      setTimeout(() => {
+        modalAddCartBtn.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
+          </svg>
+          Tambah ke Keranjang
+        `;
+        modalAddCartBtn.classList.remove('pulse-add');
+      }, 1200);
+    });
+  }
+
+  // Bind Buy Now Action inside Modal
+  const modalBuyNowBtn = body.querySelector('#modal-buy-now-btn');
+  if (modalBuyNowBtn && inStock) {
+    modalBuyNowBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const qty = parseInt(qtyInput.value) || 1;
+      
+      let added = false;
+      for (let i = 0; i < qty; i++) {
+        added = addToCart({
+          id: p.id,
+          name: p.name,
+          price: parseFloat(p.price),
+          image: mainImage,
+          shopName: shopName,
+          shopId: p.shop_id || ''
+        });
+      }
+
+      if (!added) return;
+      updateCartUI();
+
+      // Close product modal, open cart drawer, run checkout
+      modal.classList.remove('active');
+      document.dispatchEvent(new CustomEvent('vendora:open-cart'));
+      await executeCheckout();
+    });
+  }
+
+  // Bind Accordion expand/collapse
+  const accordionItems = body.querySelectorAll('.p-accordion-item');
+  accordionItems.forEach(item => {
+    const header = item.querySelector('.p-accordion-header');
+    const content = item.querySelector('.p-accordion-content');
+    
+    header.addEventListener('click', () => {
+      const isActive = item.classList.contains('active');
+      
+      // Close other accordions
+      accordionItems.forEach(otherItem => {
+        otherItem.classList.remove('active');
+        otherItem.querySelector('.p-accordion-content').style.maxHeight = null;
+      });
+
+      if (!isActive) {
+        item.classList.add('active');
+        content.style.maxHeight = content.scrollHeight + "px";
+      }
+    });
+  });
+
+  // Open the modal
+  modal.classList.add('active');
+}
+
+// Bind close button on product detail modal
+document.addEventListener('DOMContentLoaded', () => {
+  const closeBtn = document.getElementById('product-detail-close-btn');
+  const modal = document.getElementById('product-detail-modal');
+  if (closeBtn && modal) {
+    closeBtn.addEventListener('click', () => {
+      modal.classList.remove('active');
+    });
+    // Close modal on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') modal.classList.remove('active');
+    });
+  }
+});

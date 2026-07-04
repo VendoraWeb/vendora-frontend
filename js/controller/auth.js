@@ -1,4 +1,3 @@
-import { getValue, onClick } from "https://cdn.jsdelivr.net/gh/jscroot/element@0.1.5/croot.js";
 import { BASE_URL, setActiveSession } from "../config/api.js";
 
 // ─── Alert helper ──────────────────────────────────────────────────────────
@@ -65,8 +64,8 @@ export function initAuth() {
       const submitBtn = document.getElementById('signin-submit-btn');
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Signing in...'; }
 
-      const email    = getValue('login-email');
-      const password = getValue('login-password');
+      const email    = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
 
       try {
         const res  = await fetch(`${BASE_URL}/login`, {
@@ -100,23 +99,43 @@ export function initAuth() {
       const submitBtn = document.getElementById('signup-submit-btn');
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Creating account...'; }
 
-      const name     = getValue('reg-name');
-      const email    = getValue('reg-email');
-      const password = getValue('reg-password');
-      const role     = getValue('reg-role');
+      const name     = document.getElementById('reg-name').value;
+      const email    = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+      const role     = document.getElementById('reg-role').value;
+      const shop_name = document.getElementById('reg-shop-name').value || '';
 
       try {
+        const payload = { name, email, password, role };
+        if (role === 'seller' && shop_name) payload.shop_name = shop_name;
+
         const res  = await fetch(`${BASE_URL}/register`, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ name, email, password, role })
+          body:    JSON.stringify(payload)
         });
         const data = await res.json();
 
         if (data.status === 201) {
-          showAlert("Account created! Please sign in.", "success");
-          registerForm.reset();
-          setTimeout(() => showSignIn(), 1200);
+          showAlert("Account created! Logging you in...", "success");
+          
+          // Auto-login
+          try {
+            const loginRes = await fetch(`${BASE_URL}/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password })
+            });
+            const loginData = await loginRes.json();
+            if (loginRes.ok) {
+              setActiveSession({ token: loginData.data.token, user: loginData.data.user });
+              setTimeout(() => redirectByRole(loginData.data.user.role), 1000);
+            } else {
+              setTimeout(() => showSignIn(), 1000);
+            }
+          } catch (e) {
+             setTimeout(() => showSignIn(), 1000);
+          }
         } else {
           showAlert(data.message || "Registration failed. Email may already be in use.", "error");
         }
@@ -178,3 +197,4 @@ export function initAuth() {
     });
   }
 }
+

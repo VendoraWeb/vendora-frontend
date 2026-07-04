@@ -1,5 +1,5 @@
 // API Configuration
-export const BASE_URL = 'http://localhost:8080/api';
+export const BASE_URL = 'http://localhost:8081/api';
 
 // Helper to get active session user
 export function getActiveSession() {

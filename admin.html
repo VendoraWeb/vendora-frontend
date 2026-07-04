@@ -4,28 +4,43 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vendora | Admin Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); }
+    .glass-panel { background: #FFFFFF; border: 1px solid var(--border); border-radius: 24px; padding: 28px; box-shadow: var(--shadow); margin-bottom: 24px; }
+    h2, .page-title { font-family: var(--font); color: var(--text-primary); }
+    th { border-bottom: 1px solid var(--border) !important; color: var(--text-secondary) !important; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 11px !important; background: var(--bg-secondary); }
+    td { border-bottom: 1px solid var(--border); padding: 16px 10px !important; color: var(--text-primary); }
+    .stat-card { border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column; justify-content: center; padding: 32px; background: #FFFFFF; border-radius: 24px; box-shadow: var(--shadow); }
+    .stat-label { color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 12px; font-family: 'Manrope', sans-serif; }
+    .stat-value { color: var(--text-primary) !important; font-size: 36px; font-weight: 700; font-family: var(--font); text-shadow: none; }
+  </style>
 </head>
 <body>
 
   <nav id="main-navbar">
     <a href="index.html" class="nav-logo">
-      <div class="nav-logo-mark">V</div>
+      <div class="nav-logo-mark">
+        <img src="logo.png" alt="Vendora">
+      </div>
       <span class="nav-logo-text">Vendora</span>
     </a>
     <div style="flex:1;"></div>
     <div class="nav-actions">
-      <a href="index.html" style="font-size:13px;color:#94A3B8;padding:7px 14px;border-radius:6px;">Katalog</a>
-      <span id="user-display" style="font-size:12px;font-weight:700;color:#EF4444;padding:5px 12px;background:rgba(239,68,68,0.12);border-radius:6px;">Admin Console</span>
-      <button type="button" id="nav-logout-btn" style="padding:7px 14px;border:1.5px solid rgba(239,68,68,0.4);color:#EF4444;border-radius:6px;background:transparent;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);">Keluar</button>
+      <a href="index.html" style="font-size:13px;color:var(--text-primary);font-weight:500;padding:7px 14px;border-radius:6px;text-decoration:none;">Katalog</a>
+      <span id="user-display" style="font-size:12px;font-weight:700;color:var(--gold);padding:5px 12px;background:rgba(212,175,55,0.1);border-radius:6px;border:1px solid rgba(212,175,55,0.3);">Admin Console</span>
+      <button type="button" id="nav-logout-btn" style="padding:7px 14px;border:1px solid var(--border);color:var(--text-primary);border-radius:6px;background:transparent;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all 0.2s;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'">Keluar</button>
     </div>
   </nav>
 
   <div class="page-container">
     <!-- Header info -->
-    <div style="margin-bottom: 40px;">
-      <h1 class="page-title">Admin Console</h1>
-      <p class="sub-title">Monitor rented store units (ruko), review licenses, and configure ecosystem operations.</p>
+    <div style="margin-bottom: 40px; text-align: center;">
+      <h1 class="page-title" style="font-size: 42px; letter-spacing: 1px; margin-bottom: 12px;">Admin Console</h1>
+      <p class="sub-title" style="color: var(--text-primary); font-size: 15px; max-width: 600px; margin: 0 auto; line-height: 1.6; font-weight: 500;">Monitor rented store units (ruko), review licenses, and configure ecosystem operations in real-time.</p>
     </div>
 
     <!-- Alert notifications -->
@@ -81,33 +96,7 @@
         </div>
       </div>
 
-      <!-- Support Ticket Desk -->
-      <div class="glass-panel" style="margin-top: 40px;">
-        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-          Pusat Pengaduan Seller (CS Ticket Desk)
-        </h2>
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left;" id="admin-tickets-table">
-            <thead>
-              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 14px;">
-                <th style="padding: 12px 10px;">Seller</th>
-                <th style="padding: 12px 10px;">Subjek</th>
-                <th style="padding: 12px 10px;">Pesan Pengaduan</th>
-                <th style="padding: 12px 10px;">Balasan Admin</th>
-                <th style="padding: 12px 10px;">Status</th>
-                <th style="padding: 12px 10px;">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="tickets-list-tbody" style="font-size: 14px;">
-              <tr>
-                <td colspan="6" style="padding: 20px 10px; text-align: center; color: var(--text-secondary);">
-                  Memuat pengaduan seller...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+
 
       <!-- Laporan Transaksi -->
       <div class="glass-panel" style="margin-top: 40px;">
@@ -189,41 +178,8 @@
 
   </div>
 
-  <!-- Reply Ticket Modal (Overlay) -->
-  <div id="reply-ticket-modal" class="modal-overlay">
-    <div class="modal-container" style="max-width: 500px;">
-      <div class="modal-header">
-        <h2 style="font-size: 20px; font-weight: 700;">Balas Pengaduan Seller</h2>
-        <button id="close-reply-modal-btn" type="button" class="modal-close-btn" aria-label="Close">&times;</button>
-      </div>
-      <form id="reply-ticket-form">
-        <input type="hidden" id="reply-ticket-id">
-        <div class="modal-body" style="display:flex; flex-direction:column; gap:16px; text-align:left;">
-          <div>
-            <strong style="font-size:13px; color:var(--text-main); display:block;">Dari Seller:</strong>
-            <span id="reply-ticket-seller" style="font-size:13px; color:var(--text-muted);"></span>
-          </div>
-          <div>
-            <strong style="font-size:13px; color:var(--text-main); display:block;">Subjek:</strong>
-            <span id="reply-ticket-subject" style="font-size:13px; color:var(--text-muted); font-weight:600;"></span>
-          </div>
-          <div>
-            <strong style="font-size:13px; color:var(--text-main); display:block;">Pesan Pengaduan:</strong>
-            <p id="reply-ticket-message" style="font-size:13px; color:var(--text-muted); margin-top:4px; background:#F8FAFC; padding:10px; border-radius:6px; border:1px solid var(--border); max-height:120px; overflow-y:auto; white-space:pre-wrap;"></p>
-          </div>
-          <div class="form-group" style="display:flex; flex-direction:column; gap:6px;">
-            <label for="reply-ticket-text" style="font-size:13px; font-weight:700; color:var(--text-main);">Tulis Balasan CS</label>
-            <textarea id="reply-ticket-text" class="form-control" rows="4" placeholder="Ketik jawaban/bantuan di sini..." required style="width:100%; font-family:var(--font); font-size:13px; padding:8px; border:1px solid var(--border); border-radius:6px; background:white;"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px; padding: 15px 20px;">
-          <button type="button" id="cancel-reply-modal-btn" class="btn btn-outline" style="padding: 8px 16px;">Batal</button>
-          <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Kirim Balasan</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
-  <script type="module" src="js/main.js"></script>
+
+  <script type="module" src="js/main.js?v=3"></script>
 </body>
 </html>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 110" fill="none">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5D17A;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#C9A84C;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#E8C96A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A07828;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Handle (semicircle) -->
+  <path d="M38 22 Q38 8 50 8 Q62 8 62 22" stroke="url(#goldGrad)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- Bag body with V cutout -->
+  <path d="
+    M20 26 L80 26 L80 28
+    L74 28 L74 28
+    L62 60 L50 78 L38 60
+    L26 28 L20 28 Z
+  " fill="url(#goldGrad)"/>
+  <!-- Left wing -->
+  <path d="M20 26 L26 28 L14 75 Q10 88 22 90 L38 90 L50 78 L38 60 L26 28 Z" fill="url(#goldGrad)"/>
+  <!-- Right wing -->
+  <path d="M80 26 L74 28 L86 75 Q90 88 78 90 L62 90 L50 78 L62 60 L74 28 Z" fill="url(#goldGrad)"/>
+  <!-- Top bar of bag -->
+  <rect x="20" y="24" width="60" height="8" rx="2" fill="url(#goldGrad)"/>
+</svg>

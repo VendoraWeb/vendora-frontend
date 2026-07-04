@@ -1,4 +1,3 @@
-import { getValue, setInner } from "https://cdn.jsdelivr.net/gh/jscroot/element@0.1.5/croot.js";
 import { BASE_URL, getActiveSession } from "../config/api.js";
 
 // Helper to show alert banner
@@ -25,7 +24,7 @@ export function initSellerDashboard() {
   }
 
   // Display user details
-  setInner('user-display', `Seller: ${session.user.name}`);
+  document.getElementById('user-display').innerHTML = `Seller: ${session.user.name}`;
   document.getElementById('seller-auth-callout').style.display = 'none';
 
   // Check if seller already has an active shop lease
@@ -33,12 +32,17 @@ export function initSellerDashboard() {
 
   // Setup form listener for renting a shop space (requires virtual payment first)
   const rentForm = document.getElementById('rent-shop-form');
+  const shopNameInput = document.getElementById('shop-name');
+  if (shopNameInput && session.user.shop_name) {
+    shopNameInput.value = session.user.shop_name;
+  }
+  
   if (rentForm) {
     rentForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const name = getValue('shop-name');
-      const description = getValue('shop-desc');
-      const rentalDays = parseInt(getValue('rental-days'), 10);
+      const name = document.getElementById('shop-name').value;
+      const description = document.getElementById('shop-desc').value;
+      const rentalDays = parseInt(document.getElementById('rental-days').value, 10);
       const totalCost = rentalDays * 15000;
 
       // Show Snap Modal
@@ -114,11 +118,11 @@ export function initSellerDashboard() {
         return;
       }
 
-      const name = getValue('prod-name');
-      const price = parseFloat(getValue('prod-price'));
-      const stock = parseInt(getValue('prod-stock'), 10);
-      const image = getValue('prod-image');
-      const description = getValue('prod-desc');
+      const name = document.getElementById('prod-name').value;
+      const price = parseFloat(document.getElementById('prod-price').value);
+      const stock = parseInt(document.getElementById('prod-stock').value, 10);
+      const image = document.getElementById('prod-image').value;
+      const description = document.getElementById('prod-desc').value;
 
       fetch(`${BASE_URL}/product`, {
         method: 'POST',
@@ -168,11 +172,11 @@ export function initSellerDashboard() {
       e.preventDefault();
       
       const id = document.getElementById('edit-prod-id').value;
-      const name = getValue('edit-prod-name');
-      const price = parseFloat(getValue('edit-prod-price'));
-      const stock = parseInt(getValue('edit-prod-stock'), 10);
-      const image = getValue('edit-prod-image');
-      const description = getValue('edit-prod-desc');
+      const name = document.getElementById('edit-prod-name').value;
+      const price = parseFloat(document.getElementById('edit-prod-price').value);
+      const stock = parseInt(document.getElementById('edit-prod-stock').value, 10);
+      const image = document.getElementById('edit-prod-image').value;
+      const description = document.getElementById('edit-prod-desc').value;
       const shopId = localStorage.getItem('vendora_active_shop_id');
 
       fetch(`${BASE_URL}/product/${id}`, {
@@ -227,13 +231,13 @@ function checkSellerShop(ownerId) {
         document.getElementById('active-shop-dashboard').style.display = 'block';
 
         // Render dashboard values
-        setInner('dashboard-shop-name', myShop.name);
-        setInner('dashboard-shop-desc', myShop.description || 'No description provided.');
-        setInner('shop-status-badge', myShop.status.toUpperCase());
+        document.getElementById('dashboard-shop-name').innerHTML = myShop.name;
+        document.getElementById('dashboard-shop-desc').innerHTML = myShop.description || 'No description provided.';
+        document.getElementById('shop-status-badge').innerHTML = myShop.status.toUpperCase();
         
         const expiresDate = new Date(myShop.rental_expires);
-        setInner('shop-expires-badge', expiresDate.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }));
-        setInner('shop-price-badge', `Rp ${myShop.rental_price.toLocaleString()}`);
+        document.getElementById('shop-expires-badge').innerHTML = expiresDate.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+        document.getElementById('shop-price-badge').innerHTML = `Rp ${myShop.rental_price.toLocaleString()}`;
 
         // Countdown hari sewa
         const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
@@ -709,8 +713,8 @@ function loadAdminEcosystem() {
     const transactions = txRes.data || [];
 
     // Calculate metrics
-    setInner('stat-shops', shops.length);
-    setInner('stat-transactions', transactions.length);
+    document.getElementById('stat-shops').innerHTML = shops.length;
+    document.getElementById('stat-transactions').innerHTML = transactions.length;
 
     let salesTotal = 0;
     transactions.forEach(t => {
@@ -723,7 +727,7 @@ function loadAdminEcosystem() {
       rentalTotal += s.rental_price;
     });
 
-    setInner('stat-revenue', `Rp ${(salesTotal + rentalTotal).toLocaleString()}`);
+    document.getElementById('stat-revenue').innerHTML = `Rp ${(salesTotal + rentalTotal).toLocaleString()}`;
 
     // Populate Shops Lease table
     const tbody = document.getElementById('shops-list-tbody');
@@ -745,9 +749,11 @@ function loadAdminEcosystem() {
       const expiry = new Date(s.rental_expires).toLocaleDateString();
       const statusText = s.status === 'active' ? 'Active' : 'Suspended';
       const statusColor = s.status === 'active' ? 'var(--accent)' : 'var(--danger)';
-      const actionBtn = s.status === 'active' 
+      const statusBtn = s.status === 'active' 
         ? `<button class="btn btn-outline btn-toggle-status" data-id="${s.id}" data-status="suspended" style="padding: 6px 10px; font-size: 12px; color: var(--danger); border-color: rgba(239, 68, 68, 0.4);">Suspend</button>`
         : `<button class="btn btn-accent btn-toggle-status" data-id="${s.id}" data-status="active" style="padding: 6px 10px; font-size: 12px;">Activate</button>`;
+      
+      const actionBtn = `<div style="display:flex; gap:6px;">${statusBtn}<button class="btn btn-danger btn-delete-shop" onclick="window.deleteShop('${s.id}')" style="padding: 6px 10px; font-size: 12px;">Hapus</button></div>`;
 
       html += `
         <tr style="border-bottom: 1px solid var(--border-color);">
@@ -763,11 +769,14 @@ function loadAdminEcosystem() {
     });
     tbody.innerHTML = html;
 
-    // Table Actions
-    document.querySelectorAll('.btn-toggle-status').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const shopId = e.currentTarget.getAttribute('data-id');
-        const nextStatus = e.currentTarget.getAttribute('data-status');
+    // Table Actions (using event delegation for reliability)
+    tbody.addEventListener('click', (e) => {
+      const toggleBtn = e.target.closest('.btn-toggle-status');
+      const deleteBtn = e.target.closest('.btn-delete-shop');
+
+      if (toggleBtn) {
+        const shopId = toggleBtn.getAttribute('data-id');
+        const nextStatus = toggleBtn.getAttribute('data-status');
 
         fetch(`${BASE_URL}/shop/${shopId}/status`, {
           method: 'PUT',
@@ -787,7 +796,7 @@ function loadAdminEcosystem() {
           console.error(err);
           showAlert("Connection error changing status.", "error");
         });
-      });
+      }
     });
   })
   .catch(err => {
@@ -795,3 +804,25 @@ function loadAdminEcosystem() {
     showAlert("Failed to load administration dataset.", "error");
   });
 }
+
+window.deleteShop = function(shopId) {
+  fetch(`${BASE_URL}/shop/${shopId}`, {
+    method: 'DELETE',
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (result.status === 200) {
+      showAlert("Ruko berhasil dihapus permanen.", "success");
+      const tbody = document.getElementById('shops-list-tbody');
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; text-align: center;">Memuat ulang...</td></tr>`;
+      loadAdminEcosystem();
+    } else {
+      showAlert(result.message || "Gagal menghapus ruko.", "error");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    showAlert("Koneksi error saat menghapus ruko.", "error");
+  });
+};
+

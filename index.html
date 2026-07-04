@@ -5,16 +5,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vendora — Marketplace Premium Indonesia</title>
   <meta name="description" content="Platform e-commerce premium dengan konsep sewa ruko virtual. Temukan produk terbaik dari merchant terpercaya di Vendora.">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=2">
+
 </head>
 <body>
+
+  <style>
+    @media(max-width: 768px) {
+      .top-bar-banner { display: none !important; }
+    }
+  </style>
+
+  <!-- Top Bar Banner -->
+  <div class="top-bar-banner" style="background: var(--bg-primary); border-bottom: 1px solid var(--border); padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-secondary); font-family: var(--font);">
+    <div style="display: flex; gap: 20px; align-items: center; font-weight: 500;">
+      <span style="display: flex; align-items: center; gap: 4px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Marketplace Premium #1 Indonesia
+      </span>
+      <span>|</span>
+      <span style="display: flex; align-items: center; gap: 4px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
+        100% Verified Merchant
+      </span>
+      <span>|</span>
+      <span style="display: flex; align-items: center; gap: 4px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Garansi Produk Original
+      </span>
+    </div>
+    <div style="display: flex; gap: 20px; align-items: center;">
+      <a href="#" style="text-decoration: none; color: inherit; font-weight: 500;">Bantuan</a>
+      <span>|</span>
+      <a href="#" style="text-decoration: none; color: inherit; font-weight: 500;">Tentang Vendora</a>
+    </div>
+  </div>
 
   <!-- ============================================================
        NAVBAR — DARK PREMIUM
        ============================================================ -->
   <nav id="main-navbar">
     <a href="index.html" class="nav-logo">
-      <div class="nav-logo-mark">V</div>
+      <div class="nav-logo-mark">
+        <img src="logo.png" alt="Vendora Logo">
+      </div>
       <span class="nav-logo-text">Vendora</span>
     </a>
 
@@ -96,6 +133,15 @@
         </div>
       </div>
     </div>
+    
+    <!-- Mobile hamburger button on the right -->
+    <button class="nav-mobile-menu-btn" id="nav-mobile-menu-btn" type="button" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
   </nav>
 
   <!-- Global alert -->
@@ -104,201 +150,226 @@
   <!-- ============================================================
        HERO LANDSCAPE VIDEO — IMMERSIVE
        ============================================================ -->
-  <section class="hero-section">
-    <div class="hero-landscape">
-      <div class="video-background">
-        <div id="hero-yt-player"></div>
-      </div>
-      <div class="hero-landscape-overlay">
-        <div class="hero-landscape-content">
-          <div class="hero-eyebrow" style="color:var(--primary); margin-bottom:12px;">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            Marketplace Premium #1 Indonesia
-          </div>
-          <h1 class="hero-landscape-title">Produk Asli,<br>Harga <span>Terjamin</span></h1>
-          <p class="hero-landscape-sub">Belanja dengan tenang. Semua merchant di Vendora telah terverifikasi untuk menjamin kualitas dan keaslian produk Anda.</p>
-          <a href="#catalog-anchor" class="hero-cta" style="display:inline-flex;">
-            Belanja Sekarang
-            <svg class="hero-cta-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ============================================================
-       GRAND PRODUCT SPOTLIGHT
+       HERO LIGHT LUXURY SECTION
        ============================================================ -->
-  <section id="product-spotlight">
-    <div class="spotlight-wrap">
+  <section id="hero-section" class="hero-section" style="background: var(--bg-primary); overflow: hidden; position: relative;">
+    <style>
+      .hero-container {
+        display: flex;
+        align-items: flex-start;
+        max-width: 1440px;
+        margin: 0 auto;
+        padding-left: clamp(30px, 6vw, 80px);
+        position: relative;
+      }
+      .hero-left {
+        width: 100%;
+        max-width: 550px;
+        padding-right: 40px;
+        padding-top: 40px;
+        padding-bottom: 60px;
+        z-index: 2;
+      }
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 18px;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: var(--text-secondary);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 32px;
+      }
+      .hero-badge svg { color: var(--text-primary); }
+      .hero-title {
+        font-family: var(--font-display);
+        font-size: clamp(36px, 4.5vw, 56px);
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -1px;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        margin-top: 20px;
+      }
+      .hero-desc {
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin-bottom: 32px;
+        max-width: 95%;
+      }
+      .hero-button {
+        font-family: var(--font);
+        font-size: 15px;
+        font-weight: 600;
+        background: #111111;
+        color: #ffffff;
+        padding: 16px 32px;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+      }
+      .hero-button:hover {
+        background: #222222;
+        transform: translateY(-2px);
+      }
+      .trust-badges-container {
+        display: flex;
+        gap: 16px;
+        margin-top: 48px;
+        flex-wrap: wrap;
+      }
+      .trust-badge-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .trust-badge-icon {
+        width: 32px;
+        height: 32px;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-primary);
+        flex-shrink: 0;
+      }
+      .trust-badge-text-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+      }
+      .trust-badge-text-sub {
+        font-size: 10px;
+        color: var(--text-secondary);
+      }
+      .hero-right-wrapper {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 52vw;
+        aspect-ratio: 16 / 9;
+        height: auto;
+        z-index: 1;
+      }
+      .hero-video-box {
+        width: 100%;
+        height: 100%;
+        background: #000;
+        border-radius: 40px 0 0 40px;
+        overflow: hidden;
+        position: relative;
+      }
+      .hero-video-box iframe {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        border: none;
+      }
 
-      <!-- Media 60% -->
-      <div class="spotlight-media">
-        <img class="spotlight-media-img"
-          src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=900&q=85"
-          alt="Headphone Premium">
-        <div class="spotlight-glow"></div>
-        <div class="spotlight-watermark">
-          <div class="spotlight-watermark-dot"></div>
-          Produk Unggulan Minggu Ini
+      @media(max-width: 992px) {
+        .hero-container {
+          flex-direction: column;
+          padding-right: clamp(20px, 5vw, 80px);
+        }
+        .hero-left { width: 100%; padding-right: 0; margin-bottom: 40px; margin-top: 40px; padding-top: 0; padding-bottom: 0; }
+        .hero-right-wrapper {
+          position: relative;
+          width: 100%;
+          height: 400px;
+          top: 0; bottom: 0;
+          border-radius: 24px;
+        }
+        .hero-video-box { border-radius: 24px; }
+        .hero-video-box iframe {
+          width: 150vw;
+          height: 84.37vw;
+        }
+      }
+    </style>
+    
+    <div class="hero-container">
+      <div class="hero-left">
+        <div class="hero-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Marketplace Premium #1 Indonesia
         </div>
-      </div>
-
-      <!-- Content 40% -->
-      <div class="spotlight-content">
-        <div class="spotlight-badge">
-          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Official Partner
-        </div>
-
-        <div class="spotlight-label">Produk Unggulan</div>
-
-        <h2 class="spotlight-title">Sony WH-1000<br><span class="spotlight-title-accent">XM5 Premium</span></h2>
-
-        <div class="spotlight-price-wrap">
-          <div class="spotlight-price">Rp 4.599.000</div>
-          <div class="spotlight-price-old">Rp 5.999.000</div>
-          <div class="spotlight-discount-badge">-23%</div>
-        </div>
-
-        <p class="spotlight-desc">
-          Noise cancelling aktif terdepan di kelasnya. Driver 30mm presisi tinggi dengan baterai 30 jam. Rasakan audio premium yang sesungguhnya.
-        </p>
-
-        <div class="spotlight-shop">
-          <div class="spotlight-shop-avatar">A</div>
-          <div>
-            <div class="spotlight-shop-name">AudioCraft Official Store</div>
-            <div class="spotlight-shop-verified">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="color:var(--primary)"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              Merchant Terverifikasi
+        <h1 class="hero-title">Produk Asli,<br>Harga Terjamin.</h1>
+        <p class="hero-subtitle">Belanja dengan tenang. Semua merchant di Vendora telah terverifikasi untuk menjamin kualitas dan keaslian produk Anda.</p>
+        <a href="#catalog-anchor" class="hero-button">
+          Belanja Sekarang
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        
+        <div class="trust-badges-container">
+          <div class="trust-badge-item">
+            <div class="trust-badge-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+              <div class="trust-badge-text-title">100% Original</div>
+              <div class="trust-badge-text-sub">Produk dijamin asli</div>
+            </div>
+          </div>
+          <div class="trust-badge-item">
+            <div class="trust-badge-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
+            </div>
+            <div>
+              <div class="trust-badge-text-title">Merchant Terverifikasi</div>
+              <div class="trust-badge-text-sub">Hanya merchant terpercaya</div>
+            </div>
+          </div>
+          <div class="trust-badge-item">
+            <div class="trust-badge-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            </div>
+            <div>
+              <div class="trust-badge-text-title">Garansi Uang Kembali</div>
+              <div class="trust-badge-text-sub">Jika barang tidak sesuai</div>
             </div>
           </div>
         </div>
-
-        <a href="#catalog-anchor" class="spotlight-cta">
-          Lihat Produk Eksklusif
-          <svg class="spotlight-cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </a>
-
-        <div class="spotlight-corner-tag">Terlaris Minggu Ini</div>
       </div>
-
+      
+      <div class="hero-right-wrapper">
+        <div class="hero-video-box">
+          <iframe src="https://www.youtube.com/embed/et2DhvinqKs?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=et2DhvinqKs" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- ============================================================
        FLASH SALE + BENTO GRID
        ============================================================ -->
-  <section id="flash-bento-section">
-    <div class="flash-bento-title">
-      Temukan Lebih Banyak
-      <span class="flash-fire-badge">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c0 0-2 3-2 6 0 1.1.9 2 2 2s2-.9 2-2c0-1.3-.5-2.4-1-3.4C14.5 6.2 17 9 17 12c0 2.8-2.2 5-5 5s-5-2.2-5-5c0-3.5 3-7 5-10z"/></svg>
-        Flash Sale
-      </span>
-    </div>
-
-    <div class="bento-grid">
-
-      <!-- Main Promo Block — 3 col x 2 row -->
-      <a href="seller.html" class="bento-main">
-        <div class="bento-main-bg"></div>
-        <div class="bento-main-label">
-          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-          Platform Stats
-        </div>
-        <div class="bento-main-title">Sewa Ruko<br>Premium Online</div>
-        <div class="bento-stats">
-          <div class="bento-stat-item">
-            <span class="bento-stat-value">2.4K+</span>
-            <span class="bento-stat-label">Ruko Aktif</span>
-          </div>
-          <div class="bento-stat-item">
-            <span class="bento-stat-value">98K+</span>
-            <span class="bento-stat-label">Pembeli</span>
-          </div>
-          <div class="bento-stat-item">
-            <span class="bento-stat-value">4.9</span>
-            <span class="bento-stat-label">Rating</span>
-          </div>
-        </div>
-        <div class="bento-main-sub">Mulai berjualan di platform terpercaya dengan ribuan pembeli aktif setiap harinya.</div>
-        <span class="bento-main-cta">
-          Daftarkan Ruko
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </span>
-      </a>
-
-      <!-- Flash Sale Countdown — 3 col x 1 row -->
-      <div class="bento-flash">
-        <div>
-          <div class="bento-flash-label">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Flash Sale Hari Ini
-          </div>
-          <div class="bento-flash-title">Diskon hingga 70%<br>berakhir dalam:</div>
-        </div>
-        <div class="countdown-wrap">
-          <div class="countdown-unit">
-            <div class="countdown-num" id="cd-hours">08</div>
-            <div class="countdown-label">Jam</div>
-          </div>
-          <div class="countdown-sep">:</div>
-          <div class="countdown-unit">
-            <div class="countdown-num" id="cd-minutes">45</div>
-            <div class="countdown-label">Menit</div>
-          </div>
-          <div class="countdown-sep">:</div>
-          <div class="countdown-unit">
-            <div class="countdown-num" id="cd-seconds">00</div>
-            <div class="countdown-label">Detik</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bento Cell 1 -->
-      <div class="bento-cell">
-        <img class="bento-cell-img" src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=300&q=80" alt="Sepatu" loading="lazy">
-        <div class="bento-cell-overlay"></div>
-        <div class="bento-cell-content">
-          <div class="bento-cell-tag">Sport</div>
-          <div class="bento-cell-name">Sepatu Lari Pro</div>
-          <div class="bento-cell-price">Rp 899K</div>
-        </div>
-      </div>
-
-      <!-- Bento Cell 2 -->
-      <div class="bento-cell">
-        <img class="bento-cell-img" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&q=80" alt="Jam" loading="lazy">
-        <div class="bento-cell-overlay"></div>
-        <div class="bento-cell-content">
-          <div class="bento-cell-tag">Fashion</div>
-          <div class="bento-cell-name">Jam Tangan Elegan</div>
-          <div class="bento-cell-price">Rp 1.2Jt</div>
-        </div>
-      </div>
-
-      <!-- Bento Cell 3 Wide — 2 cols -->
-      <div class="bento-cell bento-cell-wide">
-        <img class="bento-cell-img" src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=500&q=80" alt="Skincare" loading="lazy">
-        <div class="bento-cell-overlay"></div>
-        <div class="bento-cell-content">
-          <div class="bento-cell-tag">Beauty</div>
-          <div class="bento-cell-name">Premium Skincare Set — Limited Edition</div>
-          <div class="bento-cell-price">Rp 450K</div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Section separator -->
-  <div class="section-sep" style="margin-top:48px;"></div>
-
   <!-- ============================================================
        CATALOG SECTION
        ============================================================ -->
+  <!-- ============================================================
+       SHOP PROFILE BANNER (HIDDEN BY DEFAULT)
+       ============================================================ -->
+  <div id="shop-banner-container" style="display:none; padding: 40px clamp(20px, 5vw, 80px); max-width: 1440px; margin: 0 auto;"></div>
+
   <section class="catalog-section-wrap" id="catalog-anchor">
 
     <!-- Editorial header -->
@@ -395,18 +466,20 @@
       </div>
       <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
         <div class="auth-group">
+          <label class="auth-label" id="profile-email-label">Email Baru</label>
+          <input type="email" id="profile-email" class="auth-input" placeholder="email@contoh.com">
+        </div>
+        <div class="auth-group">
           <label class="auth-label" id="profile-phone-label">Nomor WhatsApp</label>
           <input type="text" id="profile-phone" class="auth-input" placeholder="08123456789">
-          <span id="profile-phone-help" style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block; line-height: 1.3;">
-            * (Buyer: Kontak pengiriman belanja. Seller: Kontak resmi untuk ruko Anda)
-          </span>
         </div>
         <div class="auth-group">
           <label class="auth-label" id="profile-address-label">Alamat Ruko / Pengiriman</label>
           <textarea id="profile-address" class="auth-input" placeholder="Alamat lengkap..." style="min-height:80px; resize:vertical;"></textarea>
-          <span id="profile-address-help" style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block; line-height: 1.3;">
-            * (Buyer: Alamat utama pengiriman barang. Seller: Lokasi toko/gudang fisik ruko)
-          </span>
+        </div>
+        <div class="auth-group">
+          <label class="auth-label" id="profile-avatar-label">URL Foto Profil / Logo</label>
+          <input type="text" id="profile-avatar" class="auth-input" placeholder="https://...">
         </div>
         <button class="auth-submit" id="profile-save-btn" style="width:100%; margin-top:8px;">Simpan Perubahan</button>
       </div>
@@ -415,35 +488,63 @@
 
   <!-- Shop Detail Modal -->
   <div class="modal-overlay" id="shop-detail-modal">
-    <div class="modal-content" style="max-width: 450px;">
-      <div class="modal-header" style="border-bottom: 1px solid var(--border); padding-bottom: 12px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <div style="width: 8px; height: 8px; background: #10B981; border-radius: 50%;"></div>
-          <h3 class="modal-title" id="shop-modal-name">Detail Toko</h3>
-        </div>
-        <button class="modal-close" id="shop-detail-close-btn">
+    <div class="modal-content" style="max-width: 480px; padding:0; overflow:hidden;">
+      <div class="modal-header" style="position:absolute; right:10px; top:10px; border:none; padding:0; z-index:10;">
+        <button onclick="document.getElementById('shop-detail-modal').classList.remove('active');" class="modal-close" id="shop-detail-close-btn" style="background:rgba(0,0,0,0.5); color:white; border-radius:50%; padding:4px;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <div class="modal-body" style="display:flex; flex-direction:column; gap:18px; padding-top:16px;">
-        <div>
-          <div style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:4px;">Deskripsi Toko</div>
-          <div id="shop-modal-desc" style="font-size:14px; color:var(--text-main); line-height:1.5;">-</div>
+      <div class="modal-body" style="padding:0;">
+        <div style="background: linear-gradient(135deg, var(--gold) 0%, #856920 100%); padding: 32px 24px 24px; display:flex; align-items:center; gap:16px;">
+          <div style="width: 72px; height: 72px; background: var(--bg-1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: var(--gold); border: 2px solid rgba(255,255,255,0.8); flex-shrink:0; position:relative; overflow:hidden;">
+            <span id="shop-modal-initial">T</span>
+            <img id="shop-modal-logo" src="" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; display:none;" alt="Logo">
+          </div>
+          <div style="color: #fff; overflow:hidden;">
+            <h3 id="shop-modal-name" style="font-size: 22px; font-weight: 700; margin-bottom: 4px; font-family: var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nama Toko</h3>
+            <div style="font-size: 13px; opacity: 0.9; display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Verified Merchant</span>
+            </div>
+          </div>
         </div>
         
-        <div>
-          <div style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:4px;">Alamat Toko / Ruko</div>
-          <div id="shop-modal-address" style="font-size:14px; color:var(--text-main); line-height:1.5;">-</div>
-        </div>
+        <div style="padding: 24px; display:flex; flex-direction:column; gap:20px; background:var(--bg-1);">
+          <div style="display:flex; justify-content:space-between; text-align:center; border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+            <div><div style="font-size:18px; font-weight:700; color:var(--gold);">1.2K</div><div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:4px;">Produk</div></div>
+            <div><div style="font-size:18px; font-weight:700; color:var(--gold);">4.9</div><div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:4px;">Rating</div></div>
+            <div><div style="font-size:18px; font-weight:700; color:var(--gold);">98%</div><div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:4px;">Chat Dibalas</div></div>
+          </div>
+          
+          <div>
+            <div style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px;">Deskripsi Toko</div>
+            <div id="shop-modal-desc" style="font-size:14px; color:var(--text-main); line-height:1.6;">-</div>
+          </div>
+          
+          <div>
+            <div style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px;">Lokasi Pengiriman</div>
+            <div id="shop-modal-address" style="font-size:14px; color:var(--text-main); line-height:1.6;">-</div>
+          </div>
 
-        <div style="border-top: 1px solid var(--border); padding-top:16px; display:flex; flex-direction:column; gap:8px;">
-          <a id="shop-modal-wa-btn" href="#" target="_blank" class="auth-submit" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; background:#25D366; border-color:#25D366; color:white; font-weight:700;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.66.986 3.284 1.48 4.975 1.484 5.4 0 9.79-4.386 9.794-9.794.002-2.62-1.018-5.086-2.87-6.938C16.62 2.052 14.154.996 11.533.996 6.13.996 1.74 5.38 1.737 10.787c-.001 1.766.463 3.49 1.344 5.013l-.997 3.634 3.737-.98c1.51.923 3.197 1.408 4.793 1.411z"/>
-            </svg>
-            Hubungi via WhatsApp
-          </a>
+          <div style="display:flex; gap:12px; margin-top: 12px;">
+            <button id="shop-modal-view-btn" style="flex:1; text-align:center; padding:12px; background:var(--bg-2); border:1px solid var(--gold); color:var(--gold); border-radius:8px; text-decoration:none; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--bg-1)';" onmouseout="this.style.background='var(--bg-2)'; this.style.color='var(--gold)';">Lihat Produk</button>
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div class="modal-overlay" id="product-detail-modal">
+    <div class="modal-content product-detail-modal-content" style="max-width: 1400px; width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border); padding: 16px 24px; flex-shrink: 0;">
+        <h3 class="modal-title">Detail Produk</h3>
+        <button class="modal-close" id="product-detail-close-btn" type="button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body product-detail-modal-body" style="padding: 0; overflow-y: auto; flex: 1;">
+        <!-- Konten 2 Kolom di-render di sini secara dinamis -->
       </div>
     </div>
   </div>
@@ -522,6 +623,181 @@
     </div>
   </div>
 
-  <script type="module" src="js/main.js"></script>
+  <!-- Chat Penjual Modal -->
+  <div class="modal-overlay" id="chat-modal">
+    <div class="modal-content" style="max-width: 400px; padding: 0; display: flex; flex-direction: column; height: 500px; max-height: 90vh;">
+      <div style="background: var(--gold); color: var(--bg-1); padding: 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 12px 12px 0 0;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 40px; height: 40px; background: var(--bg-1); color: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px;" id="chat-shop-initial">T</div>
+          <div>
+            <div style="font-weight: 700; font-size: 16px;" id="chat-shop-name">Nama Toko</div>
+            <div style="font-size: 12px; opacity: 0.8; display: flex; align-items: center; gap: 4px;">
+              <div style="width: 8px; height: 8px; background: #34D399; border-radius: 50%;"></div>
+              Online
+            </div>
+          </div>
+        </div>
+        <button class="modal-close" id="chat-close-btn" style="background: transparent; border: none; color: var(--bg-1); cursor: pointer; padding: 4px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      
+      <div id="chat-messages" style="flex: 1; background: var(--bg-1); overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="align-self: center; background: var(--bg-2); padding: 6px 12px; border-radius: 16px; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+          Pesan diamankan dengan enkripsi end-to-end.
+        </div>
+        <div style="align-self: flex-start; background: var(--bg-2); padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%; font-size: 14px; color: var(--text-main); line-height: 1.5; border: 1px solid var(--border);">
+          Halo! Ada yang bisa kami bantu seputar produk dari <strong id="chat-welcome-shop">Toko</strong>?
+          <div style="font-size: 10px; color: var(--text-muted); text-align: right; margin-top: 4px;">12:00</div>
+        </div>
+      </div>
+
+      <div style="padding: 16px; background: var(--bg-1); border-top: 1px solid var(--border); border-radius: 0 0 12px 12px; display: flex; gap: 8px;">
+        <input type="text" id="chat-input" placeholder="Tulis pesan..." style="flex: 1; background: var(--bg-2); border: 1px solid var(--border); border-radius: 20px; padding: 10px 16px; color: var(--text-main); font-size: 14px; outline: none;">
+        <button id="chat-send-btn" style="background: var(--gold); color: var(--bg-1); border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 2px; margin-top: 2px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js?v=3"></script>
+
+  <!-- ============================================================
+       BOTTOM NAVIGATION BAR — MOBILE ONLY
+       ============================================================ -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <a href="index.html" class="bottom-nav-item active" id="bn-home">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Beranda</span>
+    </a>
+    <a href="#catalog-anchor" class="bottom-nav-item" id="bn-category">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/>
+        <rect x="14" y="3" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/>
+      </svg>
+      <span>Kategori</span>
+    </a>
+    <button class="bottom-nav-item bottom-nav-cart" id="bn-cart" type="button">
+      <div style="position:relative;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+        <span class="bn-cart-badge" id="bn-cart-badge"></span>
+      </div>
+      <span>Keranjang</span>
+    </button>
+    <div class="bottom-nav-item" id="bn-profile">
+      <div class="bn-avatar-wrapper" style="position:relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+        <svg id="bn-profile-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <div id="bn-avatar-text" class="nav-avatar" style="display: none; width: 24px; height: 24px; font-size: 10px; border: 1px solid rgba(212,175,55,0.4);">U</div>
+      </div>
+      <span>Profil</span>
+    </div>
+  </nav>
+
+  <script>
+    // Bottom nav — cart button mirrors the top cart toggle
+    document.getElementById('bn-cart').addEventListener('click', function() {
+      const topCartBtn = document.getElementById('cart-toggle-btn');
+      if (topCartBtn) topCartBtn.click();
+    });
+
+    // Profile toggle logic (bottom nav and hamburger button)
+    function toggleMobileProfile() {
+      const dropdown = document.querySelector('.nav-profile-dropdown .dropdown-menu');
+      const topProfile = document.getElementById('nav-user-panel');
+      const loginLink = document.querySelector('#nav-auth-guest a');
+      
+      // If user is guest, redirect to login
+      const isGuest = document.getElementById('nav-auth-guest') && document.getElementById('nav-auth-guest').style.display !== 'none';
+      if (isGuest && loginLink) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Otherwise toggle dropdown class
+      if (dropdown) {
+        dropdown.classList.toggle('open');
+      }
+    }
+
+    document.getElementById('bn-profile').addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleMobileProfile();
+    });
+
+    const mobileMenuBtn = document.getElementById('nav-mobile-menu-btn');
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleMobileProfile();
+      });
+    }
+
+    // Close open dropdowns when clicking outside
+    document.addEventListener('click', function() {
+      const dropdown = document.querySelector('.nav-profile-dropdown .dropdown-menu');
+      if (dropdown) dropdown.classList.remove('open');
+    });
+
+    // Sync bottom-nav cart badge with top cart badge
+    const cartObserver = new MutationObserver(function() {
+      const topBadge = document.getElementById('cart-count');
+      const bnBadge = document.getElementById('bn-cart-badge');
+      if (!topBadge || !bnBadge) return;
+      const count = topBadge.textContent.trim();
+      if (count && count !== '0') {
+        bnBadge.textContent = count;
+        bnBadge.classList.add('visible');
+      } else {
+        bnBadge.classList.remove('visible');
+      }
+    });
+    const topBadge = document.getElementById('cart-count');
+    if (topBadge) cartObserver.observe(topBadge, { childList: true, subtree: true, characterData: true });
+
+    // Sync bottom-nav avatar (PP) with top avatar
+    function syncAvatar() {
+      const topAvatar = document.getElementById('nav-avatar-text');
+      const bnAvatarText = document.getElementById('bn-avatar-text');
+      const bnProfileIcon = document.getElementById('bn-profile-icon');
+      const topUserPanel = document.getElementById('nav-auth-user');
+      
+      if (topUserPanel && topUserPanel.style.display !== 'none') {
+        if (topAvatar && bnAvatarText && bnProfileIcon) {
+          bnAvatarText.textContent = topAvatar.textContent;
+          bnAvatarText.style.display = 'flex';
+          bnProfileIcon.style.display = 'none';
+        }
+      } else {
+        if (bnAvatarText && bnProfileIcon) {
+          bnAvatarText.style.display = 'none';
+          bnProfileIcon.style.display = 'block';
+        }
+      }
+    }
+
+    // Observer to detect login state change
+    const authObserver = new MutationObserver(syncAvatar);
+    const topUserPanel = document.getElementById('nav-auth-user');
+    if (topUserPanel) {
+      authObserver.observe(topUserPanel, { attributes: true, attributeFilter: ['style'] });
+      // Call once initially
+      setTimeout(syncAvatar, 300);
+    }
+  </script>
+
 </body>
 </html>
+

@@ -4,28 +4,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vendora | Seller Space</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=3">
+  <style>
+    body { background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); }
+    .glass-panel { background: #FFFFFF; border: 1px solid var(--border); border-radius: 24px; padding: 28px; box-shadow: var(--shadow); margin-bottom: 24px; }
+    h2, .page-title { font-family: var(--font-display); color: var(--text-primary); }
+    th { border-bottom: 1px solid var(--border) !important; color: var(--text-secondary) !important; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 11px !important; background: var(--bg-secondary); }
+    td { border-bottom: 1px solid var(--border); padding: 16px 10px !important; color: var(--text-primary); }
+    .stat-card { border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column; justify-content: center; padding: 32px; background: #FFFFFF; border-radius: 24px; box-shadow: var(--shadow); }
+    .stat-label { color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 12px; font-family: 'Manrope', sans-serif; }
+    .stat-value { color: var(--text-primary) !important; font-size: 36px; font-weight: 700; font-family: var(--font-display); text-shadow: none; }
+  </style>
 </head>
 <body>
 
   <nav id="main-navbar">
     <a href="index.html" class="nav-logo">
-      <div class="nav-logo-mark">V</div>
+      <div class="nav-logo-mark">
+        <img src="logo.png" alt="Vendora">
+      </div>
       <span class="nav-logo-text">Vendora</span>
     </a>
     <div style="flex:1;"></div>
     <div class="nav-actions">
-      <a href="index.html" style="font-size:13px;color:#94A3B8;padding:7px 14px;border-radius:6px;">Katalog</a>
-      <span id="user-display" style="font-size:12px;font-weight:700;color:var(--primary);padding:5px 12px;background:rgba(16,185,129,0.12);border-radius:6px;">Seller Hub</span>
-      <button type="button" id="nav-logout-btn" style="padding:7px 14px;border:1.5px solid rgba(239,68,68,0.4);color:#EF4444;border-radius:6px;background:transparent;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);">Keluar</button>
+      <a href="index.html" style="font-size:13px;color:var(--text-secondary);padding:7px 14px;border-radius:6px;text-decoration:none;">Katalog</a>
+      <span id="user-display" style="font-size:12px;font-weight:700;color:var(--text-primary);padding:5px 12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;">Seller Hub</span>
+      <button type="button" id="nav-profile-btn" style="padding:7px 14px;border:1px solid var(--border);color:var(--text-primary);border-radius:6px;background:transparent;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all 0.2s;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profil
+      </button>
+      <button type="button" id="nav-logout-btn" style="padding:7px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:6px;background:transparent;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all 0.2s;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'">Keluar</button>
     </div>
   </nav>
 
   <div class="page-container">
     <!-- Header info -->
-    <div style="margin-bottom: 40px;">
-      <h1 class="page-title">Seller Hub</h1>
-      <p class="sub-title">Rent virtual ruko spaces, upload premium goods, and control store inventories.</p>
+    <div style="margin-bottom: 40px; text-align: center;">
+      <h1 class="page-title" style="font-size: 42px; letter-spacing: 1px; margin-bottom: 12px;">Seller Hub</h1>
+      <p class="sub-title" style="color: var(--text-primary); font-size: 15px; max-width: 600px; margin: 0 auto; line-height: 1.6; font-weight: 500;">Rent virtual ruko spaces, upload premium goods, and control store inventories.</p>
     </div>
 
     <!-- Alert triggers -->
@@ -266,11 +285,206 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <div class="modal-body">
-        <div style="text-align:center; margin-bottom:8px; color:var(--text-muted); font-size:14px;">Total Pembayaran Sewa</div>
-        <div class="snap-amount" id="snap-amount-display">Rp 0</div>
+      <div class="modal-body" style="background: var(--bg-1); color: var(--text-main);">
+        <div style="text-align:center; margin-bottom:8px; color: var(--text-muted); font-size:14px;">Total Pembayaran Sewa</div>
+        <div class="snap-amount" id="snap-amount-display" style="color: var(--gold); text-shadow: 0 2px 10px rgba(212,175,55,0.2);">Rp 0</div>
         
-        <div style="font-size:14px; font-weight:700; margin-bottom:12px; color:var(--text-main);">Pilih Metode Pembayaran</div>
+        <div style="font-size:14px; font-weight:700; margin-bottom:12px; color: var(--text-main);">Pilih Metode Pembayaran</div>
+        <div class="snap-methods">
+          <button class="snap-method-btn" type="button" onclick="window.snapProcess('QRIS')">
+            <div class="snap-method-icon">QRIS</div>
+            <div style="flex:1; text-align:left;">
+              <div style="font-weight:700; font-size:14px; color:var(--text-main);">GoPay, OVO, Dana</div>
+              <div style="font-size:12px; color:var(--text-muted);">Pindai QR Code</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="snap-method-btn" type="button" onclick="window.snapProcess('VA_BCA')">
+            <div class="snap-method-icon">BCA</div>
+            <div style="flex:1; text-align:left;">
+              <div style="font-weight:700; font-size:14px; color:var(--text-main);">BCA Virtual Account</div>
+              <div style="font-size:12px; color:var(--text-muted);">Transfer Otomatis</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="snap-method-btn" type="button" onclick="window.snapProcess('CARD')">
+            <div class="snap-method-icon">CARD</div>
+            <div style="flex:1; text-align:left;">
+              <div style="font-weight:700; font-size:14px; color:var(--text-main);">Kartu Kredit / Debit / ATM</div>
+              <div style="font-size:12px; color:var(--text-muted);">Visa, MasterCard, JCB, GPN</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="snap-method-btn" type="button" onclick="window.snapProcess('RETAIL')">
+            <div class="snap-method-icon">IND</div>
+            <div style="flex:1; text-align:left;">
+              <div style="font-weight:700; font-size:14px; color:var(--text-main);">Indomaret / Alfamart</div>
+              <div style="font-size:12px; color:var(--text-muted);">Bayar di Gerai</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px;">
+              <span style="color: var(--text-secondary);">Lease Expiration:</span>
+              <span id="shop-expires-badge" style="font-weight: 600;">MM-DD-YYYY</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px;">
+              <span style="color: var(--text-secondary);">Rental Cost:</span>
+              <span id="shop-price-badge" style="font-weight: 600;">Rp 0</span>
+            </div>
+
+            <!-- Perpanjang Sewa -->
+            <div style="margin-top: 20px; border-top: 1px dashed var(--border-color); padding-top: 16px;">
+              <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Perpanjang masa sewa ruko Anda sebelum habis.</p>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <select id="renew-days" class="form-control" style="flex: 1; font-size: 13px; padding: 8px;">
+                  <option value="30">+30 Hari (Rp 450.000)</option>
+                  <option value="90">+90 Hari (Rp 1.350.000)</option>
+                  <option value="365">+365 Hari (Rp 5.475.000)</option>
+                </select>
+                <button id="btn-renew-shop" type="button" class="btn btn-primary" style="white-space: nowrap; padding: 8px 16px; font-size: 13px;">
+                  Perpanjang
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Add Product Form -->
+        <div style="flex: 2; min-width: 320px;" class="glass-panel">
+          <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 20px;">Add New Product</h2>
+          <form id="add-product-form">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <div class="form-group">
+                <label for="prod-name">Product Name</label>
+                <input type="text" id="prod-name" class="form-control" placeholder="E.g. Vintage Leather Jacket" required>
+              </div>
+              <div class="form-group">
+                <label for="prod-price">Price (IDR / Rp)</label>
+                <input type="number" id="prod-price" class="form-control" placeholder="150000" required>
+              </div>
+              <div class="form-group">
+                <label for="prod-stock">Available Stock</label>
+                <input type="number" id="prod-stock" class="form-control" placeholder="10" required>
+              </div>
+              <div class="form-group">
+                <label for="prod-image">Image URL</label>
+                <input type="text" id="prod-image" class="form-control" placeholder="https://..." value="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="prod-desc">Product Description</label>
+              <textarea id="prod-desc" class="form-control" rows="2" placeholder="Tell buyers more about your product..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top: 10px;">List Product</button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Seller's Listed Catalog -->
+      <div style="margin-top: 40px;">
+        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 20px;">My Product Listings</h2>
+        <div id="seller-products" class="grid-3">
+          <!-- Dynamically loaded listed products -->
+          <div class="glass-panel" style="text-align: center; color: var(--text-secondary);">
+            No items listed yet.
+          </div>
+        </div>
+      </div>
+
+      <!-- Riwayat Order Masuk -->
+      <div class="glass-panel" style="margin-top: 40px; margin-bottom: 20px;">
+        <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+          📦 Riwayat Order Masuk
+        </h2>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;" id="seller-orders-table">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 13px;">
+                <th style="padding: 12px 10px;">ID Order</th>
+                <th style="padding: 12px 10px;">Produk</th>
+                <th style="padding: 12px 10px;">Total</th>
+                <th style="padding: 12px 10px;">Status</th>
+                <th style="padding: 12px 10px;">Tanggal</th>
+              </tr>
+            </thead>
+            <tbody id="seller-orders-tbody" style="font-size: 13px;">
+              <tr><td colspan="5" style="padding: 20px 10px; text-align: center; color: var(--text-secondary);">Memuat order...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- Section 3: Not Logged In Callout -->
+    <div id="seller-auth-callout" class="glass-panel" style="text-align: center; padding: 40px 20px; max-width: 600px; margin: 40px auto;">
+      <h2 style="font-size: 28px; margin-bottom: 12px;">Access Seller Workspace</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        You must be signed in as a registered Seller to lease online store space and configure products.
+      </p>
+      <a href="login.html" class="btn btn-primary">Sign In / Join</a>
+    </div>
+
+  </div>
+
+  <!-- Edit Product Modal (Overlay) -->
+  <div id="edit-product-modal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 style="font-size: 20px; font-weight: 700;">Edit Product Details</h2>
+        <button id="close-modal-btn" type="button" class="modal-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <form id="edit-product-form">
+        <input type="hidden" id="edit-prod-id">
+        <div class="modal-body">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group">
+              <label for="edit-prod-name">Product Name</label>
+              <input type="text" id="edit-prod-name" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-prod-price">Price (IDR / Rp)</label>
+              <input type="number" id="edit-prod-price" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-prod-stock">Available Stock</label>
+              <input type="number" id="edit-prod-stock" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-prod-image">Image URL</label>
+              <input type="text" id="edit-prod-image" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-prod-desc">Product Description</label>
+            <textarea id="edit-prod-desc" class="form-control" rows="3" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="cancel-modal-btn" class="btn btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Snap Payment Gateway Mock Modal -->
+  <div class="modal-overlay" id="snap-modal">
+    <div class="modal-content" style="max-width:400px;">
+      <div class="modal-header" style="background:#F8FAFC; border-bottom:1px solid var(--border);">
+        <h3 class="modal-title" style="font-size:16px;">Pembayaran Aman Vendora</h3>
+        <button class="modal-close" id="snap-close-btn" type="button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="background: var(--bg-1); color: var(--text-main);">
+        <div style="text-align:center; margin-bottom:8px; color: var(--text-muted); font-size:14px;">Total Pembayaran Sewa</div>
+        <div class="snap-amount" id="snap-amount-display" style="color: var(--gold); text-shadow: 0 2px 10px rgba(212,175,55,0.2);">Rp 0</div>
+        
+        <div style="font-size:14px; font-weight:700; margin-bottom:12px; color: var(--text-main);">Pilih Metode Pembayaran</div>
         <div class="snap-methods">
           <button class="snap-method-btn" type="button" onclick="window.snapProcess('QRIS')">
             <div class="snap-method-icon">QRIS</div>
@@ -308,7 +522,37 @@
       </div>
     </div>
   </div>
+  <!-- Profile Update Modal -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Update Profil</h3>
+        <button class="modal-close" id="profile-close-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
+        <div class="auth-group">
+          <label class="auth-label" id="profile-email-label">Email Baru</label>
+          <input type="email" id="profile-email" class="auth-input" placeholder="email@contoh.com">
+        </div>
+        <div class="auth-group">
+          <label class="auth-label" id="profile-phone-label">Nomor WhatsApp</label>
+          <input type="text" id="profile-phone" class="auth-input" placeholder="08123456789">
+        </div>
+        <div class="auth-group">
+          <label class="auth-label" id="profile-address-label">Alamat Ruko / Pengiriman</label>
+          <textarea id="profile-address" class="auth-input" placeholder="Alamat lengkap..." style="min-height:80px; resize:vertical;"></textarea>
+        </div>
+        <div class="auth-group">
+          <label class="auth-label" id="profile-avatar-label">URL Foto Profil / Logo</label>
+          <input type="text" id="profile-avatar" class="auth-input" placeholder="https://...">
+        </div>
+        <button class="auth-submit" id="profile-save-btn" style="width:100%; margin-top:8px;">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
 
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/main.js?v=3"></script>
 </body>
 </html>
