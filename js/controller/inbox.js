@@ -122,6 +122,8 @@ export function initSellerInboxWidget() {
   }
 
   async function loadInbox() {
+    const s = getActiveSession();
+    if (s && s.user && s.user.shop_id) currentShopId = s.user.shop_id;
     if (!currentShopId) return;
     try {
       const res = await fetch(`${BASE_URL}/chat/inbox?shop_id=${currentShopId}`);
@@ -169,6 +171,8 @@ export function initSellerInboxWidget() {
   }
 
   async function loadChatHistory(buyerId) {
+    const s = getActiveSession();
+    if (s && s.user && s.user.shop_id) currentShopId = s.user.shop_id;
     if (!currentShopId) return;
     try {
       const res = await fetch(`${BASE_URL}/chat/history?buyer_id=${buyerId}&shop_id=${currentShopId}`);
@@ -194,6 +198,8 @@ export function initSellerInboxWidget() {
   }
 
   async function sendReply() {
+    const s = getActiveSession();
+    if (s && s.user && s.user.shop_id) currentShopId = s.user.shop_id;
     const text = threadInput.value.trim();
     if (!text || !activeBuyerId || !currentShopId) return;
 

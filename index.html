@@ -52,7 +52,7 @@
       <div class="nav-logo-mark">
         <img src="logo.png" alt="Vendora Logo">
       </div>
-      <span class="nav-logo-text">Vendora</span>
+      <span class="nav-logo-text">ENDORA</span>
     </a>
 
     <div class="mega-menu-wrapper">
@@ -352,9 +352,29 @@
       </div>
       
       <div class="hero-right-wrapper">
-        <div class="hero-video-box">
-          <iframe src="https://www.youtube.com/embed/et2DhvinqKs?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=et2DhvinqKs" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+        <div class="hero-video-box" id="hero-video-box">
+          <iframe id="hero-vid-1" src="https://www.youtube.com/embed/et2DhvinqKs?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=et2DhvinqKs" frameborder="0" allow="autoplay; encrypted-media" style="transition: opacity 1s ease; opacity: 1; z-index: 2;"></iframe>
+          <iframe id="hero-vid-2" src="https://www.youtube.com/embed/5PpP7SMxbXs?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=5PpP7SMxbXs" frameborder="0" allow="autoplay; encrypted-media" style="transition: opacity 1s ease; opacity: 0; z-index: 1;"></iframe>
         </div>
+        <script>
+          setInterval(() => {
+            const vid1 = document.getElementById('hero-vid-1');
+            const vid2 = document.getElementById('hero-vid-2');
+            if(vid1 && vid2) {
+              if (vid1.style.opacity === '1') {
+                vid1.style.opacity = '0';
+                vid2.style.opacity = '1';
+                vid2.style.zIndex = '2';
+                vid1.style.zIndex = '1';
+              } else {
+                vid1.style.opacity = '1';
+                vid2.style.opacity = '0';
+                vid1.style.zIndex = '2';
+                vid2.style.zIndex = '1';
+              }
+            }
+          }, 15000); // Ganti setiap 15 detik
+        </script>
       </div>
     </div>
   </section>
@@ -477,10 +497,7 @@
           <label class="auth-label" id="profile-address-label">Alamat Ruko / Pengiriman</label>
           <textarea id="profile-address" class="auth-input" placeholder="Alamat lengkap..." style="min-height:80px; resize:vertical;"></textarea>
         </div>
-        <div class="auth-group">
-          <label class="auth-label" id="profile-avatar-label">URL Foto Profil / Logo</label>
-          <input type="text" id="profile-avatar" class="auth-input" placeholder="https://...">
-        </div>
+
         <button class="auth-submit" id="profile-save-btn" style="width:100%; margin-top:8px;">Simpan Perubahan</button>
       </div>
     </div>
@@ -584,6 +601,16 @@
         <div style="text-align:center; margin-bottom:8px; color:var(--text-muted); font-size:14px;">Total Pembayaran</div>
         <div class="snap-amount" id="snap-amount-display">Rp 0</div>
         
+        <div style="margin-bottom:16px; padding:12px; border:1px solid var(--border); border-radius:8px; background:var(--bg-secondary); position:relative;">
+          <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Detail Pengiriman</div>
+          
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted);">Nama Penerima</label>
+          <input type="text" id="checkout-recipient-name" class="auth-input" style="margin-bottom:12px; background:var(--bg-1);" placeholder="Nama Penerima">
+          
+          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted);">Alamat Pengiriman</label>
+          <textarea id="checkout-address-input" class="auth-input" style="min-height:60px; resize:vertical; background:var(--bg-1);" placeholder="Alamat lengkap..."></textarea>
+        </div>
+        
         <div style="font-size:14px; font-weight:700; margin-bottom:12px; color:var(--text-main);">Pilih Metode Pembayaran</div>
         <div class="snap-methods">
           <button class="snap-method-btn" onclick="window.snapProcess('QRIS')">
@@ -661,7 +688,7 @@
     </div>
   </div>
 
-  <script type="module" src="js/main.js?v=3"></script>
+  <script type="module" src="js/main.js?v=4"></script>
 
   <!-- ============================================================
        BOTTOM NAVIGATION BAR — MOBILE ONLY

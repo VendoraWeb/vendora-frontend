@@ -78,7 +78,8 @@ export function addToCart(product) {
       image:    product.image  || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80',
       shopName: product.shopName || '',
       shopId:   product.shopId   || '',
-      quantity: 1
+      quantity: 1,
+      selected: true
     });
   }
   saveCart();
@@ -100,8 +101,11 @@ export async function updateCartUI() {
   let total      = 0;
   let totalItems = 0;
   cart.forEach(item => {
-    total      += item.price * item.quantity;
-    totalItems += item.quantity;
+    if (item.selected === undefined) item.selected = true; // default if old data
+    if (item.selected) {
+      total      += item.price * item.quantity;
+      totalItems += item.quantity;
+    }
   });
 
   // Update badge (nav)
@@ -137,8 +141,10 @@ export async function updateCartUI() {
   let html = '';
   cart.forEach(item => {
     const itemTotal = item.price * item.quantity;
+    const checkedHtml = item.selected ? 'checked' : '';
     html += `
-      <div class="cart-item" data-cart-id="${item.id}">
+      <div class="cart-item" data-cart-id="${item.id}" style="${!item.selected ? 'opacity: 0.6;' : ''}">
+        <input type="checkbox" class="cart-item-checkbox" data-id="${item.id}" ${checkedHtml} style="margin-right: 12px; transform: scale(1.2); accent-color: var(--gold); cursor: pointer;">
         <img class="cart-item-img" src="${item.image}" alt="${item.name}" loading="lazy"
              onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80'">
         <div class="cart-item-info">
@@ -168,6 +174,19 @@ export async function updateCartUI() {
     if (child.id !== 'cart-empty-state') child.remove();
   });
   cartItemsEl.insertAdjacentHTML('afterbegin', html);
+
+  // Checkbox listeners
+  cartItemsEl.querySelectorAll('.cart-item-checkbox').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const id = e.target.dataset.id;
+      const item = cart.find(i => i.id === id);
+      if (item) {
+        item.selected = e.target.checked;
+        saveCart();
+        updateCartUI();
+      }
+    });
+  });
 
   // Qty minus buttons
   cartItemsEl.querySelectorAll('.btn-qty-minus').forEach(btn => {
@@ -225,7 +244,7 @@ export async function updateCartUI() {
       const stock = stockMap[item.id];
       // Jika produk tidak ada di database (dihapus) atau stoknya 0
       if (stock === undefined || stock === 0) {
-        hasOutOfStock = true;
+        if (item.selected) hasOutOfStock = true;
         itemEl.style.opacity = '0.6';
         itemEl.style.border = '1.5px solid #F87171';
         
@@ -238,7 +257,7 @@ export async function updateCartUI() {
           itemEl.querySelector('.cart-item-info').appendChild(badge);
         }
       } else if (stock < item.quantity) {
-        hasInvalidQuantity = true;
+        if (item.selected) hasInvalidQuantity = true;
         itemEl.style.border = '1.5px solid #FBBF24';
         
         let badge = itemEl.querySelector('.stock-warning-badge');
@@ -284,58 +303,84 @@ export async function executeCheckout() {
     return;
   }
 
-  const checkoutBtn = document.getElementById('checkout-btn');
-  if (checkoutBtn) { checkoutBtn.disabled = true; checkoutBtn.textContent = 'Memproses...'; }
-
-  const payloadItems = cart.map(item => ({ product_id: item.id, quantity: item.quantity }));
-
-  try {
-    const res  = await fetch(`${BASE_URL}/checkout`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ buyer_id: session.user.id, items: payloadItems })
-    });
-    const data = await res.json();
-
-    if (data.status === 201) {
-      // Tampilkan Snap Payment Mockup
-      const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const snapModal = document.getElementById('snap-modal');
-      const snapAmountDisplay = document.getElementById('snap-amount-display');
-      
-      if(snapModal && snapAmountDisplay) {
-        snapAmountDisplay.textContent = 'Rp ' + totalAmount.toLocaleString('id-ID');
-        snapModal.classList.add('active');
-        
-        const closeBtn = document.getElementById('snap-close-btn');
-        if(closeBtn) {
-          closeBtn.addEventListener('click', () => {
-            snapModal.classList.remove('active');
-            cart = []; saveCart(); updateCartUI(); loadCatalogProducts();
-            document.dispatchEvent(new CustomEvent('vendora:close-cart'));
-          }, { once: true });
-        }
-        
-        if (!window.snapProcess) {
-          window.snapProcess = function(method) {
-            showAlert('Pembayaran ' + method + ' Berhasil diproses!', 'success');
-            snapModal.classList.remove('active');
-            cart = []; saveCart(); updateCartUI(); loadCatalogProducts();
-            document.dispatchEvent(new CustomEvent('vendora:close-cart'));
-          };
-        }
-      } else {
-        cart = []; saveCart(); updateCartUI(); loadCatalogProducts();
-        document.dispatchEvent(new CustomEvent('vendora:close-cart'));
-      }
-    } else {
-      showAlert(data.message || "Checkout gagal. Cek kembali stok produk.", "error");
+  // Buka Checkout Confirmation Modal (sebelumnya snap-modal)
+  const selectedCart = cart.filter(item => item.selected);
+  if (selectedCart.length === 0) {
+    showAlert("Pilih minimal satu barang untuk di-checkout.", "error");
+    return;
+  }
+  
+  const totalAmount = selectedCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const snapModal = document.getElementById('snap-modal');
+  const snapAmountDisplay = document.getElementById('snap-amount-display');
+  const nameInput = document.getElementById('checkout-recipient-name');
+  const addressInput = document.getElementById('checkout-address-input');
+  
+  if (snapModal && snapAmountDisplay) {
+    snapAmountDisplay.textContent = 'Rp ' + totalAmount.toLocaleString('id-ID');
+    
+    if (nameInput) {
+      nameInput.value = session.user.name || session.user.email || 'Pembeli';
     }
-  } catch (err) {
-    console.error(err);
-    showAlert("Gagal terhubung ke server. Coba lagi.", "error");
-  } finally {
-    const checkoutBtn2 = document.getElementById('checkout-btn');
-    if (checkoutBtn2) { checkoutBtn2.disabled = false; checkoutBtn2.textContent = 'Lanjut ke Pembayaran'; }
+    if (addressInput) {
+      addressInput.value = session.user.address || '';
+    }
+    
+    // Define global snapProcess callback for cart checkout
+    window.snapProcess = async (method) => {
+      let defaultShopId = '';
+      try {
+        const shopRes = await fetch(`${BASE_URL}/shops`);
+        const shopData = await shopRes.json();
+        const appleShop = (shopData.data || []).find(s => s.name === 'Apple');
+        if (appleShop) defaultShopId = appleShop.id;
+      } catch(e){}
+
+      const payloadItems = selectedCart.map(item => ({ 
+        product_id: item.id, 
+        shop_id: item.shopId || defaultShopId,
+        quantity: item.quantity 
+      }));
+      
+      const recName = nameInput ? nameInput.value.trim() : '';
+      const recAddr = addressInput ? addressInput.value.trim() : '';
+      
+      try {
+        const res  = await fetch(`${BASE_URL}/checkout`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ 
+            buyer_id: session.user.id, 
+            recipient_name: recName,
+            shipping_address: recAddr,
+            items: payloadItems 
+          })
+        });
+        const data = await res.json();
+        
+        if (data.status === 201) {
+          let methodName = method === 'QRIS' ? 'GoPay/OVO/Dana' : method === 'VA_BCA' ? 'BCA Virtual Account' : method === 'CARD' ? 'Kartu Kredit' : 'Indomaret/Alfamart';
+          showAlert(`Pembayaran via ${methodName} Berhasil! Pesanan langsung diteruskan ke Penjual.`, 'success');
+          snapModal.classList.remove('active');
+          cart = cart.filter(item => !item.selected);
+          saveCart(); updateCartUI(); loadCatalogProducts();
+          document.dispatchEvent(new CustomEvent('vendora:close-cart'));
+        } else {
+          showAlert(data.message || "Checkout gagal. Cek kembali stok produk.", "error");
+        }
+      } catch (err) {
+        console.error(err);
+        showAlert("Gagal terhubung ke server. Coba lagi.", "error");
+      }
+    };
+    
+    snapModal.classList.add('active');
+    
+    const closeBtn = document.getElementById('snap-close-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        snapModal.classList.remove('active');
+      }, { once: true });
+    }
   }
 }

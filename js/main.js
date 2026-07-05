@@ -1,6 +1,6 @@
 import { initAuth }                                from "./controller/auth.js?v=3";
-import { loadCatalogProducts }                      from "./controller/product.js?v=3";
-import { initCart, updateCartUI }                   from "./controller/transaction.js?v=3";
+import { loadCatalogProducts }                      from "./controller/product.js?v=4";
+import { initCart, updateCartUI }                   from "./controller/transaction.js?v=6";
 import { initSellerDashboard, initAdminDashboard }  from "./controller/dashboard.js?v=3";
 import { getActiveSession, clearActiveSession, BASE_URL }      from "./config/api.js?v=3";
 import { initSellerInboxWidget }                  from "./controller/inbox.js?v=3";
@@ -139,10 +139,10 @@ function initProfileModal() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_id: session.user.id,
-            email: emailInput ? emailInput.value : session.user.email,
+            email: session.user.email,
             phone: phoneInput.value,
             address: addressInput.value,
-            avatar: avatarInput ? avatarInput.value : session.user.avatar
+            avatar: session.user.avatar
           })
         });
         const data = await res.json();
@@ -151,7 +151,7 @@ function initProfileModal() {
           session.user.phone = data.data.phone;
           session.user.address = data.data.address;
           session.user.avatar = data.data.avatar;
-          localStorage.setItem('vendora_session', JSON.stringify(session));
+          sessionStorage.setItem('vendora_session', JSON.stringify(session));
           showAlert('Profil berhasil diperbarui', 'success');
           modal.classList.remove('active');
         } else {
@@ -249,8 +249,9 @@ function initFilterChips() {
     chip.addEventListener('click', () => {
       chips.forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
-      const filterVal = chip.dataset.filter;
-      loadCatalogProducts(filterVal);
+      const filter = chip.dataset.filter;
+      const shopQuery = new URLSearchParams(window.location.search).get('shop');
+      loadCatalogProducts(filter, shopQuery);
     });
   });
 }
@@ -386,10 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const bannerContainer = document.getElementById('shop-banner-container');
       if (bannerContainer) {
         bannerContainer.style.display = 'block';
+        const videoId = shopQuery.toLowerCase() === 'puma' ? '5PpP7SMxbXs' : 'PBrYMBacnyM';
         bannerContainer.innerHTML = `
           <div style="position: relative; border-radius: 20px; display: flex; align-items: center; gap: 24px; color: #fff; overflow: hidden; min-height: 240px; padding: 40px; box-shadow: var(--shadow-lg);">
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;">
-              <iframe width="100%" height="150%" style="position:absolute; top:-25%; left:0; scale: 1.2; opacity: 0.85;" src="https://www.youtube.com/embed/PBrYMBacnyM?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=PBrYMBacnyM" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+              <iframe width="100%" height="150%" style="position:absolute; top:-25%; left:0; scale: 1.2; opacity: 0.85;" src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}" frameborder="0" allow="autoplay; encrypted-media"></iframe>
             </div>
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(20,20,20,0.4) 100%); z-index: 1;"></div>
             
@@ -417,17 +419,46 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           const bannerChatBtn = document.getElementById('banner-chat-btn');
           if (bannerChatBtn) {
-            bannerChatBtn.addEventListener('click', () => {
+            bannerChatBtn.addEventListener('click', async () => {
               const chatModal = document.getElementById('chat-modal');
-              if (chatModal) {
-                document.getElementById('chat-shop-name').textContent = shopQuery;
-                document.getElementById('chat-shop-initial').textContent = shopQuery.charAt(0).toUpperCase();
-                document.getElementById('chat-welcome-shop').textContent = shopQuery;
-                chatModal.classList.add('active');
+              if (!chatModal) return;
+
+              // Tampilkan modal terlebih dahulu dengan state loading
+              document.getElementById('chat-shop-name').textContent = "Memuat...";
+              document.getElementById('chat-shop-initial').textContent = shopQuery.charAt(0).toUpperCase();
+              document.getElementById('chat-welcome-shop').textContent = shopQuery;
+              chatModal.classList.add('active');
+
+              let shopId = '';
+              let ownerId = '';
+              try {
+                const res = await fetch(`${BASE_URL}/shops`);
+                if (res.ok) {
+                  const data = await res.json();
+                  const shop = (data.data || []).find(s => s.name.toLowerCase() === shopQuery.toLowerCase());
+                  if (shop) {
+                    shopId = shop.id;
+                    ownerId = shop.owner_id;
+                  }
+                }
+              } catch (e) { console.error(e); }
+
+              if (!shopId) {
+                // Jika toko tidak ditemukan, tutup modal dan beri alert
+                chatModal.classList.remove('active');
+                if (typeof showAlert === 'function') showAlert("Toko tidak ditemukan", "error");
+                else alert("Toko tidak ditemukan");
+                return;
               }
+
+              window.currentChatShopId = shopId;
+              window.currentChatOwnerId = ownerId;
+              document.getElementById('chat-shop-name').textContent = shopQuery;
+              
+              if (window.startChatPolling) window.startChatPolling();
             });
           }
-        }, 100);
+        }, 50);
       }
 
       const filterBar = document.querySelector('.catalog-filter-bar');
@@ -444,10 +475,10 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => initFilterChips(), 100);
       }
       
-      loadCatalogProducts('all');
+      loadCatalogProducts('all', shopQuery);
     } else {
       // Auto-load products on the homepage if no shopQuery is present
-      loadCatalogProducts('all');
+      loadCatalogProducts('all', null);
     }
 
     // --- CACHE BUSTER DOM FIX ---
@@ -474,46 +505,8 @@ document.addEventListener('DOMContentLoaded', () => {
        });
     }
     
-    // Auto-inject Chat Modal if missing
-    if (!document.getElementById('chat-modal')) {
-      const chatModalHTML = `
-      <div class="modal-overlay" id="chat-modal">
-        <div class="modal-content" style="max-width: 400px; padding: 0; display: flex; flex-direction: column; height: 500px; max-height: 90vh;">
-          <div style="background: var(--gold); color: var(--bg-1); padding: 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 12px 12px 0 0;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="width: 40px; height: 40px; background: var(--bg-1); color: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px;" id="chat-shop-initial">T</div>
-              <div>
-                <div style="font-weight: 700; font-size: 16px;" id="chat-shop-name">Nama Toko</div>
-                <div style="font-size: 12px; opacity: 0.8; display: flex; align-items: center; gap: 4px;">
-                  <div style="width: 8px; height: 8px; background: #34D399; border-radius: 50%;"></div>
-                  Online
-                </div>
-              </div>
-            </div>
-            <button class="modal-close" id="chat-close-btn" style="background: transparent; border: none; color: var(--bg-1); cursor: pointer; padding: 4px;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-          
-          <div id="chat-messages" style="flex: 1; background: var(--bg-1); overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-            <div style="align-self: center; background: var(--bg-2); padding: 6px 12px; border-radius: 16px; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
-              Pesan diamankan dengan enkripsi end-to-end.
-            </div>
-            <div style="align-self: flex-start; background: var(--bg-2); padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%; font-size: 14px; color: var(--text-main); line-height: 1.5; border: 1px solid var(--border);">
-              Halo! Ada yang bisa kami bantu seputar produk dari <strong id="chat-welcome-shop">Toko</strong>?
-              <div style="font-size: 10px; color: var(--text-muted); text-align: right; margin-top: 4px;">12:00</div>
-            </div>
-          </div>
-
-          <div style="padding: 16px; background: var(--bg-1); border-top: 1px solid var(--border); border-radius: 0 0 12px 12px; display: flex; gap: 8px;">
-            <input type="text" id="chat-input" placeholder="Tulis pesan..." style="flex: 1; background: var(--bg-2); border: 1px solid var(--border); border-radius: 20px; padding: 10px 16px; color: var(--text-main); font-size: 14px; outline: none;">
-            <button id="chat-send-btn" style="background: var(--gold); color: var(--bg-1); border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 2px; margin-top: 2px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
-          </div>
-        </div>
-      </div>`;
-      document.body.insertAdjacentHTML('beforeend', chatModalHTML);
+    // Setup Chat Modal logic
+    if (document.getElementById('chat-modal')) {
       // REAL BUYER CHAT LOGIC
       let chatPollInterval = null;
       
@@ -567,10 +560,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
       window.startChatPolling = function() {
         if (chatPollInterval) clearInterval(chatPollInterval);
+        const chatMessages = document.getElementById('chat-messages');
+        if (chatMessages) chatMessages.innerHTML = '<div style="text-align:center; padding:20px; font-size:12px; color:var(--text-muted);">Memuat percakapan...</div>';
         loadChatHistory();
         chatPollInterval = setInterval(loadChatHistory, 3000);
       };
       
+      async function sendBotReply(buyerId, shopId, ownerId) {
+        let actualOwnerId = ownerId;
+        if (!actualOwnerId) {
+          try {
+            const res = await fetch(`${BASE_URL}/shops`);
+            const data = await res.json();
+            const shop = (data.data || []).find(s => s.id === shopId);
+            if (shop) actualOwnerId = shop.owner_id;
+          } catch (e) { console.error(e); }
+        }
+        if (!actualOwnerId) return;
+
+        const payload = {
+          sender_id: actualOwnerId,
+          receiver_id: buyerId,
+          shop_id: shopId,
+          text: "Terima kasih! Pesan Anda sudah kami terima dan akan segera dibalas oleh admin toko."
+        };
+
+        try {
+          await fetch(`${BASE_URL}/chat/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          loadChatHistory();
+        } catch (e) {
+          console.error("Bot reply failed:", e);
+        }
+      }
+
       async function sendChatMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
@@ -579,6 +605,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!session) {
           showAlert("Silakan Sign In terlebih dahulu", "error");
           return;
+        }
+        
+        // Cek apakah ini pesan pertama di chat ini
+        let isFirstMessage = false;
+        try {
+          const histRes = await fetch(`${BASE_URL}/chat/history?buyer_id=${session.user.id}&shop_id=${window.currentChatShopId}`);
+          if (histRes.ok) {
+            const histData = await histRes.json();
+            if (!histData.data || histData.data.length === 0) {
+              isFirstMessage = true;
+            }
+          }
+        } catch(e) {
+          isFirstMessage = true;
         }
 
         const payload = {
@@ -596,6 +636,13 @@ document.addEventListener('DOMContentLoaded', () => {
           if (res.ok) {
             chatInput.value = '';
             loadChatHistory();
+            
+            // Auto reply dari bot HANYA JIKA ini pesan pertama
+            if (isFirstMessage) {
+              setTimeout(() => {
+                sendBotReply(session.user.id, window.currentChatShopId, window.currentChatOwnerId);
+              }, 1500);
+            }
           } else {
             showAlert("Gagal mengirim pesan", "error");
           }
@@ -651,15 +698,10 @@ window.showShopDetailModal = function(shop) {
 
   const logoEl = document.getElementById('shop-modal-logo');
   if (logoEl) {
-    if (shop.owner_avatar && shop.owner_avatar.trim() !== '') {
-      logoEl.src = shop.owner_avatar;
-      logoEl.style.display = 'block';
-      if (initialEl) initialEl.style.display = 'none';
-    } else {
-      logoEl.style.display = 'none';
-      if (initialEl) initialEl.style.display = 'block';
-    }
+    logoEl.style.display = 'none';
   }
+  if (initialEl) initialEl.style.display = 'block';
+
   if (descEl) descEl.textContent = shop.description || 'Tidak ada deskripsi toko.';
   if (addressEl) addressEl.textContent = shop.owner_address || 'Tidak ada alamat toko.';
   
@@ -671,52 +713,27 @@ window.showShopDetailModal = function(shop) {
     };
   }
 
+  const chatBtn = document.getElementById('shop-modal-chat-btn');
+  if (chatBtn) {
+    chatBtn.onclick = function() {
+      modal.classList.remove('active');
+      const chatModal = document.getElementById('chat-modal');
+      if (chatModal) {
+        window.currentChatShopId = shop.id;
+        window.currentChatOwnerId = shop.owner_id;
+        document.getElementById('chat-shop-name').textContent = shopName;
+        document.getElementById('chat-shop-initial').textContent = shopName.charAt(0).toUpperCase();
+        document.getElementById('chat-welcome-shop').textContent = shopName;
+        chatModal.classList.add('active');
+        if (window.startChatPolling) window.startChatPolling();
+      }
+    };
+  }
+
   modal.classList.add('active');
 };
 
-// Chat Modal logic
-document.addEventListener('DOMContentLoaded', () => {
-  const chatModal = document.getElementById('chat-modal');
-  const chatCloseBtn = document.getElementById('chat-close-btn');
-  const chatSendBtn = document.getElementById('chat-send-btn');
-  const chatInput = document.getElementById('chat-input');
-  const chatMessages = document.getElementById('chat-messages');
 
-  if (chatCloseBtn) {
-    chatCloseBtn.addEventListener('click', () => {
-      chatModal.classList.remove('active');
-    });
-  }
-
-  function sendChatMessage() {
-    const text = chatInput.value.trim();
-    if (!text) return;
-
-    const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    
-    // Add User Message
-    const msgDiv = document.createElement('div');
-    msgDiv.style = "align-self: flex-end; background: var(--gold); padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%; font-size: 14px; color: var(--bg-1); line-height: 1.5;";
-    msgDiv.innerHTML = `${text}<div style="font-size: 10px; color: rgba(255,255,255,0.7); text-align: right; margin-top: 4px;">${timeStr}</div>`;
-    chatMessages.appendChild(msgDiv);
-    chatInput.value = '';
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    // Simulate Reply
-    setTimeout(() => {
-      const replyDiv = document.createElement('div');
-      replyDiv.style = "align-self: flex-start; background: var(--bg-2); padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%; font-size: 14px; color: var(--text-main); line-height: 1.5; border: 1px solid var(--border);";
-      replyDiv.innerHTML = `Terima kasih! Pesan Anda sudah kami terima dan akan segera dibalas oleh admin toko.<div style="font-size: 10px; color: var(--text-muted); text-align: right; margin-top: 4px;">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
-      chatMessages.appendChild(replyDiv);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 1500);
-  }
-
-  if (chatSendBtn) chatSendBtn.addEventListener('click', sendChatMessage);
-  if (chatInput) chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendChatMessage();
-  });
-});
 
 // ─── Order History & Tracking Modal ──────────────────────────────────────────
 function initOrderHistoryModal() {
@@ -770,21 +787,21 @@ function initOrderHistoryModal() {
       txs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       const statusColors = {
-        'pending_payment': '#94A3B8',
-        'paid': '#60A5FA',
-        'success': '#34D399',
-        'cancelled': '#F87171'
+        'pending': '#F59E0B',
+        'processing': '#3B82F6',
+        'success': '#10B981',
+        'cancelled': '#EF4444'
       };
       const statusLabels = {
-        'pending_payment': 'Menunggu Pembayaran',
-        'paid': 'Diproses Penjual',
+        'pending': 'Menunggu Konfirmasi',
+        'processing': 'Sedang Diproses',
         'success': 'Pesanan Selesai',
         'cancelled': 'Dibatalkan'
       };
 
       let html = '';
       txs.forEach(t => {
-        const date = t.created_at ? new Date(t.created_at).toLocaleString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '-';
+        const date = t.created_at ? new Date(t.created_at).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '-';
         const statusColor = statusColors[t.status] || '#94A3B8';
         const statusLabel = statusLabels[t.status] || t.status;
         const shortId = t.id ? t.id.slice(-8).toUpperCase() : '-';
@@ -802,22 +819,25 @@ function initOrderHistoryModal() {
                 <strong>Posisi Terakhir:</strong> Paket telah sampai di alamat tujuan dan diterima oleh pembeli. Transaksi Selesai.
               </div>
             </div>`;
-        } else if (t.status === 'paid') {
+        } else if (t.status === 'processing') {
           trackingHtml = `
-            <div style="margin-top: 12px; padding: 12px; background: rgba(96, 165, 250, 0.08); border-radius: 8px; border: 1px dashed #3B82F6;">
+            <div style="margin-top: 12px; padding: 12px; background: rgba(59, 130, 246, 0.08); border-radius: 8px; border: 1px dashed #3B82F6;">
               <div style="font-size:12px; font-weight:700; color:#2563EB; display:flex; justify-content:space-between; margin-bottom:6px;">
                 <span>Lacak Pengiriman (Vendora Express)</span>
                 <span style="font-family:monospace;">RESI: VDR-EXP-${shortId}</span>
               </div>
               <div style="font-size:13px; color:#1D4ED8; line-height:1.4;">
-                <strong>Posisi Terakhir:</strong> Pembayaran dikonfirmasi. Pesanan sedang dipersiapkan dan dikemas oleh penjual.
+                <strong>Posisi Terakhir:</strong> Penjual telah mengonfirmasi. Pesanan sedang dipersiapkan dan menunggu pick up oleh kurir.
               </div>
             </div>`;
-        } else if (t.status === 'pending_payment') {
+        } else if (t.status === 'pending') {
           trackingHtml = `
-            <div style="margin-top: 12px; padding: 12px; background: #F1F5F9; border-radius: 8px; border: 1px solid var(--border);">
-              <div style="font-size:13px; color:var(--text-secondary); line-height:1.4;">
-                <strong>Posisi Terakhir:</strong> Menunggu pembayaran selesai sebelum barang diproses oleh pihak penjual.
+            <div style="margin-top: 12px; padding: 12px; background: rgba(245, 158, 11, 0.08); border-radius: 8px; border: 1px dashed #F59E0B;">
+              <div style="font-size:12px; font-weight:700; color:#D97706; display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span>Status Pemrosesan</span>
+              </div>
+              <div style="font-size:13px; color:#B45309; line-height:1.4;">
+                <strong>Info:</strong> Menunggu penjual mengonfirmasi pesanan Anda dan mengatur pengiriman.
               </div>
             </div>`;
         }
@@ -828,6 +848,9 @@ function initOrderHistoryModal() {
             <span style="font-weight:600;">Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</span>
           </div>
         `).join('');
+        
+        const recName = t.recipient_name || 'Pembeli';
+        const recAddr = t.shipping_address || '-';
 
         html += `
           <div style="border:1px solid var(--border); border-radius: var(--r-md); padding:16px; background:var(--surface); margin-bottom:12px;">
@@ -835,6 +858,11 @@ function initOrderHistoryModal() {
               <div>
                 <span style="font-size:11px; color:var(--text-muted); display:block; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">No. Transaksi</span>
                 <span style="font-family:monospace; font-weight:700; color:var(--text-main); font-size:13px;">...${shortId}</span>
+              </div>
+              <div style="text-align:right;">
+                <span style="font-size:11px; color:var(--text-muted); display:block; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Dikirim ke</span>
+                <span style="font-weight:600; color:var(--text-main); font-size:13px; display:block;">${recName}</span>
+                <span style="font-size:11px; color:var(--text-secondary); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;" title="${recAddr}">${recAddr}</span>
               </div>
               <div style="text-align:right;">
                 <span style="font-size:11px; color:var(--text-muted); display:block; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Status</span>

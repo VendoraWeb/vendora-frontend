@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=5">
   <style>
     body { background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); }
     .glass-panel { background: #FFFFFF; border: 1px solid var(--border); border-radius: 24px; padding: 28px; box-shadow: var(--shadow); margin-bottom: 24px; }
@@ -26,7 +26,7 @@
       <div class="nav-logo-mark">
         <img src="logo.png" alt="Vendora">
       </div>
-      <span class="nav-logo-text">Vendora</span>
+      <span class="nav-logo-text">ENDORA</span>
     </a>
     <div style="flex:1;"></div>
     <div class="nav-actions">
@@ -208,14 +208,16 @@
             <thead>
               <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 13px;">
                 <th style="padding: 12px 10px;">ID Order</th>
+                <th style="padding: 12px 10px;">Penerima</th>
                 <th style="padding: 12px 10px;">Produk</th>
                 <th style="padding: 12px 10px;">Total</th>
                 <th style="padding: 12px 10px;">Status</th>
                 <th style="padding: 12px 10px;">Tanggal</th>
+                <th style="padding: 12px 10px;">Aksi</th>
               </tr>
             </thead>
             <tbody id="seller-orders-tbody" style="font-size: 13px;">
-              <tr><td colspan="5" style="padding: 20px 10px; text-align: center; color: var(--text-secondary);">Memuat order...</td></tr>
+              <tr><td colspan="7" style="padding: 20px 10px; text-align: center; color: var(--text-secondary);">Memuat order...</td></tr>
             </tbody>
           </table>
         </div>
@@ -403,14 +405,16 @@
             <thead>
               <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 13px;">
                 <th style="padding: 12px 10px;">ID Order</th>
+                <th style="padding: 12px 10px;">Penerima</th>
                 <th style="padding: 12px 10px;">Produk</th>
                 <th style="padding: 12px 10px;">Total</th>
                 <th style="padding: 12px 10px;">Status</th>
                 <th style="padding: 12px 10px;">Tanggal</th>
+                <th style="padding: 12px 10px;">Aksi</th>
               </tr>
             </thead>
             <tbody id="seller-orders-tbody" style="font-size: 13px;">
-              <tr><td colspan="5" style="padding: 20px 10px; text-align: center; color: var(--text-secondary);">Memuat order...</td></tr>
+              <tr><td colspan="7" style="padding: 20px 10px; text-align: center; color: var(--text-secondary);">Memuat order...</td></tr>
             </tbody>
           </table>
         </div>
@@ -419,14 +423,6 @@
     </div>
 
 
-    <!-- Section 3: Not Logged In Callout -->
-    <div id="seller-auth-callout" class="glass-panel" style="text-align: center; padding: 40px 20px; max-width: 600px; margin: 40px auto;">
-      <h2 style="font-size: 28px; margin-bottom: 12px;">Access Seller Workspace</h2>
-      <p style="color: var(--text-secondary); margin-bottom: 24px;">
-        You must be signed in as a registered Seller to lease online store space and configure products.
-      </p>
-      <a href="login.html" class="btn btn-primary">Sign In / Join</a>
-    </div>
 
   </div>
 
@@ -544,15 +540,12 @@
           <label class="auth-label" id="profile-address-label">Alamat Ruko / Pengiriman</label>
           <textarea id="profile-address" class="auth-input" placeholder="Alamat lengkap..." style="min-height:80px; resize:vertical;"></textarea>
         </div>
-        <div class="auth-group">
-          <label class="auth-label" id="profile-avatar-label">URL Foto Profil / Logo</label>
-          <input type="text" id="profile-avatar" class="auth-input" placeholder="https://...">
-        </div>
+
         <button class="auth-submit" id="profile-save-btn" style="width:100%; margin-top:8px;">Simpan Perubahan</button>
       </div>
     </div>
   </div>
 
-  <script type="module" src="js/main.js?v=3"></script>
+  <script type="module" src="js/main.js?v=4"></script>
 </body>
 </html>

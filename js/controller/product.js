@@ -1,5 +1,5 @@
 import { BASE_URL } from "../config/api.js";
-import { addToCart, updateCartUI, executeCheckout } from "./transaction.js";
+import { addToCart, updateCartUI, executeCheckout } from "./transaction.js?v=6";
 
 // ─── Alert helper ──────────────────────────────────────────────────────────
 function showAlert(message, type) {
@@ -110,7 +110,7 @@ function renderCard(p, shopName) {
 }
 
 // ─── Load and render all catalog products ────────────────────────────────────
-export async function loadCatalogProducts(filter = 'all') {
+export async function loadCatalogProducts(filter = 'all', shopQuery = null) {
   const grid = document.getElementById('product-list');
   if (!grid) return;
 
@@ -130,22 +130,54 @@ export async function loadCatalogProducts(filter = 'all') {
     const data = await res.json();
     let dbProducts = data.data || [];
 
+    // Fetch Apple shop ID to attribute mockup transactions to Apple Seller Hub
+    let appleShopId = '';
+    try {
+      const shopRes = await fetch(`${BASE_URL}/shops`);
+      const shopData = await shopRes.json();
+      const appleShop = (shopData.data || []).find(s => s.name === 'Apple');
+      if (appleShop) appleShopId = appleShop.id;
+    } catch (e) {
+      console.warn('Failed to fetch Apple shop ID', e);
+    }
+
     // Fallback/Mockup products matching the mockup screenshot exactly (Apple)
     const mockProducts = [
-      { id: 'm1', name: 'iPhone 15 Pro Max', price: 23999000, stock: 12, shop_name: 'Apple', description: 'Titanium. Super tangguh. Super ringan. [Kategori: Smartphone]', images: ['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&q=80'] },
-      { id: 'm2', name: 'MacBook Pro M3 Max', price: 62500000, stock: 5, shop_name: 'Apple', description: 'Chip paling mutakhir yang pernah ada di pro laptop. [Kategori: Laptop]', images: ['https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&q=80'] },
-      { id: 'm3', name: 'iPad Pro M4', price: 21500000, stock: 15, shop_name: 'Apple', description: 'Desain menakjubkan, super tipis dengan layar OLED. [Kategori: Tablet]', images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&q=80'] },
-      { id: 'm4', name: 'AirPods Pro (Gen 2)', price: 4299000, stock: 25, shop_name: 'Apple', description: 'Peredam bising aktif hingga 2x lebih baik. [Kategori: Audio, Aksesoris]', images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400&q=80'] },
-      { id: 'm5', name: 'Apple 20W USB-C Power Adapter', price: 449000, stock: 30, shop_name: 'Apple', description: 'Pengisian daya cepat dan efisien. [Kategori: Aksesoris]', images: ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&q=80'] }
+      { id: 'm1', name: 'iPhone 15 Pro Max', price: 23999000, stock: 12, shop_name: 'Apple', shop_id: appleShopId, description: 'Titanium. Super tangguh. Super ringan. [Kategori: Smartphone]', images: ['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&q=80'] },
+      { id: 'm2', name: 'MacBook Pro M3 Max', price: 62500000, stock: 5, shop_name: 'Apple', shop_id: appleShopId, description: 'Chip paling mutakhir yang pernah ada di pro laptop. [Kategori: Laptop]', images: ['https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&q=80'] },
+      { id: 'm3', name: 'iPad Pro M4', price: 21500000, stock: 15, shop_name: 'Apple', shop_id: appleShopId, description: 'Desain menakjubkan, super tipis dengan layar OLED. [Kategori: Tablet]', images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&q=80'] },
+      { id: 'm4', name: 'AirPods Pro (Gen 2)', price: 4299000, stock: 25, shop_name: 'Apple', shop_id: appleShopId, description: 'Peredam bising aktif hingga 2x lebih baik. [Kategori: Audio, Aksesoris]', images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400&q=80'] },
+      { id: 'm5', name: 'Apple 20W USB-C Power Adapter', price: 449000, stock: 30, shop_name: 'Apple', shop_id: appleShopId, description: 'Pengisian daya cepat dan efisien. [Kategori: Aksesoris]', images: ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&q=80'] }
     ];
 
-    // Use ONLY mock products for the frontend presentation to ensure a cohesive luxury store look
-    let products = [...mockProducts];
+    // Include both mock products and real DB products for the presentation
+    let products = [...mockProducts, ...dbProducts];
 
     // Remove duplicates from products list
     products = products.filter((v, i, a) => a.findIndex(t => t.name.toLowerCase() === v.name.toLowerCase()) === i);
 
-    // Apply filtering on client side
+    // Pre-fetch shop names for all unique shop IDs so we can filter them
+    const shopIds = [...new Set(products.map(p => p.shop_id).filter(Boolean))];
+    if (shopIds.length > 0) {
+      try {
+        const shopRes  = await fetch(`${BASE_URL}/shops`);
+        const shopData = await shopRes.json();
+        (shopData.data || []).forEach(s => { 
+          shopCache[s.id] = s.name; 
+          shopDetailCache[s.id] = s;
+        });
+      } catch { /* shop names are optional */ }
+    }
+
+    // Apply filtering by Shop Name if provided
+    if (shopQuery) {
+      products = products.filter(p => {
+        const pShopName = (p.shop_name || shopCache[p.shop_id] || '').toLowerCase();
+        return pShopName === shopQuery.toLowerCase();
+      });
+    }
+
+    // Apply text filtering on client side
     if (filter !== 'all') {
       products = products.filter(p => {
         const desc = (p.description || '').toLowerCase();
@@ -165,20 +197,6 @@ export async function loadCatalogProducts(filter = 'all') {
         </div>`;
       return;
     }
-
-    // Pre-fetch shop names for all unique shop IDs
-    const shopIds = [...new Set(products.map(p => p.shop_id).filter(Boolean))];
-    if (shopIds.length > 0) {
-      try {
-        const shopRes  = await fetch(`${BASE_URL}/shops`);
-        const shopData = await shopRes.json();
-        (shopData.data || []).forEach(s => { 
-          shopCache[s.id] = s.name; 
-          shopDetailCache[s.id] = s;
-        });
-      } catch { /* shop names are optional */ }
-    }
-
     // Render all cards
     grid.innerHTML = products.map(p => renderCard(p, p.shop_name || shopCache[p.shop_id] || '')).join('');
 
@@ -562,10 +580,9 @@ function showProductDetailModal(p, shopName) {
       if (!added) return;
       updateCartUI();
 
-      // Close product modal, open cart drawer, run checkout
+      // Close product modal, open cart drawer
       modal.classList.remove('active');
       document.dispatchEvent(new CustomEvent('vendora:open-cart'));
-      await executeCheckout();
     });
   }
 

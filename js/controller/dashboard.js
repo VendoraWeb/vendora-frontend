@@ -358,6 +358,9 @@ function loadSellerStats(shopId) {
 
           let html = '';
 
+          // Sort transactions by date descending
+          txs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
           txs.forEach(t => {
             // Filter hanya item yang milik shop ini
             const myItems = (t.items || []).filter(i => myProductIds.has(i.product_id));
@@ -368,19 +371,34 @@ function loadSellerStats(shopId) {
             revenue += myRevenue;
             orderCount++;
 
-            const date = t.created_at ? new Date(t.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }) : '-';
+            const date = t.created_at ? new Date(t.created_at).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '-';
             const itemsText = myItems.map(i => `${i.name} ×${i.quantity}`).join(', ');
             const sc = statusColors[t.status] || '#94A3B8';
             const sl = statusLabels[t.status] || t.status;
             const shortId = t.id ? t.id.toString().slice(-8).toUpperCase() : '-';
 
+            const recName = t.recipient_name || 'Pembeli';
+            const recAddr = t.shipping_address || '-';
+
             html += `
               <tr style="border-bottom:1px solid var(--border-color);">
                 <td style="padding:12px 10px;font-family:monospace;font-size:12px;color:var(--text-secondary);">...${shortId}</td>
+                <td style="padding:12px 10px;">
+                  <div style="font-weight:600; color:var(--text-main); font-size:13px;">${recName}</div>
+                  <div style="font-size:11px; color:var(--text-secondary); max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${recAddr}">${recAddr}</div>
+                </td>
                 <td style="padding:12px 10px;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${itemsText}">${itemsText}</td>
                 <td style="padding:12px 10px;font-weight:700;">Rp ${myRevenue.toLocaleString('id-ID')}</td>
                 <td style="padding:12px 10px;"><span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:${sc}22;color:${sc};">${sl}</span></td>
                 <td style="padding:12px 10px;color:var(--text-secondary);">${date}</td>
+                <td style="padding:12px 10px;">
+                  <select onchange="window.updateOrderStatus('${t.id}', this.value)" style="padding:4px 8px; border-radius:4px; border:1px solid var(--border); background:var(--surface-2); color:var(--text-main); font-size:12px; cursor:pointer;">
+                    <option value="pending" ${t.status === 'pending_payment' ? 'selected' : ''}>Menunggu</option>
+                    <option value="paid" ${t.status === 'paid' ? 'selected' : ''}>Diproses</option>
+                    <option value="success" ${t.status === 'success' ? 'selected' : ''}>Selesai</option>
+                    <option value="cancelled" ${t.status === 'cancelled' ? 'selected' : ''}>Dibatalkan</option>
+                  </select>
+                </td>
               </tr>`;
           });
 
@@ -392,13 +410,13 @@ function loadSellerStats(shopId) {
 
           // Populate order history table
           if (tbody) {
-            tbody.innerHTML = html || `<tr><td colspan="5" style="padding:20px 10px;text-align:center;color:var(--text-secondary);">Belum ada order masuk.</td></tr>`;
+            tbody.innerHTML = html || `<tr><td colspan="7" style="padding:20px 10px;text-align:center;color:var(--text-secondary);">Belum ada order masuk.</td></tr>`;
           }
         });
     })
     .catch(() => {
       const tbody = document.getElementById('seller-orders-tbody');
-      if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="padding:20px 10px;text-align:center;color:var(--danger);">Gagal memuat order.</td></tr>`;
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="padding:20px 10px;text-align:center;color:var(--danger);">Gagal memuat order.</td></tr>`;
     });
 }
 
@@ -568,6 +586,9 @@ function loadAdminTransactions(statusFilter) {
         return;
       }
 
+      // Sort descending by date
+      txs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
       const statusColors = {
         'pending_payment': '#FBBF24',
         'paid': '#60A5FA',
@@ -713,12 +734,13 @@ function loadAdminEcosystem() {
     const transactions = txRes.data || [];
 
     // Calculate metrics
-    document.getElementById('stat-shops').innerHTML = shops.length;
-    document.getElementById('stat-transactions').innerHTML = transactions.length;
+    const statShops = document.getElementById('stat-shops');
+    const statTransactions = document.getElementById('stat-transactions');
+    if (statShops) statShops.innerHTML = shops.length;
+    if (statTransactions) statTransactions.innerHTML = transactions.length;
 
     let salesTotal = 0;
     transactions.forEach(t => {
-      // Sum total orders
       salesTotal += t.total_amount;
     });
 
@@ -727,7 +749,10 @@ function loadAdminEcosystem() {
       rentalTotal += s.rental_price;
     });
 
-    document.getElementById('stat-revenue').innerHTML = `Rp ${(salesTotal + rentalTotal).toLocaleString()}`;
+    const statRental = document.getElementById('stat-rental-revenue');
+    const statSales = document.getElementById('stat-sales-volume');
+    if (statRental) statRental.innerHTML = `Rp ${rentalTotal.toLocaleString('id-ID')}`;
+    if (statSales) statSales.innerHTML = `Rp ${salesTotal.toLocaleString('id-ID')}`;
 
     // Populate Shops Lease table
     const tbody = document.getElementById('shops-list-tbody');

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=5">
   <style>
     body { background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); }
     .glass-panel { background: #FFFFFF; border: 1px solid var(--border); border-radius: 24px; padding: 28px; box-shadow: var(--shadow); margin-bottom: 24px; }
@@ -48,21 +48,26 @@
 
     <!-- Section 1: Dashboard Stats -->
     <div id="admin-dashboard-section" style="display: none;">
-      <div class="grid-3" style="margin-bottom: 40px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 40px;">
         <!-- Stat 1 -->
         <div class="glass-panel stat-card">
-          <span class="stat-label">Total Shops Rented</span>
+          <span class="stat-label">Toko Aktif (Disewakan)</span>
           <span id="stat-shops" class="stat-value" style="color: var(--primary);">0</span>
         </div>
         <!-- Stat 2 -->
         <div class="glass-panel stat-card">
-          <span class="stat-label">Total Revenue</span>
-          <span id="stat-revenue" class="stat-value" style="color: var(--accent);">Rp 0</span>
+          <span class="stat-label">Pendapatan Sewa Ruko</span>
+          <span id="stat-rental-revenue" class="stat-value" style="color: var(--accent);">Rp 0</span>
         </div>
         <!-- Stat 3 -->
         <div class="glass-panel stat-card">
-          <span class="stat-label">Completed Sales</span>
-          <span id="stat-transactions" class="stat-value" style="color: var(--text-primary);">0</span>
+          <span class="stat-label">Total Volume Transaksi</span>
+          <span id="stat-sales-volume" class="stat-value" style="color: var(--text-primary); font-size:28px;">Rp 0</span>
+        </div>
+        <!-- Stat 4 -->
+        <div class="glass-panel stat-card">
+          <span class="stat-label">Total Pesanan</span>
+          <span id="stat-transactions" class="stat-value" style="color: var(--text-secondary);">0</span>
         </div>
       </div>
 
@@ -180,6 +185,6 @@
 
 
 
-  <script type="module" src="js/main.js?v=3"></script>
+  <script type="module" src="js/main.js?v=4"></script>
 </body>
 </html>
