@@ -9,181 +9,410 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css?v=5">
   <style>
-    body { background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); }
+    body { background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); margin: 0; padding: 0; }
+    
+    /* Layout Wrapper */
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+    
+    /* Sticky Sidebar Navigation */
+    .admin-sidebar {
+      width: 260px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--border);
+      padding: 30px 24px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      box-sizing: border-box;
+    }
+    
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      margin-bottom: 36px;
+    }
+    
+    .sidebar-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+    
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: var(--text-secondary);
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+    
+    .sidebar-item svg {
+      color: var(--text-light);
+      transition: color 0.2s ease;
+    }
+    
+    .sidebar-item:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+    
+    .sidebar-item:hover svg {
+      color: var(--text-primary);
+    }
+    
+    .sidebar-item.active {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border-color: var(--border);
+      font-weight: 600;
+    }
+    
+    .sidebar-item.active svg {
+      color: var(--text-primary);
+    }
+    
+    /* Main Content Wrapper */
+    .admin-main {
+      flex: 1;
+      margin-left: 260px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    
+    /* Top Header */
+    .admin-header {
+      height: 80px;
+      padding: 0 40px;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      box-sizing: border-box;
+    }
+    
+    .header-title {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: var(--font);
+      margin: 0;
+      color: var(--text-primary);
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    /* Page Content Padding */
+    .admin-content {
+      padding: 40px;
+      flex: 1;
+      box-sizing: border-box;
+    }
+
+    /* Keep the visual style from design system */
     .glass-panel { background: #FFFFFF; border: 1px solid var(--border); border-radius: 24px; padding: 28px; box-shadow: var(--shadow); margin-bottom: 24px; }
     h2, .page-title { font-family: var(--font); color: var(--text-primary); }
     th { border-bottom: 1px solid var(--border) !important; color: var(--text-secondary) !important; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 11px !important; background: var(--bg-secondary); }
     td { border-bottom: 1px solid var(--border); padding: 16px 10px !important; color: var(--text-primary); }
-    .stat-card { border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column; justify-content: center; padding: 32px; background: #FFFFFF; border-radius: 24px; box-shadow: var(--shadow); }
+    .stat-card { border: 1px solid var(--border); text-align: center; display: flex; flex-direction: column; justify-content: center; padding: 32px; background: #FFFFFF; border-radius: 24px; box-shadow: var(--shadow); margin-bottom: 0; }
     .stat-label { color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 12px; font-family: 'Manrope', sans-serif; }
     .stat-value { color: var(--text-primary) !important; font-size: 36px; font-weight: 700; font-family: var(--font); text-shadow: none; }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 992px) {
+      .admin-sidebar {
+        width: 80px;
+        padding: 30px 12px;
+        align-items: center;
+      }
+      .admin-sidebar .nav-logo-text,
+      .admin-sidebar .item-text {
+        display: none;
+      }
+      .admin-sidebar .nav-logo {
+        justify-content: center;
+        margin-bottom: 24px;
+      }
+      .admin-main {
+        margin-left: 80px;
+      }
+      .admin-header {
+        padding: 0 20px;
+      }
+      .admin-content {
+        padding: 20px;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <nav id="main-navbar">
-    <a href="index.html" class="nav-logo">
-      <div class="nav-logo-mark">
-        <img src="logo.png" alt="Vendora">
-      </div>
-      <span class="nav-logo-text">Vendora</span>
-    </a>
-    <div style="flex:1;"></div>
-    <div class="nav-actions">
-      <a href="index.html" style="font-size:13px;color:var(--text-primary);font-weight:500;padding:7px 14px;border-radius:6px;text-decoration:none;">Katalog</a>
-      <span id="user-display" style="font-size:12px;font-weight:700;color:var(--gold);padding:5px 12px;background:rgba(212,175,55,0.1);border-radius:6px;border:1px solid rgba(212,175,55,0.3);">Admin Console</span>
-      <button type="button" id="nav-logout-btn" style="padding:7px 14px;border:1px solid var(--border);color:var(--text-primary);border-radius:6px;background:transparent;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all 0.2s;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'">Keluar</button>
-    </div>
-  </nav>
-
-  <div class="page-container">
-    <!-- Header info -->
-    <div style="margin-bottom: 40px; text-align: center;">
-      <h1 class="page-title" style="font-size: 42px; letter-spacing: 1px; margin-bottom: 12px;">Admin Console</h1>
-      <p class="sub-title" style="color: var(--text-primary); font-size: 15px; max-width: 600px; margin: 0 auto; line-height: 1.6; font-weight: 500;">Monitor rented store units (ruko), review licenses, and configure ecosystem operations in real-time.</p>
-    </div>
-
-    <!-- Alert notifications -->
-    <div id="alert-container"></div>
-
-    <!-- Section 1: Dashboard Stats -->
-    <div id="admin-dashboard-section" style="display: none;">
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 40px;">
-        <!-- Stat 1 -->
-        <div class="glass-panel stat-card">
-          <span class="stat-label">Toko Aktif (Disewakan)</span>
-          <span id="stat-shops" class="stat-value" style="color: var(--primary);">0</span>
-        </div>
-        <!-- Stat 2 -->
-        <div class="glass-panel stat-card">
-          <span class="stat-label">Pendapatan Sewa Ruko</span>
-          <span id="stat-rental-revenue" class="stat-value" style="color: var(--accent);">Rp 0</span>
-        </div>
-        <!-- Stat 3 -->
-        <div class="glass-panel stat-card">
-          <span class="stat-label">Total Volume Transaksi</span>
-          <span id="stat-sales-volume" class="stat-value" style="color: var(--text-primary); font-size:28px;">Rp 0</span>
-        </div>
-        <!-- Stat 4 -->
-        <div class="glass-panel stat-card">
-          <span class="stat-label">Total Pesanan</span>
-          <span id="stat-transactions" class="stat-value" style="color: var(--text-secondary);">0</span>
-        </div>
-      </div>
-
-      <!-- Shop Space Rental List -->
-      <div class="glass-panel">
-        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-          Verifikasi Pembayaran & Sewa Ruko
-        </h2>
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left;" id="admin-shops-table">
-            <thead>
-              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 14px;">
-                <th style="padding: 12px 10px;">Nama Toko</th>
-                <th style="padding: 12px 10px;">Deskripsi</th>
-                <th style="padding: 12px 10px;">ID Pemilik</th>
-                <th style="padding: 12px 10px;">Biaya Ruko</th>
-                <th style="padding: 12px 10px;">Masa Berlaku</th>
-                <th style="padding: 12px 10px;">Status</th>
-                <th style="padding: 12px 10px;">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="shops-list-tbody" style="font-size: 14px;">
-              <!-- Dynamically populated table body -->
-              <tr>
-                <td colspan="7" style="padding: 20px 10px; text-align: center; color: var(--text-secondary);">
-                  Loading rented shops list...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-
-
-      <!-- Laporan Transaksi -->
-      <div class="glass-panel" style="margin-top: 40px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:10px; flex-wrap:wrap; gap:12px;">
-          <h2 style="font-size:24px; font-weight:700; margin:0;">📋 Laporan Transaksi</h2>
-          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <select id="tx-filter-status" style="padding:6px 12px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface); color:var(--text-primary); font-size:13px; cursor:pointer;">
-              <option value="">Semua Status</option>
-              <option value="pending_payment">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="success">Success</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            <span id="tx-count-badge" style="font-size:12px; padding:4px 10px; background:rgba(99,102,241,0.15); color:#818CF8; border-radius:20px; font-weight:700;"></span>
+  <div class="admin-layout">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a href="index.html" class="nav-logo" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+          <div class="nav-logo-mark">
+            <img src="logo.png" alt="Vendora" style="height: 32px; width: auto;">
           </div>
-        </div>
-        <div style="overflow-x:auto;">
-          <table style="width:100%; border-collapse:collapse; text-align:left;" id="admin-tx-table">
-            <thead>
-              <tr style="border-bottom:1px solid var(--border-color); color:var(--text-secondary); font-size:13px;">
-                <th style="padding:12px 10px;">ID Transaksi</th>
-                <th style="padding:12px 10px;">Buyer ID</th>
-                <th style="padding:12px 10px;">Item</th>
-                <th style="padding:12px 10px;">Total</th>
-                <th style="padding:12px 10px;">Status</th>
-                <th style="padding:12px 10px;">Tanggal</th>
-              </tr>
-            </thead>
-            <tbody id="tx-list-tbody" style="font-size:13px;">
-              <tr><td colspan="6" style="padding:20px 10px; text-align:center; color:var(--text-secondary);">Memuat transaksi...</td></tr>
-            </tbody>
-          </table>
-        </div>
+          <span class="nav-logo-text" style="font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--text-primary);">Vendora</span>
+        </a>
       </div>
-
-      <!-- Manajemen User & Seller -->
-      <div class="glass-panel" style="margin-top:40px; margin-bottom:40px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:10px; flex-wrap:wrap; gap:12px;">
-          <h2 style="font-size:24px; font-weight:700; margin:0;">👥 Manajemen User</h2>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <select id="user-filter-role" style="padding:6px 12px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface); color:var(--text-primary); font-size:13px; cursor:pointer;">
-              <option value="">Semua Role</option>
-              <option value="buyer">Buyer</option>
-              <option value="seller">Seller</option>
-              <option value="admin">Admin</option>
-            </select>
-            <span id="user-count-badge" style="font-size:12px; padding:4px 10px; background:rgba(16,185,129,0.15); color:#34D399; border-radius:20px; font-weight:700;"></span>
+      
+      <nav class="sidebar-menu">
+        <div class="sidebar-item active" id="menu-dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span class="item-text">Dashboard</span>
+        </div>
+        <div class="sidebar-item" id="menu-verifikasi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 7v1a3 3 0 006 0V7m0 1a3 3 0 006 0V7m0 1a3 3 0 006 0V8M19 21V12M5 21V12"/></svg>
+          <span class="item-text">Verifikasi Sewa</span>
+        </div>
+        <div class="sidebar-item" id="menu-transaksi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span class="item-text">Laporan Transaksi</span>
+        </div>
+        <div class="sidebar-item" id="menu-user">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <span class="item-text">Manajemen User</span>
+        </div>
+      </nav>
+    </aside>
+    
+    <!-- MAIN WORKSPACE -->
+    <div class="admin-main">
+      
+      <!-- TOP HEADER -->
+      <header class="admin-header">
+        <h1 id="admin-page-title" class="header-title">Dashboard</h1>
+        
+        <div class="header-actions">
+          <a href="index.html" style="font-size: 13px; color: var(--text-primary); font-weight: 500; padding: 7px 14px; border-radius: 6px; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'">Katalog</a>
+          <span id="user-display" style="font-size: 12px; font-weight: 700; color: var(--gold); padding: 5px 12px; background: rgba(212,175,55,0.1); border-radius: 6px; border: 1px solid rgba(212,175,55,0.3);">Admin Console</span>
+          <button type="button" id="nav-logout-btn" style="padding: 7px 14px; border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; background: transparent; cursor: pointer; font-size: 13px; font-weight: 600; font-family: var(--font); transition: all 0.2s;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'">Keluar</button>
+        </div>
+      </header>
+      
+      <!-- MAIN CONTENT AREA -->
+      <main class="admin-content">
+        <!-- Alert notifications -->
+        <div id="alert-container"></div>
+        
+        <!-- Parent section toggled by JS Auth Logic -->
+        <div id="admin-dashboard-section" style="display: none;">
+          
+          <!-- Inner Section 1: KPI Stats (Dashboard Menu) -->
+          <div id="section-dashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 40px;">
+            <!-- Stat 1 -->
+            <div class="glass-panel stat-card">
+              <span class="stat-label">Toko Aktif (Disewakan)</span>
+              <span id="stat-shops" class="stat-value" style="color: var(--primary);">0</span>
+            </div>
+            <!-- Stat 2 -->
+            <div class="glass-panel stat-card">
+              <span class="stat-label">Pendapatan Sewa Ruko</span>
+              <span id="stat-rental-revenue" class="stat-value" style="color: var(--accent);">Rp 0</span>
+            </div>
+            <!-- Stat 3 -->
+            <div class="glass-panel stat-card">
+              <span class="stat-label">Total Volume Transaksi</span>
+              <span id="stat-sales-volume" class="stat-value" style="color: var(--text-primary); font-size:28px;">Rp 0</span>
+            </div>
+            <!-- Stat 4 -->
+            <div class="glass-panel stat-card">
+              <span class="stat-label">Total Pesanan</span>
+              <span id="stat-transactions" class="stat-value" style="color: var(--text-secondary);">0</span>
+            </div>
           </div>
+          
+          <!-- Inner Section 2: Verifikasi Pembayaran (Verifikasi Sewa Menu) -->
+          <div id="section-verifikasi" class="glass-panel" style="display: none;">
+            <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+              Verifikasi Pembayaran & Sewa Ruko
+            </h2>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;" id="admin-shops-table">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 14px;">
+                    <th style="padding: 12px 10px;">Nama Toko</th>
+                    <th style="padding: 12px 10px;">Deskripsi</th>
+                    <th style="padding: 12px 10px;">ID Pemilik</th>
+                    <th style="padding: 12px 10px;">Biaya Ruko</th>
+                    <th style="padding: 12px 10px;">Masa Berlaku</th>
+                    <th style="padding: 12px 10px;">Status</th>
+                    <th style="padding: 12px 10px;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="shops-list-tbody" style="font-size: 14px;">
+                  <tr>
+                    <td colspan="7" style="padding: 20px 10px; text-align: center; color: var(--text-secondary);">
+                      Loading rented shops list...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Inner Section 3: Laporan Transaksi (Laporan Transaksi Menu) -->
+          <div id="section-transaksi" class="glass-panel" style="display: none; margin-bottom: 24px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:10px; flex-wrap:wrap; gap:12px;">
+              <h2 style="font-size:24px; font-weight:700; margin:0;">📋 Laporan Transaksi</h2>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <select id="tx-filter-status" style="padding:6px 12px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface); color:var(--text-primary); font-size:13px; cursor:pointer;">
+                  <option value="">Semua Status</option>
+                  <option value="pending_payment">Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="success">Success</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <span id="tx-count-badge" style="font-size:12px; padding:4px 10px; background:rgba(99,102,241,0.15); color:#818CF8; border-radius:20px; font-weight:700;"></span>
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table style="width:100%; border-collapse:collapse; text-align:left;" id="admin-tx-table">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--border-color); color:var(--text-secondary); font-size:13px;">
+                    <th style="padding:12px 10px;">ID Transaksi</th>
+                    <th style="padding:12px 10px;">Buyer ID</th>
+                    <th style="padding:12px 10px;">Item</th>
+                    <th style="padding:12px 10px;">Total</th>
+                    <th style="padding:12px 10px;">Status</th>
+                    <th style="padding:12px 10px;">Tanggal</th>
+                  </tr>
+                </thead>
+                <tbody id="tx-list-tbody" style="font-size:13px;">
+                  <tr><td colspan="6" style="padding:20px 10px; text-align:center; color:var(--text-secondary);">Memuat transaksi...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Inner Section 4: Manajemen User & Seller (Manajemen User Menu) -->
+          <div id="section-user" class="glass-panel" style="display: none; margin-bottom: 24px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:10px; flex-wrap:wrap; gap:12px;">
+              <h2 style="font-size:24px; font-weight:700; margin:0;">👥 Manajemen User</h2>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <select id="user-filter-role" style="padding:6px 12px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface); color:var(--text-primary); font-size:13px; cursor:pointer;">
+                  <option value="">Semua Role</option>
+                  <option value="buyer">Buyer</option>
+                  <option value="seller">Seller</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <span id="user-count-badge" style="font-size:12px; padding:4px 10px; background:rgba(16,185,129,0.15); color:#34D399; border-radius:20px; font-weight:700;"></span>
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table style="width:100%; border-collapse:collapse; text-align:left;" id="admin-users-table">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--border-color); color:var(--text-secondary); font-size:13px;">
+                    <th style="padding:12px 10px;">Nama</th>
+                    <th style="padding:12px 10px;">Email</th>
+                    <th style="padding:12px 10px;">Role</th>
+                    <th style="padding:12px 10px;">Status</th>
+                    <th style="padding:12px 10px;">Bergabung</th>
+                    <th style="padding:12px 10px;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="users-list-tbody" style="font-size:13px;">
+                  <tr><td colspan="6" style="padding:20px 10px; text-align:center; color:var(--text-secondary);">Memuat data user...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
         </div>
-        <div style="overflow-x:auto;">
-          <table style="width:100%; border-collapse:collapse; text-align:left;" id="admin-users-table">
-            <thead>
-              <tr style="border-bottom:1px solid var(--border-color); color:var(--text-secondary); font-size:13px;">
-                <th style="padding:12px 10px;">Nama</th>
-                <th style="padding:12px 10px;">Email</th>
-                <th style="padding:12px 10px;">Role</th>
-                <th style="padding:12px 10px;">Status</th>
-                <th style="padding:12px 10px;">Bergabung</th>
-                <th style="padding:12px 10px;">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="users-list-tbody" style="font-size:13px;">
-              <tr><td colspan="6" style="padding:20px 10px; text-align:center; color:var(--text-secondary);">Memuat data user...</td></tr>
-            </tbody>
-          </table>
+        
+        <!-- Section 2: Access Denied / Auth callout (Shown when not authenticated) -->
+        <div id="admin-auth-callout" class="glass-panel" style="text-align: center; padding: 40px 20px; max-width: 600px; margin: 40px auto; display: none;">
+          <h2 style="font-size: 28px; margin-bottom: 12px;">Access Admin Workspace</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 24px;">
+            You must be signed in with a registered Administrator account to manage store rentals and ecosystem status.
+          </p>
+          <a href="login.html" class="btn btn-primary">Sign In / Join</a>
         </div>
-      </div>
-
+      </main>
+      
     </div>
-
-    <!-- Section 2: Access Denied / Auth callout -->
-    <div id="admin-auth-callout" class="glass-panel" style="text-align: center; padding: 40px 20px; max-width: 600px; margin: 40px auto;">
-      <h2 style="font-size: 28px; margin-bottom: 12px;">Access Admin Workspace</h2>
-      <p style="color: var(--text-secondary); margin-bottom: 24px;">
-        You must be signed in with a registered Administrator account to manage store rentals and ecosystem status.
-      </p>
-      <a href="login.html" class="btn btn-primary">Sign In / Join</a>
-    </div>
-
+    
   </div>
 
+  <!-- Interactive Sidebar Navigation Handler -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebarItems = document.querySelectorAll('.sidebar-item');
+      const sections = {
+        'menu-dashboard': document.getElementById('section-dashboard'),
+        'menu-verifikasi': document.getElementById('section-verifikasi'),
+        'menu-transaksi': document.getElementById('section-transaksi'),
+        'menu-user': document.getElementById('section-user')
+      };
+      const titleEl = document.getElementById('admin-page-title');
 
+      function showSection(menuId) {
+        // Deactivate all sidebar links
+        sidebarItems.forEach(item => item.classList.remove('active'));
+        
+        // Hide all inner sections
+        Object.values(sections).forEach(section => {
+          if (section) section.style.display = 'none';
+        });
+
+        // Activate clicked sidebar item
+        const activeItem = document.getElementById(menuId);
+        if (activeItem) {
+          activeItem.classList.add('active');
+          if (titleEl) {
+            titleEl.textContent = activeItem.querySelector('.item-text').textContent.trim();
+          }
+        }
+
+        // Show matching section
+        const activeSection = sections[menuId];
+        if (activeSection) {
+          if (menuId === 'menu-dashboard') {
+            activeSection.style.display = 'grid'; // Grid for KPI stat cards
+          } else {
+            activeSection.style.display = 'block'; // Block for tables
+          }
+        }
+      }
+
+      sidebarItems.forEach(item => {
+        item.addEventListener('click', () => {
+          showSection(item.id);
+        });
+      });
+
+      // Default to Dashboard menu view
+      showSection('menu-dashboard');
+    });
+  </script>
 
   <script type="module" src="js/main.js?v=4"></script>
 </body>
