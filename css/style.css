@@ -2874,61 +2874,23 @@ footer a:hover {
   background: rgba(212, 175, 55, 0.08);
 }
 
-/* Mobile shows bottom nav */
+/* Responsive Adjustments for Mobile (Keeping Desktop Layout) */
 @media (max-width: 768px) {
-  .bottom-nav {
-    display: flex;
-  }
-  body {
-    padding-bottom: 90px;
-  }
-
   #main-navbar {
     padding: 12px 16px;
-    gap: 12px;
-    height: auto;
-    flex-wrap: wrap;
-    align-items: center;
+    gap: 8px;
   }
   .nav-logo {
-    flex: 1;
-  }
-  .nav-mobile-menu-btn {
-    display: block;
-    order: 2;
+    flex: 0 0 auto;
   }
   .mega-menu-wrapper {
     display: none;
   }
-
-  /* Show search stacked under VENDORA */
   .nav-search {
-    display: block !important;
-    width: 100% !important;
-    max-width: none !important;
-    flex: none !important;
-    order: 3 !important;
-    margin-top: 8px;
+    flex: 1;
+    min-width: 120px;
   }
 
-  .nav-divider {
-    display: none;
-  }
-  .btn-nav-login {
-    display: none;
-  }
-  .btn-nav-register {
-    display: none;
-  }
-  #nav-auth-guest {
-    display: none !important;
-  }
-  #nav-auth-user {
-    display: none !important;
-  }
-  .nav-actions {
-    display: none !important;
-  }
 
   .nav-logo-text {
     font-size: 17px;
