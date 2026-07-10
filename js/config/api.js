@@ -1,5 +1,5 @@
 // API Configuration
-export const BASE_URL = 'http://localhost:8081/api';
+export const BASE_URL = 'https://vendora-api.osk.dom.my.id/api';
 
 // Helper to get active session user
 export function getActiveSession() {
