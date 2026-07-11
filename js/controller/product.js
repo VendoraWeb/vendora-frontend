@@ -67,7 +67,7 @@ function renderCard(p, shopName) {
         <div class="product-name">${p.name}</div>
         <div class="product-price">${priceStr}</div>
         <div class="product-stock-text">${stockStr}</div>
-        <div class="product-actions" style="display: flex; gap: 8px; margin-top: 12px; width: 100%;">
+        <div class="product-card-actions" style="display: flex; gap: 6px; margin-top: 14px;">
           <button
             class="btn-add-cart"
             data-id="${p.id}"
