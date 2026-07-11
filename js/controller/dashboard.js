@@ -363,7 +363,7 @@ function loadSellerStats(shopId) {
 
           txs.forEach(t => {
             // Filter hanya item yang milik shop ini
-            const myItems = (t.items || []).filter(i => myProductIds.has(i.product_id));
+            const myItems = (t.items || []).filter(i => i.shop_id === shopId || myProductIds.has(i.product_id));
             if (myItems.length === 0) return; // transaksi ini tidak ada produk kita
 
             // Hitung revenue hanya dari item milik shop ini
