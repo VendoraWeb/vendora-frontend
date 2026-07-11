@@ -1,5 +1,5 @@
 // API Configuration
-export const BASE_URL = 'https://vendora-api.osk.dom.my.id/api';
+export const BASE_URL = 'https://beba6dcc-c2b4-4b06-afdf-e9b1e149fe53-00-32kp8du4hszfz.pike.replit.dev/api';
 
 // Helper to get active session user
 export function getActiveSession() {
