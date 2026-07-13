@@ -291,28 +291,39 @@
         #main-navbar {
           flex-wrap: wrap;
           height: auto !important;
-          padding: 10px clamp(15px, 3vw, 20px) !important;
-          gap: 10px !important;
+          padding: 12px clamp(15px, 3vw, 20px) !important;
+          gap: 12px !important;
+          align-items: center !important;
+        }
+        .nav-logo {
+          align-items: center !important;
         }
         .nav-logo-mark, .nav-logo-mark img, .nav-logo-mark svg { 
-          width: 45px !important; 
-          height: 45px !important; 
+          width: 38px !important; 
+          height: 38px !important; 
+          transform: none !important;
+          margin: 0 !important;
         }
         .nav-logo-text { 
           display: inline-block !important; 
-          font-size: 22px !important;
-          margin-top: 6px !important;
-          margin-left: -8px !important;
+          font-size: 20px !important;
+          margin-top: 0px !important;
+          margin-left: -5px !important;
           color: #111111 !important;
           -webkit-text-fill-color: #111111 !important;
           visibility: visible !important;
           opacity: 1 !important;
           text-indent: 0 !important;
+          transform: translateY(2px) !important;
+        }
+        .nav-actions {
+          align-items: center !important;
+          margin: 0 !important;
         }
         .nav-search { 
           order: 10; 
           flex: 1 1 100%; 
-          margin: 5px 0 0 0 !important; 
+          margin: 0 !important; 
           max-width: 100% !important;
         }
         .nav-category-btn, .nav-mobile-menu-btn, .top-bar-banner { display: none !important; }
