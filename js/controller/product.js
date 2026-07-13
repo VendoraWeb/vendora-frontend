@@ -292,7 +292,7 @@ export async function loadCatalogProducts(filter = 'all', shopQuery = null) {
     grid.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#64748B;">
         <p style="font-size:15px;font-weight:600;color:#EF4444;margin-bottom:6px;">Gagal memuat produk</p>
-        <span style="font-size:13px;">Pastikan backend server berjalan di localhost:8080</span>
+        <span style="font-size:13px;">Gagal memuat produk. Terjadi kesalahan jaringan atau server sedang offline.</span>
       </div>`;
   }
 }
