@@ -358,6 +358,7 @@ function initHeroVideoCycler() {
 // ─── Route init ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const path = window.location.pathname;
+  const isPage = (page) => path.endsWith(page) || path.endsWith(page.replace('.html', ''));
 
   initNavbarSession();
 
@@ -368,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Homepage ─────────────────────────────────────────────────────────────
-  if (path.endsWith('index.html') || path === '/' || path.endsWith('/')) {
+  if (isPage('index.html') || path === '/' || path.endsWith('/')) {
     initHeroVideoCycler();
     initFlashSaleCountdown();
     initFilterChips();
@@ -659,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Login ─────────────────────────────────────────────────────────────────
-  else if (path.endsWith('login.html')) {
+  else if (isPage('login.html')) {
     const session = getActiveSession();
     if (session) {
       const routes = { admin: 'admin.html', seller: 'seller.html', buyer: 'index.html' };
@@ -670,12 +671,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Seller Hub ────────────────────────────────────────────────────────────
-  else if (path.endsWith('seller.html')) {
+  else if (isPage('seller.html')) {
     initSellerDashboard();
   }
 
   // ── Admin Console ─────────────────────────────────────────────────────────
-  else if (path.endsWith('admin.html')) {
+  else if (isPage('admin.html')) {
     initAdminDashboard();
     initAdminTickets();
   }
