@@ -143,11 +143,11 @@ export async function loadCatalogProducts(filter = 'all', shopQuery = null) {
 
     // Fallback/Mockup products matching the mockup screenshot exactly (Apple)
     const mockProducts = [
-      { id: 'm1', name: 'iPhone 15 Pro Max', price: 23999000, stock: 12, shop_name: 'Apple', shop_id: appleShopId, description: 'Titanium. Super tangguh. Super ringan. [Kategori: Smartphone]', images: ['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&q=80'] },
-      { id: 'm2', name: 'MacBook Pro M3 Max', price: 62500000, stock: 5, shop_name: 'Apple', shop_id: appleShopId, description: 'Chip paling mutakhir yang pernah ada di pro laptop. [Kategori: Laptop]', images: ['https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&q=80'] },
-      { id: 'm3', name: 'iPad Pro M4', price: 21500000, stock: 15, shop_name: 'Apple', shop_id: appleShopId, description: 'Desain menakjubkan, super tipis dengan layar OLED. [Kategori: Tablet]', images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&q=80'] },
-      { id: 'm4', name: 'AirPods Pro (Gen 2)', price: 4299000, stock: 25, shop_name: 'Apple', shop_id: appleShopId, description: 'Peredam bising aktif hingga 2x lebih baik. [Kategori: Audio, Aksesoris]', images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400&q=80'] },
-      { id: 'm5', name: 'Apple 20W USB-C Power Adapter', price: 449000, stock: 30, shop_name: 'Apple', shop_id: appleShopId, description: 'Pengisian daya cepat dan efisien. [Kategori: Aksesoris]', images: ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&q=80'] }
+      { id: 'm1', name: 'iPhone 15 Pro Max', price: 23999000, stock: 50, shop_name: 'Apple', shop_id: appleShopId, description: 'Titanium. Super tangguh. Super ringan. [Kategori: Smartphone]', images: ['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&q=80'] },
+      { id: 'm2', name: 'MacBook Pro M3 Max', price: 62500000, stock: 20, shop_name: 'Apple', shop_id: appleShopId, description: 'Chip paling mutakhir yang pernah ada di pro laptop. [Kategori: Laptop]', images: ['https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&q=80'] },
+      { id: 'm3', name: 'iPad Pro M4', price: 21500000, stock: 50, shop_name: 'Apple', shop_id: appleShopId, description: 'Desain menakjubkan, super tipis dengan layar OLED. [Kategori: Tablet]', images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&q=80'] },
+      { id: 'm4', name: 'AirPods Pro (Gen 2)', price: 4299000, stock: 100, shop_name: 'Apple', shop_id: appleShopId, description: 'Peredam bising aktif hingga 2x lebih baik. [Kategori: Audio, Aksesoris]', images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400&q=80'] },
+      { id: 'm5', name: 'Apple 20W USB-C Power Adapter', price: 449000, stock: 100, shop_name: 'Apple', shop_id: appleShopId, description: 'Pengisian daya cepat dan efisien. [Kategori: Aksesoris]', images: ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&q=80'] }
     ];
 
     // Include both mock products and real DB products for the presentation
