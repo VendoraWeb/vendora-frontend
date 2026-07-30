@@ -124,7 +124,10 @@ export function initSellerInboxWidget() {
   async function loadInbox() {
     const s = getActiveSession();
     if (s && s.user && s.user.shop_id) currentShopId = s.user.shop_id;
-    if (!currentShopId) return;
+    if (!currentShopId) {
+      listBody.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">Silakan buka ruko terlebih dahulu untuk melihat pesan.</div>';
+      return;
+    }
     try {
       const res = await fetch(`${BASE_URL}/chat/inbox?shop_id=${currentShopId}`);
       const data = await res.json();
@@ -166,14 +169,22 @@ export function initSellerInboxWidget() {
           });
           listBody.appendChild(div);
         });
+      } else {
+        listBody.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">Gagal memuat pesan.</div>';
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      listBody.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">Koneksi error, tidak dapat memuat pesan.</div>';
+    }
   }
 
   async function loadChatHistory(buyerId) {
     const s = getActiveSession();
     if (s && s.user && s.user.shop_id) currentShopId = s.user.shop_id;
-    if (!currentShopId) return;
+    if (!currentShopId) {
+      threadMessages.innerHTML = '<div style="text-align:center; padding:20px; font-size:12px; color:var(--text-muted);">Toko belum aktif.</div>';
+      return;
+    }
     try {
       const res = await fetch(`${BASE_URL}/chat/history?buyer_id=${buyerId}&shop_id=${currentShopId}`);
       const data = await res.json();
