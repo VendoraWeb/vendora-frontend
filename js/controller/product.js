@@ -45,8 +45,10 @@ function renderCard(p, shopName) {
   const priceStr = `Rp ${Number(p.price).toLocaleString('id-ID')}`;
   const stockStr = p.stock > 0 ? `Stok: ${p.stock}` : 'Stok habis';
 
+  const searchStr = `${p.name} ${shopName || ''}`.toLowerCase().trim();
+
   return `
-    <div class="product-card" data-product-id="${p.id}">
+    <div class="product-card" data-product-id="${p.id}" data-search-term="${searchStr}">
       <div class="product-img-wrapper">
         <img class="product-img"
              src="${image}"
@@ -286,6 +288,12 @@ export async function loadCatalogProducts(filter = 'all', shopQuery = null) {
         }
       });
     });
+
+    // Re-apply search filter if there's already text in the search bar
+    const searchInput = document.getElementById('nav-search-input');
+    if (searchInput && searchInput.value) {
+      searchInput.dispatchEvent(new Event('input'));
+    }
 
   } catch (err) {
     console.error('Failed to load products:', err);

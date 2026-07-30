@@ -1,5 +1,5 @@
 import { initAuth }                                from "./controller/auth.js?v=3";
-import { loadCatalogProducts }                      from "./controller/product.js?v=4";
+import { loadCatalogProducts, initSearch }                      from "./controller/product.js?v=4";
 import { initCart, updateCartUI }                   from "./controller/transaction.js?v=6";
 import { initSellerDashboard, initAdminDashboard }  from "./controller/dashboard.js?v=3";
 import { getActiveSession, clearActiveSession, BASE_URL }      from "./config/api.js?v=3";
@@ -377,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSmoothScroll();
     initCartDrawer();
     initCart();
+    initSearch();
 
     const urlParams = new URLSearchParams(window.location.search);
     const shopQuery = urlParams.get('shop');
