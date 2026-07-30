@@ -1,8 +1,8 @@
 import { initAuth }                                from "./controller/auth.js?v=3";
 import { loadCatalogProducts, initSearch }                      from "./controller/product.js?v=4";
-import { initCart, updateCartUI }                   from "./controller/transaction.js?v=6";
+import { initCart, updateCartUI }                   from "./controller/transaction.js?v=7";
 import { initSellerDashboard, initAdminDashboard }  from "./controller/dashboard.js?v=3";
-import { getActiveSession, clearActiveSession, BASE_URL }      from "./config/api.js?v=3";
+import { getActiveSession, clearActiveSession, BASE_URL }      from "./config/api.js?v=4";
 import { initSellerInboxWidget }                  from "./controller/inbox.js?v=3";
 import { initAdminTickets }                       from "./controller/ticket.js?v=3";
 

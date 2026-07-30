@@ -21,7 +21,11 @@ function getCartKey() {
 function loadCart() {
   const key = getCartKey();
   if (!key) return [];
-  return JSON.parse(localStorage.getItem(key) || '[]');
+  try {
+    return JSON.parse(localStorage.getItem(key) || '[]');
+  } catch (e) {
+    return [];
+  }
 }
 
 let cart = loadCart();
@@ -29,7 +33,9 @@ let cart = loadCart();
 function saveCart() {
   const key = getCartKey();
   if (!key) return; // admin tidak bisa save cart
-  localStorage.setItem(key, JSON.stringify(cart));
+  try {
+    localStorage.setItem(key, JSON.stringify(cart));
+  } catch (e) {}
 }
 
 
