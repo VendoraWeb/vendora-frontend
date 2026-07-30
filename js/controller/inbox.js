@@ -123,8 +123,15 @@ export function initSellerInboxWidget() {
 
   async function loadInbox() {
     const s = getActiveSession();
-    if (s && s.user && s.user.shop_id) currentShopId = s.user.shop_id;
-    if (!currentShopId) {
+    const activeShopId = localStorage.getItem('vendora_active_shop_id');
+    
+    if (activeShopId) {
+      currentShopId = activeShopId;
+    } else if (s && s.user && s.user.shop_id) {
+      currentShopId = s.user.shop_id;
+    }
+
+    if (!currentShopId || currentShopId === '000000000000000000000000') {
       listBody.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">Silakan buka ruko terlebih dahulu untuk melihat pesan.</div>';
       return;
     }
@@ -180,8 +187,15 @@ export function initSellerInboxWidget() {
 
   async function loadChatHistory(buyerId) {
     const s = getActiveSession();
-    if (s && s.user && s.user.shop_id) currentShopId = s.user.shop_id;
-    if (!currentShopId) {
+    const activeShopId = localStorage.getItem('vendora_active_shop_id');
+    
+    if (activeShopId) {
+      currentShopId = activeShopId;
+    } else if (s && s.user && s.user.shop_id) {
+      currentShopId = s.user.shop_id;
+    }
+
+    if (!currentShopId || currentShopId === '000000000000000000000000') {
       threadMessages.innerHTML = '<div style="text-align:center; padding:20px; font-size:12px; color:var(--text-muted);">Toko belum aktif.</div>';
       return;
     }
