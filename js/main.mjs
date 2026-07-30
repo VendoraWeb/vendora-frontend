@@ -389,11 +389,11 @@ function initApp() {
       const bannerContainer = document.getElementById('shop-banner-container');
       if (bannerContainer) {
         bannerContainer.style.display = 'block';
-        const videoId = shopQuery.toLowerCase() === 'puma' ? '5PpP7SMxbXs' : 'PBrYMBacnyM';
+        const videoSrc = shopQuery.toLowerCase() === 'puma' ? 'videos/hero-vid-2.mp4' : 'videos/hero-vid-1.mp4';
         bannerContainer.innerHTML = `
           <div style="position: relative; border-radius: 20px; display: flex; align-items: center; gap: 24px; color: #fff; overflow: hidden; min-height: 240px; padding: 40px; box-shadow: var(--shadow-lg);">
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;">
-              <iframe width="100%" height="150%" style="position:absolute; top:-25%; left:0; scale: 1.2; opacity: 0.85;" src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+              <video width="100%" height="150%" style="position:absolute; top:-25%; left:0; scale: 1.2; opacity: 0.85; object-fit: cover;" src="${videoSrc}" autoplay muted loop playsinline></video>
             </div>
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(20,20,20,0.4) 100%); z-index: 1;"></div>
             
