@@ -356,7 +356,7 @@ function initHeroVideoCycler() {
 }
 
 // ─── Route init ───────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   const path = window.location.pathname;
   const isPage = (page) => path.endsWith(page) || path.endsWith(page.replace('.html', ''));
 
@@ -681,7 +681,15 @@ document.addEventListener('DOMContentLoaded', () => {
     initAdminDashboard();
     initAdminTickets();
   }
-});
+}
+
+// Ensure initApp runs even if DOMContentLoaded already fired (common with type="module")
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+
 
 // ─── Shop Detail Modal Helper ──────────────────────────────────────────────
 window.showShopDetailModal = function(shop) {
