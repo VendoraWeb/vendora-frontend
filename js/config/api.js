@@ -1,5 +1,22 @@
 // API Configuration
-export const BASE_URL = 'https://vendora-backend-zeta.vercel.app/api';
+// Produksi: backend di Vercel. Pengembangan lokal (frontend dibuka dari localhost /
+// 127.0.0.1): backend lokal `go run main.go` di port 8081.
+// Paksa salah satu lewat konsol browser:
+//   localStorage.setItem('vendora_api_base', 'https://vendora-backend-zeta.vercel.app/api')
+//   localStorage.removeItem('vendora_api_base')   // kembali otomatis
+const PROD_API = 'https://vendora-backend-zeta.vercel.app/api';
+const LOCAL_API = 'http://127.0.0.1:8081/api';
+
+function resolveApiBase() {
+  try {
+    const override = localStorage.getItem('vendora_api_base');
+    if (override) return override.replace(/\/+$/, '');
+  } catch (e) { /* storage diblokir */ }
+  const host = window.location.hostname;
+  return (host === 'localhost' || host === '127.0.0.1') ? LOCAL_API : PROD_API;
+}
+
+export const BASE_URL = resolveApiBase();
 
 // Helper to get active session user
 export function getActiveSession() {

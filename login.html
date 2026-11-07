@@ -1,284 +1,271 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vendora | Sign In</title>
-  <meta name="description" content="Sign in or create a Vendora account to browse stores, manage your shop, or administer the platform.">
+  <title>Masuk — Vendora</title>
+  <meta name="description" content="Masuk atau buat akun Vendora untuk belanja, membuka ruko virtual, atau mengelola platform.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=12">
-  <style>
-    @media(max-width: 768px) {
-      .top-bar-banner { display: none !important; }
-    }
-    .auth-wrapper {
-      min-height: calc(100vh - var(--navbar-h) - 38px);
-      display: flex !important;
-      padding: 40px 20px !important;
-      background: var(--bg-primary);
-      align-items: center !important;
-      justify-content: center !important;
-    }
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    input:-webkit-autofill:active {
-      -webkit-box-shadow: 0 0 0 30px white inset !important;
-      -webkit-text-fill-color: var(--text-primary) !important;
-      transition: background-color 5000s ease-in-out 0s;
-    }
-    .auth-card {
-      background: #FFFFFF !important;
-      border: 1px solid var(--border) !important;
-      box-shadow: var(--shadow) !important;
-      max-width: 480px;
-      width: 100%;
-      margin: 0 auto;
-      border-radius: 24px !important;
-      padding: 40px !important;
-      backdrop-filter: none !important;
-      box-sizing: border-box;
-    }
-    .form-control, .auth-input {
-      height: 56px !important;
-      border-radius: 14px !important;
-      border: 1px solid var(--border) !important;
-      background: #FFFFFF !important;
-      color: var(--text-primary) !important;
-    }
-    .form-control:focus, .auth-input:focus {
-      border-color: var(--text-primary) !important;
-      box-shadow: 0 0 0 3px rgba(17,17,17,0.05) !important;
-    }
-    .btn-primary, .auth-submit {
-      height: 56px !important;
-      border-radius: 14px !important;
-      background: var(--button-primary) !important;
-      color: #FFFFFF !important;
-      border: none !important;
-      font-family: 'Manrope', sans-serif !important;
-      font-weight: 600 !important;
-      font-size: 16px !important;
-      box-shadow: none !important;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    .btn-primary:hover, .auth-submit:hover {
-      background: var(--button-hover) !important;
-      transform: translateY(-2px);
-    }
-    .btn-google {
-      height: 52px !important;
-      border-radius: 14px !important;
-      border: 1px solid var(--border) !important;
-      background: #FFFFFF !important;
-      color: var(--text-primary) !important;
-    }
-    .btn-google:hover {
-      background: var(--bg-secondary) !important;
-      border-color: var(--text-primary) !important;
-    }
-    .auth-tab.active {
-      background: var(--button-primary) !important;
-      color: #FFFFFF !important;
-      border-radius: 10px !important;
-      box-shadow: none !important;
-      border: none !important;
-    }
-    .auth-tab {
-      font-family: 'Manrope', sans-serif;
-      font-weight: 600;
-    }
-    .auth-tabs {
-      border: 1px solid var(--border) !important;
-      background: var(--bg-secondary) !important;
-      border-radius: 12px !important;
-      padding: 6px !important;
-    }
-    .brand-name {
-      color: var(--text-primary) !important;
-      background: none !important;
-      -webkit-text-fill-color: initial !important;
-      font-family: var(--font) !important;
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      text-align: center;
-    }
-    .auth-card-logo {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-    .auth-divider hr {
-      border-top: 1px solid var(--border) !important;
-    }
-    .logo-icon-lg {
-      filter: none !important;
-      width: 48px;
-      height: 48px;
-      margin-bottom: 12px;
-    }
-    .logo-icon-lg img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-  </style>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="icon" type="image/png" href="logo.png?v=2">
+  <link rel="apple-touch-icon" href="logo.png?v=2">
+  <meta name="theme-color" content="#0E0E0D">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=14">
+  <link rel="stylesheet" href="css/theme.css?v=7">
+  <link rel="stylesheet" href="css/auth.css?v=3">
 </head>
-<body>
+<body class="auth-page">
 
-  <!-- Top Bar Banner -->
-  <div class="top-bar-banner" style="background: var(--bg-primary); border-bottom: 1px solid var(--border); padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-secondary); font-family: var(--font);">
-    <div style="display: flex; gap: 20px; align-items: center; font-weight: 500;">
-      <span style="display: flex; align-items: center; gap: 4px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Marketplace Premium #1 Indonesia
-      </span>
-      <span>|</span>
-      <span style="display: flex; align-items: center; gap: 4px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
-        100% Verified Merchant
-      </span>
-      <span>|</span>
-      <span style="display: flex; align-items: center; gap: 4px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Garansi Produk Original
-      </span>
-    </div>
-    <div style="display: flex; gap: 20px; align-items: center;">
-      <a href="#" style="text-decoration: none; color: inherit; font-weight: 500;">Bantuan</a>
-      <span>|</span>
-      <a href="#" style="text-decoration: none; color: inherit; font-weight: 500;">Tentang Vendora</a>
-    </div>
-  </div>
+  <div class="auth-split">
 
-  <!-- Navigation -->
-  <nav id="main-navbar">
-    <a href="index.html" class="nav-logo">
-      <div class="nav-logo-mark">
-        <img src="logo.png" alt="Vendora">
+    <!-- Kiri: foto -->
+    <aside class="auth-visual" aria-hidden="true">
+      <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1400&q=80&auto=format&fit=crop" alt="">
+      <a href="index.html" class="auth-visual-logo vlogo" tabindex="-1">
+        <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=3" alt="">EN</span>DORA</span>
+      </a>
+      <div class="auth-visual-copy">
+        <p class="auth-eyebrow">Marketplace ruko virtual</p>
+        <p class="auth-visual-title">Belanja dari toko yang bisa kamu percaya.</p>
+        <ul>
+          <li>Merchant terverifikasi</li>
+          <li>Pembayaran aman</li>
+          <li>Garansi uang kembali</li>
+        </ul>
       </div>
-      <span class="nav-logo-text">Vendora</span>
-    </a>
-    <div style="flex:1;"></div>
-    <div class="nav-actions">
-      <a href="index.html" style="font-size:13px;color:#94A3B8;padding:7px 14px;border-radius:6px;transition:all 0.18s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#94A3B8'">Katalog</a>
-      <a href="login.html" style="padding:7px 16px;border:1.5px solid var(--primary);color:var(--primary);border-radius:6px;font-size:13px;font-weight:600;transition:all 0.18s;" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--primary)'">Masuk / Daftar</a>
-    </div>
-  </nav>
+    </aside>
 
-  <div class="auth-wrapper">
-      <div class="auth-card">
+    <!-- Kanan: form -->
+    <main class="auth-panel">
+      <header class="auth-top">
+        <a href="index.html" class="auth-mobile-logo vlogo" aria-label="Vendora — beranda">
+          <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=3" alt="">EN</span>DORA</span>
+        </a>
+        <a href="index.html" class="auth-back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Kembali ke katalog
+        </a>
+      </header>
 
-        <!-- Brand Logo inside card -->
-        <div class="auth-card-logo">
-          <div class="logo-icon-lg">
-            <img src="logo.png" alt="Vendora">
-          </div>
-          <div class="brand-name">Vendora</div>
-        </div>
-
-        <!-- Alert Feedback -->
+      <div class="auth-form-wrap">
         <div id="alert-container"></div>
 
-        <!-- Tab Switcher -->
-        <div class="auth-tabs" role="tablist">
-          <button class="auth-tab active" id="tab-signin" role="tab" aria-selected="true" aria-controls="signin-view">Sign In</button>
-          <button class="auth-tab" id="tab-signup" role="tab" aria-selected="false" aria-controls="signup-view">Create Account</button>
+        <div class="auth-tabs" role="tablist" id="auth-tabs">
+          <button class="auth-tab active" id="tab-signin" role="tab" aria-selected="true" aria-controls="signin-view" type="button">Masuk</button>
+          <button class="auth-tab" id="tab-signup" role="tab" aria-selected="false" aria-controls="signup-view" type="button">Daftar</button>
         </div>
 
-        <!-- ========== SIGN IN VIEW ========== -->
-        <div id="signin-view" class="auth-view" role="tabpanel">
-          <h2 style="font-family: var(--font); font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 8px;">Welcome back</h2>
-          <p class="auth-subtitle" style="text-align: center; margin-bottom: 24px;">Sign in to manage your shop or discover products.</p>
-
-          <!-- Google Login -->
-          <button id="google-login-btn" class="btn-google" type="button">
-            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.91c1.7-1.56 2.69-3.86 2.69-6.6z"/>
-              <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.91-2.26c-.8.54-1.83.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.95v2.3A9 9 0 0 0 9 18z"/>
-              <path fill="#FBBC05" d="M3.96 10.69A5.4 5.4 0 0 1 3.68 9c0-.59.1-1.17.28-1.69V5.01H.95A8.99 8.99 0 0 0 0 9c0 1.5.37 2.92 1.02 4.18l2.94-2.49z"/>
-              <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.1A8.99 8.99 0 0 0 9 0 9 9 0 0 0 .95 5.01l2.98 2.49c.72-2.13 2.7-3.71 5.04-3.71z"/>
-            </svg>
-            Continue with Google
-          </button>
-
-          <div class="auth-divider">
-            <hr><span>or</span><hr>
-          </div>
+        <!-- ========== MASUK (tahap 1: akun + kata sandi) ========== -->
+        <section id="signin-view" class="auth-view" role="tabpanel">
+          <h1 class="auth-title">Selamat datang kembali</h1>
+          <p class="auth-subtitle">Masuk dengan email atau nomor HP dan kata sandimu.</p>
 
           <form id="login-form" novalidate>
             <div class="form-group">
-              <label for="login-email">Email Address</label>
-              <input type="email" id="login-email" class="form-control" placeholder="name@domain.com" required autocomplete="email">
+              <label for="login-identifier">Email atau nomor HP</label>
+              <input type="text" id="login-identifier" class="form-control" placeholder="nama@email.com atau 0812…" required autocomplete="username" inputmode="email">
             </div>
             <div class="form-group">
-              <label for="login-password">Password</label>
-              <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
+              <div class="label-row">
+                <label for="login-password">Kata sandi</label>
+                <a href="#" class="link-quiet" id="to-reset-link">Lupa kata sandi?</a>
+              </div>
+              <div class="pw-field">
+                <input type="password" id="login-password" class="form-control" placeholder="Masukkan kata sandi" required autocomplete="current-password">
+                <button type="button" class="pw-toggle" data-toggle-pw="login-password" aria-label="Tampilkan kata sandi"></button>
+              </div>
             </div>
-            <button type="submit" class="btn btn-primary" id="signin-submit-btn" style="width: 100%; margin-top: 6px; padding: 13px;">
-              Sign In
-            </button>
+            <button type="submit" class="auth-submit" id="signin-submit-btn">Masuk</button>
           </form>
 
-          <p class="auth-toggle-link">
-            New to Vendora? <a href="#" id="to-signup-link">Create a free account</a>
-          </p>
-        </div>
+          <p class="auth-toggle-link">Belum punya akun? <a href="#" id="to-signup-link">Daftar gratis</a></p>
+        </section>
 
-        <div id="signup-view" class="auth-view" style="display: none;" role="tabpanel">
-          <h2 style="font-family: var(--font); font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 8px;">Create your account</h2>
-          <p class="auth-subtitle" style="text-align: center; margin-bottom: 24px;">Join as a buyer or seller.</p>
+        <!-- ========== DAFTAR ========== -->
+        <section id="signup-view" class="auth-view" style="display: none;" role="tabpanel">
+          <h1 class="auth-title">Buat akun Vendora</h1>
+          <p class="auth-subtitle">Daftar sebagai pembeli atau penjual.</p>
 
           <form id="register-form" novalidate>
+            <fieldset class="role-picker">
+              <legend>Daftar sebagai</legend>
+              <label class="role-option">
+                <input type="radio" name="reg-role-choice" value="buyer" checked>
+                <span>
+                  <b>Pembeli</b>
+                  <small>Belanja dari merchant terverifikasi</small>
+                </span>
+              </label>
+              <label class="role-option">
+                <input type="radio" name="reg-role-choice" value="seller">
+                <span>
+                  <b>Penjual</b>
+                  <small>Sewa ruko virtual &amp; jualan</small>
+                </span>
+              </label>
+            </fieldset>
+            <!-- auth.js membaca nilai dari select ini; disinkronkan dari pilihan di atas -->
+            <select id="reg-role" hidden>
+              <option value="buyer">buyer</option>
+              <option value="seller">seller</option>
+            </select>
+
             <div class="form-group">
-              <label for="reg-name">Full Name</label>
-              <input type="text" id="reg-name" class="form-control" placeholder="e.g. Budi Santoso" required autocomplete="name">
+              <label for="reg-name">Nama lengkap</label>
+              <input type="text" id="reg-name" class="form-control" placeholder="contoh: Budi Santoso" required autocomplete="name">
             </div>
             <div class="form-group">
-              <label for="reg-email">Email Address</label>
-              <input type="email" id="reg-email" class="form-control" placeholder="name@domain.com" required autocomplete="email">
+              <label for="reg-email">Email</label>
+              <input type="email" id="reg-email" class="form-control" placeholder="nama@email.com" required autocomplete="email">
             </div>
             <div class="form-group">
-              <label for="reg-password">Password</label>
-              <input type="password" id="reg-password" class="form-control" placeholder="Min. 8 characters" required autocomplete="new-password">
+              <label for="reg-phone">Nomor HP <span class="label-opt">(opsional)</span></label>
+              <input type="tel" id="reg-phone" class="form-control" placeholder="0812 3456 7890" autocomplete="tel" inputmode="tel">
+              <span class="form-hint">Isi supaya kamu bisa menerima kode OTP lewat WhatsApp/SMS juga.</span>
             </div>
             <div class="form-group">
-              <label for="reg-role">I want to join as a:</label>
-              <select id="reg-role" class="form-control" required>
-                <option value="buyer" style="color: #000; background: #fff;">Buyer — Browse &amp; purchase products</option>
-                <option value="seller" style="color: #000; background: #fff;">Seller — Rent a shop &amp; sell items</option>
-              </select>
+              <label for="reg-password">Kata sandi</label>
+              <div class="pw-field">
+                <input type="password" id="reg-password" class="form-control" placeholder="Minimal 8 karakter" required autocomplete="new-password" minlength="8">
+                <button type="button" class="pw-toggle" data-toggle-pw="reg-password" aria-label="Tampilkan kata sandi"></button>
+              </div>
             </div>
-            <div class="form-group" id="reg-shop-group" style="display: none; animation: alertSlide 0.3s ease;">
-              <label for="reg-shop-name">Shop Name</label>
-              <input type="text" id="reg-shop-name" class="form-control" placeholder="e.g. Apple Official Store" autocomplete="organization">
+            <div class="form-group" id="reg-shop-group" hidden>
+              <label for="reg-shop-name">Nama toko</label>
+              <input type="text" id="reg-shop-name" class="form-control" placeholder="contoh: Apple Official Store" autocomplete="organization">
             </div>
-            <script>
-              document.getElementById('reg-role').addEventListener('change', function() {
-                document.getElementById('reg-shop-group').style.display = this.value === 'seller' ? 'block' : 'none';
-                if(this.value === 'seller') document.getElementById('reg-shop-name').required = true;
-                else document.getElementById('reg-shop-name').required = false;
-              });
-            </script>
-            <button type="submit" class="btn btn-primary" id="signup-submit-btn" style="width: 100%; margin-top: 6px; padding: 13px;">
-              Create Account
-            </button>
+
+            <button type="submit" class="auth-submit" id="signup-submit-btn">Buat akun</button>
+            <p class="auth-terms">Dengan mendaftar, kamu menyetujui <a href="terms.html">Syarat &amp; Ketentuan Sewa Ruko</a>.</p>
           </form>
 
-          <p class="auth-toggle-link">
-            Already have an account? <a href="#" id="to-signin-link">Sign in here</a>
-          </p>
-        </div>
+          <p class="auth-toggle-link">Sudah punya akun? <a href="#" id="to-signin-link">Masuk</a></p>
+        </section>
 
+        <!-- ========== LUPA KATA SANDI (tahap 1) ========== -->
+        <section id="reset-view" class="auth-view" style="display: none;">
+          <button type="button" class="auth-back-step" data-back-to="signin">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Kembali ke masuk
+          </button>
+          <h1 class="auth-title">Atur ulang kata sandi</h1>
+          <p class="auth-subtitle">Masukkan email atau nomor HP akunmu. Kode verifikasi akan dikirim ke sana.</p>
+          <form id="reset-form" novalidate>
+            <div class="form-group">
+              <label for="reset-identifier">Email atau nomor HP</label>
+              <input type="text" id="reset-identifier" class="form-control" placeholder="nama@email.com atau 0812…" required autocomplete="username">
+            </div>
+            <button type="submit" class="auth-submit" id="reset-submit-btn">Lanjut</button>
+          </form>
+        </section>
+
+        <!-- ========== VERIFIKASI OTP (login & reset) ========== -->
+        <section id="otp-view" class="auth-view" style="display: none;" aria-live="polite">
+          <button type="button" class="auth-back-step" id="otp-back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            <span id="otp-back-label">Kembali</span>
+          </button>
+
+          <!-- a. pilih saluran -->
+          <div id="otp-step-channel" class="otp-step">
+            <span class="otp-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
+            </span>
+            <h1 class="auth-title" id="otp-title">Verifikasi masuk</h1>
+            <p class="auth-subtitle" id="otp-subtitle">Pilih ke mana kode verifikasi dikirim.</p>
+            <div class="channel-list" id="otp-channels" role="radiogroup" aria-label="Kirim kode ke"></div>
+            <button type="button" class="auth-submit" id="otp-send-btn">Kirim kode</button>
+          </div>
+
+          <!-- b. masukkan kode -->
+          <div id="otp-step-code" class="otp-step" hidden>
+            <span class="otp-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </span>
+            <h1 class="auth-title">Masukkan kode</h1>
+            <p class="auth-subtitle">Kode 6 digit dikirim lewat <b id="otp-sent-via">email</b> ke <b id="otp-sent-to">—</b>. Berlaku 5 menit.</p>
+            <p class="otp-dev" id="otp-dev-note" hidden>Mode pengembangan: penyedia pengiriman belum diatur, jadi kode dicetak di log server backend.</p>
+            <form id="otp-form" novalidate>
+              <div class="otp-boxes" id="otp-boxes" role="group" aria-label="Kode verifikasi 6 digit">
+                <input inputmode="numeric" maxlength="1" aria-label="Digit 1" autocomplete="one-time-code">
+                <input inputmode="numeric" maxlength="1" aria-label="Digit 2">
+                <input inputmode="numeric" maxlength="1" aria-label="Digit 3">
+                <input inputmode="numeric" maxlength="1" aria-label="Digit 4">
+                <input inputmode="numeric" maxlength="1" aria-label="Digit 5">
+                <input inputmode="numeric" maxlength="1" aria-label="Digit 6">
+              </div>
+              <button type="submit" class="auth-submit" id="otp-verify-btn" disabled>Verifikasi</button>
+            </form>
+            <div class="otp-meta">
+              <span id="otp-resend-wrap">Tidak menerima kode? <button type="button" class="link-quiet" id="otp-resend-btn" disabled>Kirim ulang <span id="otp-timer"></span></button></span>
+              <button type="button" class="link-quiet" id="otp-change-channel">Pakai metode lain</button>
+            </div>
+          </div>
+
+          <!-- c. kata sandi baru (reset) -->
+          <div id="otp-step-newpass" class="otp-step" hidden>
+            <span class="otp-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            </span>
+            <h1 class="auth-title">Buat kata sandi baru</h1>
+            <p class="auth-subtitle">Minimal 8 karakter. Hindari kata sandi yang pernah kamu pakai di tempat lain.</p>
+            <form id="newpass-form" novalidate>
+              <div class="form-group">
+                <label for="new-password">Kata sandi baru</label>
+                <div class="pw-field">
+                  <input type="password" id="new-password" class="form-control" required minlength="8" autocomplete="new-password">
+                  <button type="button" class="pw-toggle" data-toggle-pw="new-password" aria-label="Tampilkan kata sandi"></button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="new-password-confirm">Ulangi kata sandi baru</label>
+                <div class="pw-field">
+                  <input type="password" id="new-password-confirm" class="form-control" required minlength="8" autocomplete="new-password">
+                  <button type="button" class="pw-toggle" data-toggle-pw="new-password-confirm" aria-label="Tampilkan kata sandi"></button>
+                </div>
+              </div>
+              <button type="submit" class="auth-submit" id="newpass-submit-btn">Simpan kata sandi</button>
+            </form>
+          </div>
+
+          <!-- d. selesai (reset) -->
+          <div id="otp-step-done" class="otp-step" hidden>
+            <span class="otp-icon otp-icon--ok" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <h1 class="auth-title">Kata sandi diperbarui</h1>
+            <p class="auth-subtitle">Silakan masuk dengan kata sandi barumu.</p>
+            <button type="button" class="auth-submit" id="otp-done-btn">Masuk sekarang</button>
+          </div>
+        </section>
       </div>
+    </main>
   </div>
 
-  <script type="module" src="js/main.js?v=15"></script>
+  <script>
+    // Pilihan peran → select tersembunyi (dibaca auth.js) + tampilkan field nama toko
+    (function () {
+      var select = document.getElementById('reg-role');
+      var shopGroup = document.getElementById('reg-shop-group');
+      var shopInput = document.getElementById('reg-shop-name');
+      document.querySelectorAll('input[name="reg-role-choice"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          select.value = radio.value;
+          var isSeller = radio.value === 'seller';
+          shopGroup.hidden = !isSeller;
+          shopInput.required = isSeller;
+          select.dispatchEvent(new Event('change'));
+        });
+      });
+      // aria-selected pada tab mengikuti kelas .active yang diatur auth.js
+      var tabs = document.querySelectorAll('.auth-tab');
+      new MutationObserver(function () {
+        tabs.forEach(function (t) { t.setAttribute('aria-selected', t.classList.contains('active')); });
+      }).observe(document.querySelector('.auth-tabs'), { subtree: true, attributes: true, attributeFilter: ['class'] });
+    })();
+  </script>
+  <script type="module" src="js/main.js?v=32"></script>
 </body>
 </html>

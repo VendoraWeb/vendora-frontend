@@ -1,4 +1,4 @@
-import { BASE_URL, getActiveSession } from "../config/api.js";
+import { BASE_URL, getActiveSession } from "../config/api.js?v=5";
 
 // Helper to show alert inside widget
 function showCSAlert(message, type) {

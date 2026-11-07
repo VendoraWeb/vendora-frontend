@@ -1,0 +1,581 @@
+/* ============================================================
+   VENDORA THEME — token bersama (beranda, login, admin)
+   Dimuat SETELAH style.css, SEBELUM CSS halaman.
+   Palet: putih + abu hangat + hitam sebagai satu-satunya aksen.
+   ============================================================ */
+
+:root {
+  --paper: #FFFFFF;
+  --stage: #F5F5F3;
+  --line: #EBEBE8;
+  --ink: #111111;
+  --mute: #6B6B6B;
+  --paper-rgb: 255, 255, 255;
+  --ink-rgb: 17, 17, 17;
+
+  /* Aksen tunggal = hitam. Warna lain hanya untuk status (selalu + label). */
+  --primary: var(--ink);
+  --primary-hover: #2B2B2B;
+  --button-primary: var(--ink);
+  --button-hover: #2B2B2B;
+  --border-focus: var(--ink);
+  --gold: var(--ink);
+  --gold-light: #2B2B2B;
+  --gold-dark: #000000;
+  --gold-border: var(--line);
+  --accent: var(--ink);
+
+  --status-good: #1F7A4D;
+  --status-warn: #B7791F;
+  --status-bad: #C2412D;
+
+  --font-display: var(--font-body);
+  --sf-ease: cubic-bezier(0.16, 1, 0.3, 1);   /* ≈ GSAP expo.out */
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Notifikasi: hitam untuk sukses, putih bergaris merah untuk error */
+.alert {
+  border-radius: 6px;
+  font-weight: 500;
+  backdrop-filter: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08);
+}
+.alert-success { background: var(--ink); border-color: var(--ink); color: #fff; }
+.alert-error { background: #fff; border-color: rgba(194, 65, 45, 0.35); color: var(--status-bad); }
+
+/* Titik status — warna selalu didampingi teks label */
+.v-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.v-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mute);
+  flex-shrink: 0;
+}
+.v-status--good::before { background: var(--status-good); }
+.v-status--warn::before { background: var(--status-warn); }
+.v-status--bad::before { background: var(--status-bad); }
+.v-status--bad { color: var(--status-bad); }
+
+/* ============================================================
+   MODAL BERSAMA (beranda, penjual, admin)
+   ============================================================ */
+.modal-overlay {
+  background: rgba(17, 17, 17, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 24px;
+  transition: opacity 240ms var(--sf-ease);
+}
+.modal-content,
+.modal-container {
+  background: #fff;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 24px 64px rgba(0,0,0,0.18);
+  backdrop-filter: none;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(12px) scale(0.99);
+  transition: transform 320ms var(--sf-ease);
+}
+.modal-overlay.active .modal-content,
+.modal-overlay.active .modal-container { transform: none; }
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+  flex-shrink: 0;
+}
+.modal-header h2,
+.modal-title {
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0;
+}
+.modal-close,
+.modal-close-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--mute);
+  font-size: 22px;
+  line-height: 1;
+}
+.modal-close:hover,
+.modal-close-btn:hover { background: var(--stage); color: var(--ink); border-color: transparent; }
+.modal-close:focus-visible,
+.modal-close-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.modal-body { padding: 24px; overflow-y: auto; }
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--line);
+  background: #fff;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Field form di dalam modal & konsol */
+.form-group { margin: 0 0 16px; }
+.form-group label,
+.auth-label,
+#profile-modal .auth-label {
+  display: block;
+  margin: 0 0 8px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+.form-control,
+.auth-input,
+#profile-modal .auth-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  box-shadow: none;
+  transition: border-color 160ms var(--sf-ease), box-shadow 160ms var(--sf-ease);
+}
+textarea.form-control, textarea.auth-input { resize: vertical; line-height: 1.5; }
+.form-control::placeholder, .auth-input::placeholder { color: #A3A3A0; }
+.form-control:hover, .auth-input:hover { border-color: #CFCFCB; }
+.form-control:focus,
+.auth-input:focus,
+#profile-modal .auth-input:focus { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(17,17,17,0.06); }
+.form-hint { display: block; margin-top: 6px; font-size: 12px; color: var(--mute); }
+
+/* Tombol modal */
+.btn-ink, .btn-line {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 160ms var(--sf-ease), border-color 160ms var(--sf-ease), transform 160ms var(--sf-ease);
+}
+.btn-ink { background: var(--ink); color: #fff; border: 1px solid var(--ink); }
+.btn-ink:hover { background: #2B2B2B; }
+.btn-line { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.btn-line:hover { border-color: var(--ink); }
+.btn-ink:active, .btn-line:active { transform: scale(0.98); }
+.btn-ink:disabled, .btn-line:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-ink:focus-visible, .btn-line:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Profil */
+#profile-modal .modal-content { max-width: 440px; }
+#profile-modal .auth-group { margin: 0; }
+#profile-modal .auth-submit,
+.modal-content .auth-submit {
+  height: 44px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  box-shadow: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+#profile-modal .auth-submit:hover { background: #2B2B2B; }
+
+/* Pembayaran (simulasi) */
+#snap-modal .modal-content { max-width: 420px; }
+#snap-modal .modal-header { background: #fff; }
+.snap-amount {
+  font-family: var(--font-body);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink) !important;
+  text-shadow: none !important;
+  font-variant-numeric: tabular-nums;
+}
+.snap-methods { gap: 8px; }
+.snap-method-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms var(--sf-ease), transform 160ms var(--sf-ease);
+}
+.snap-method-btn:hover { border-color: var(--ink); background: #fff; transform: none; }
+.snap-method-btn:active { transform: scale(0.99); }
+.snap-method-btn > svg { color: var(--mute); }
+.snap-method-icon {
+  width: 44px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--stage);
+  color: var(--ink);
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+/* Pilihan metode pembayaran (radio) — checkout & sewa ruko */
+.pay-methods { display: grid; gap: 8px; }
+.pay-method { position: relative; cursor: pointer; }
+.pay-method input { position: absolute; opacity: 0; pointer-events: none; }
+.pay-method {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  transition: border-color 160ms var(--sf-ease), box-shadow 160ms var(--sf-ease);
+}
+.pay-method:hover { border-color: #CFCFCB; }
+.pay-method:has(input:checked) { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.pay-method:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+.pay-method::after {
+  content: "";
+  width: 18px; height: 18px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid #CFCFCB;
+  box-sizing: border-box;
+  transition: border 160ms var(--sf-ease);
+}
+.pay-method:has(input:checked)::after { border: 5px solid var(--ink); }
+.pay-icon {
+  width: 44px; height: 30px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--stage);
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+.pay-text { display: flex; flex-direction: column; min-width: 0; }
+.pay-text b { font-size: 14px; font-weight: 600; color: var(--ink); }
+.pay-text small { font-size: 12px; color: var(--mute); }
+.checkout-label { font-size: 14px; font-weight: 600; color: var(--ink); margin: 0 0 12px; }
+.checkout-note { font-size: 12px; color: var(--mute); text-align: center; margin: 12px 0 0; }
+.btn-line--sm { height: 36px; padding: 0 14px; font-size: 13px; }
+
+/* ============================================================
+   MEREK VENDORA — simbol bintang & sayap + wordmark Montserrat
+   Selector diawali "html body" supaya menang atas aturan lama
+   (style.css, storefront/console/account/auth.css) tanpa
+   bergantung urutan file.
+   ============================================================ */
+:root {
+  --font-brand: "Montserrat", var(--font-body);
+  --brand-track: 0.34em;
+  --brand-gold: #C9AE87;
+}
+
+/* Lockup Vendora: sayap + bintang duduk di atas huruf "EN" pada wordmark.
+   Markup: <a class="… vlogo"><span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg">EN</span>DORA</span></a>
+   Simbol diposisikan relatif ke "EN", jadi tetap tepat di atasnya apa pun ukuran hurufnya. */
+html body .vlogo {
+  --vl-size: 15px;          /* ukuran huruf wordmark */
+  --vl-track: 0.34em;       /* jarak antarhuruf */
+  --vl-mark: 2.55em;        /* lebar simbol sayap */
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding-top: calc(var(--vl-size) * 1.12);   /* ruang untuk sayap */
+  color: var(--ink);
+  text-decoration: none;
+  line-height: 1;
+}
+html body .vlogo-word {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-brand) !important;
+  font-size: var(--vl-size) !important;
+  font-weight: 500 !important;
+  letter-spacing: var(--vl-track) !important;
+  text-transform: uppercase;
+  line-height: 1 !important;
+  /* jarak huruf menambah ruang di akhir kata; tarik balik supaya seimbang */
+  margin: 0 calc(-1 * var(--vl-track)) 0 0 !important;
+  white-space: nowrap;
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor;
+  background: none;
+  transform: none !important;
+}
+html body .vlogo-en {
+  position: relative;
+  font: inherit !important;
+  letter-spacing: inherit !important;
+  color: inherit !important;
+  margin: 0 !important;
+}
+html body .vlogo .vlogo-mark {
+  position: absolute;
+  /* tengah "EN" — dikurangi setengah jarak huruf di belakang N */
+  left: calc(50% - var(--vl-track) / 2);
+  bottom: calc(100% - 0.06em);
+  width: var(--vl-mark) !important;
+  height: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  transform: translateX(-50%) !important;
+  pointer-events: none;
+  transition: transform 300ms var(--sf-ease);
+}
+html body .vlogo:hover .vlogo-mark { transform: translate(-50%, -1px) !important; }
+
+/* Versi bertumpuk dengan tagline (footer) */
+html body .vlogo--stack { flex-direction: column; align-items: flex-start; gap: 12px; }
+html body .vlogo-tag {
+  font-family: var(--font-brand);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0.6;
+}
+
+/* Ukuran & warna per tempat */
+html body #main-navbar .vlogo { --vl-size: 15px; }
+html body #main-navbar.is-overlay .vlogo { color: #fff; }
+html body .sf-footer .vlogo, html body .sf-footer .vlogo:hover { --vl-size: 24px; color: #EDE6DC !important; }
+html body .sf-footer .vlogo-tag { color: #EDE6DC; }
+html body .console-logo.vlogo { --vl-size: 14px; gap: 12px; padding-left: 8px; }
+html body .console-logo.vlogo small { margin: 0 0 -1px; }
+html body .acc-logo.vlogo { --vl-size: 15px; }
+html body .auth-visual-logo.vlogo { --vl-size: 16px; color: #fff; }
+html body .auth-mobile-logo.vlogo { --vl-size: 14px; }
+
+@media (max-width: 992px) {
+  html body #main-navbar .vlogo { --vl-size: 14px; }
+}
+@media (max-width: 480px) {
+  html body #main-navbar .vlogo { --vl-size: 12.5px; --vl-track: 0.28em; }
+}
+
+/* Logo versi HP di halaman login hanya tampil di layar kecil */
+@media (min-width: 901px) { html body .auth-mobile-logo { display: none; } }
+
+/* ============================================================
+   DOCK CHAT (pembeli ↔ penjual) — gaya WhatsApp, palet Vendora
+   ============================================================ */
+.cdock { --cd-bg: #EFEDE8; --cd-me: #111111; --cd-them: #FFFFFF; font-family: var(--font-body); }
+.cdock-fab {
+  position: fixed; right: 24px; bottom: 24px; z-index: 1150;
+  width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ink); color: #fff; box-shadow: 0 10px 28px rgba(17, 17, 17, 0.28);
+  transition: transform 200ms var(--sf-ease), box-shadow 200ms ease;
+}
+.cdock-fab:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(17, 17, 17, 0.32); }
+.cdock-fab:active { transform: scale(0.96); }
+.cdock-fab:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.cdock-badge {
+  position: absolute; top: -2px; right: -2px; min-width: 22px; height: 22px; padding: 0 6px;
+  border-radius: 11px; background: var(--status-bad); color: #fff; border: 2px solid #fff;
+  font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
+}
+.cdock-badge[hidden] { display: none; }
+
+.cdock-panel {
+  position: fixed; right: 24px; bottom: 92px; z-index: 1150;
+  width: 392px; height: min(620px, calc(100vh - 116px));
+  display: flex; flex-direction: column; overflow: hidden;
+  background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(17, 17, 17, 0.22);
+  transform-origin: bottom right; animation: cd-in 220ms var(--sf-ease);
+}
+.cdock-panel[hidden] { display: none; }
+@keyframes cd-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+.cdock-view { display: flex; flex-direction: column; flex: 1; min-height: 0; position: relative; }
+.cdock-view[hidden] { display: none; }
+
+.cdock-head { display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 16px; border-bottom: 1px solid var(--line); background: #fff; }
+.cdock-head-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cdock-head-text b { font-size: 15px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cdock-head-text small { font-size: 12px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cdock-icon {
+  width: 36px; height: 36px; flex: none; border: none; border-radius: 50%; background: transparent; color: var(--ink);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.cdock-icon:hover { background: var(--stage); }
+.cdock-icon:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.cdock-thread-view .cdock-head { padding-left: 6px; }
+.cdock-avatar {
+  width: 40px; height: 40px; flex: none; border-radius: 50%; object-fit: cover;
+  background: var(--stage); color: var(--ink); border: 1px solid var(--line);
+  display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600;
+}
+.cdock-head .cdock-avatar { width: 36px; height: 36px; background: var(--ink); color: #fff; border: none; }
+
+.cdock-search { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.cdock-search input {
+  width: 100%; height: 38px; padding: 0 14px; border: 1px solid transparent; border-radius: 999px;
+  background: var(--stage); font: inherit; font-size: 14px; color: var(--ink); outline: none;
+}
+.cdock-search input:focus { border-color: var(--ink); background: #fff; }
+.cdock-list { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+.cdock-item {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  background: none; border: none; border-bottom: 1px solid var(--line); text-align: left; cursor: pointer; font: inherit;
+}
+.cdock-item:hover, .cdock-item:focus-visible { background: var(--stage); outline: none; }
+.cdock-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cdock-item-top, .cdock-item-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cdock-item-top b { font-size: 14.5px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cdock-item-top time { font-size: 12px; color: var(--mute); flex: none; }
+.cdock-item.has-unread .cdock-item-top time { color: var(--ink); font-weight: 600; }
+.cdock-preview { font-size: 13px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.cdock-item.has-unread .cdock-preview { color: var(--ink); }
+.cdock-unread { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--ink); color: #fff; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; flex: none; }
+
+/* Utas pesan */
+.cm-messages {
+  flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 14px 12px 8px;
+  display: flex; flex-direction: column; gap: 3px; background-color: var(--cd-bg);
+  background-image: radial-gradient(rgba(17, 17, 17, 0.035) 1px, transparent 1px); background-size: 18px 18px;
+}
+.cm-messages.is-drop { box-shadow: inset 0 0 0 2px var(--ink); }
+.cm-loading { margin: auto; padding: 24px; font-size: 13px; color: var(--mute); text-align: center; }
+.cm-empty { margin: auto; max-width: 260px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 24px 12px; font-size: 13px; color: var(--mute); }
+.cm-empty b { font-size: 15px; color: var(--ink); font-weight: 600; }
+.cm-empty-icon { width: 52px; height: 52px; border-radius: 50%; background: #fff; color: var(--ink); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px; border: 1px solid var(--line); }
+.cdock-list .cm-empty-icon { background: var(--stage); }
+.cm-day { align-self: center; margin: 10px 0 6px; }
+.cm-day span { display: inline-block; padding: 4px 12px; border-radius: 8px; background: rgba(255, 255, 255, 0.92); font-size: 12px; color: var(--mute); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06); }
+.cm-row { display: flex; }
+.cm-row--me { justify-content: flex-end; }
+.cm-row--them { justify-content: flex-start; }
+.cm-row--me + .cm-row--them, .cm-row--them + .cm-row--me { margin-top: 6px; }
+.cm-bubble {
+  position: relative; max-width: 78%; padding: 7px 10px 6px; border-radius: 10px;
+  font-size: 14px; line-height: 1.45; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+  animation: cm-pop 180ms var(--sf-ease);
+}
+@keyframes cm-pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.cm-row--me .cm-bubble { background: var(--cd-me); color: #fff; border-top-right-radius: 3px; }
+.cm-row--them .cm-bubble { background: var(--cd-them); color: var(--ink); border-top-left-radius: 3px; }
+.cm-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.cm-text a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.cm-meta { float: right; display: inline-flex; align-items: center; gap: 3px; margin: 6px 0 -2px 10px; font-size: 11px; line-height: 1; opacity: 0.72; }
+.cm-tick { display: inline-flex; }
+.cm-tick.is-read { color: #53BDEB; opacity: 1; }
+.cm-row--me .cm-meta:has(.cm-tick.is-read) { opacity: 1; }
+.cm-tick.is-pending { opacity: 0.8; }
+.cm-failed { color: #FFB4A6; font-weight: 600; }
+.cm-row.is-failed .cm-bubble { opacity: 0.8; }
+.cm-bubble.has-photo { padding: 4px; }
+.cm-bubble.has-photo .cm-text { padding: 4px 6px 0; }
+.cm-bubble.has-photo .cm-meta { margin-right: 6px; margin-bottom: 2px; }
+.cm-bubble.photo-only .cm-meta {
+  position: absolute; right: 10px; bottom: 10px; margin: 0; padding: 3px 6px; border-radius: 8px;
+  background: rgba(0, 0, 0, 0.45); color: #fff; opacity: 1;
+}
+.cm-photo { display: block; padding: 0; border: none; background: none; cursor: zoom-in; border-radius: 7px; overflow: hidden; }
+.cm-photo img { display: block; width: 240px; max-width: 100%; max-height: 320px; object-fit: cover; background: rgba(0, 0, 0, 0.06); }
+.cm-row.is-pending .cm-photo img { opacity: 0.6; }
+.cm-jump {
+  position: absolute; left: 50%; bottom: 76px; transform: translateX(-50%); z-index: 2;
+  padding: 7px 14px; border: none; border-radius: 999px; background: var(--ink); color: #fff;
+  font: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+.cm-jump[hidden] { display: none; }
+
+.cm-compose { border-top: 1px solid var(--line); background: #fff; padding: 8px 10px; }
+.cm-preview { display: flex; align-items: center; gap: 10px; padding: 6px 4px 10px; font-size: 12.5px; color: var(--mute); }
+.cm-preview[hidden] { display: none; }
+.cm-preview img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); flex: none; }
+.cm-preview span { flex: 1; }
+.cm-compose-row { display: flex; align-items: flex-end; gap: 6px; }
+.cm-attach, .cm-send {
+  width: 42px; height: 42px; flex: none; border-radius: 50%; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.cm-attach { background: transparent; color: var(--mute); }
+.cm-attach:hover { background: var(--stage); color: var(--ink); }
+.cm-send { background: var(--ink); color: #fff; }
+.cm-send:hover { background: #2B2B2B; }
+.cm-send:active, .cm-attach:active { transform: scale(0.95); }
+.cm-attach:focus-visible, .cm-send:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.cm-compose textarea {
+  flex: 1; min-width: 0; min-height: 42px; max-height: 120px; resize: none;
+  padding: 10px 16px; border: 1px solid var(--line); border-radius: 21px; background: var(--stage);
+  font: inherit; font-size: 14px; line-height: 1.45; color: var(--ink); outline: none;
+}
+.cm-compose textarea:focus { border-color: var(--ink); background: #fff; }
+
+.cm-lightbox {
+  position: fixed; inset: 0; z-index: 2000; display: none; align-items: center; justify-content: center;
+  padding: 32px; background: rgba(10, 10, 10, 0.88);
+}
+.cm-lightbox.is-open { display: flex; }
+.cm-lightbox img { max-width: 100%; max-height: 100%; border-radius: 6px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); }
+.cm-lightbox-x {
+  position: absolute; top: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; border: none;
+  background: rgba(255, 255, 255, 0.14); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.cm-lightbox-x:hover { background: rgba(255, 255, 255, 0.24); }
+
+@media (max-width: 560px) {
+  .cdock-fab { right: 16px; bottom: 16px; }
+  .cdock.is-open .cdock-fab { display: none; }
+  .cdock-panel { inset: 0; width: auto; height: auto; border-radius: 0; border: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cdock-panel, .cm-bubble { animation: none; }
+}

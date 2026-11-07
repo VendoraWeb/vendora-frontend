@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="vdr-fav" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F2E8D8"/>
+      <stop offset="0.55" stop-color="#D7BF9B"/>
+      <stop offset="1" stop-color="#B59468"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#0E0E0D"/>
+  <!-- simbol Vendora (viewBox 160x72) diperkecil ke tengah -->
+  <g transform="translate(2 18.5) scale(0.375)">
+    <path fill="url(#vdr-fav)" d="M80 2 Q81.8 14.8 92 17 Q81.8 19.2 80 30 Q78.2 19.2 68 17 Q78.2 14.8 80 2 Z"/>
+    <path fill="url(#vdr-fav)" d="M6 66 C 25 47, 51 35.5, 73 33.5 L 80 43 L 87 33.5 C 109 35.5, 135 47, 154 66 C 132 54, 113 48.5, 99.5 50 C 90 51.5, 83.5 58, 80 70 C 76.5 58, 70 51.5, 60.5 50 C 47 48.5, 28 54, 6 66 Z"/>
+  </g>
+</svg>

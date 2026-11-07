@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengaturan akun — Vendora</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="icon" type="image/png" href="logo.png?v=2">
+  <link rel="apple-touch-icon" href="logo.png?v=2">
+  <meta name="theme-color" content="#0E0E0D">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=14">
+  <link rel="stylesheet" href="css/theme.css?v=7">
+  <link rel="stylesheet" href="css/account.css?v=5">
+</head>
+<body class="account-page">
+
+  <header class="acc-top">
+    <a href="index.html" class="acc-logo vlogo" aria-label="Vendora — beranda">
+      <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=3" alt="">EN</span>DORA</span>
+    </a>
+    <div class="acc-top-right">
+      <a href="index.html" class="acc-back" id="account-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg><span> Kembali ke katalog</span>
+      </a>
+      <span class="acc-avatar acc-avatar--sm" id="acc-top-avatar" aria-hidden="true"></span>
+    </div>
+  </header>
+
+  <div id="alert-container"></div>
+
+  <!-- Belum masuk -->
+  <main id="account-locked" class="acc-locked" hidden>
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0112 0v1"/></svg>
+    <h1>Masuk untuk mengatur akun</h1>
+    <p>Kelola profil, alamat, keamanan, dan notifikasi setelah masuk.</p>
+    <a href="login.html" class="btn-ink">Masuk</a>
+  </main>
+
+  <main id="account-app" class="acc-wrap" hidden>
+    <div class="acc-head">
+      <h1>Pengaturan akun</h1>
+      <p>Atur profil, alamat, keamanan, dan notifikasi akun Vendora kamu.</p>
+    </div>
+
+    <div class="acc-layout">
+      <!-- Kiri: ringkasan + navigasi -->
+      <aside class="acc-side">
+        <div class="acc-summary">
+          <span class="acc-avatar" id="acc-summary-avatar" aria-hidden="true"></span>
+          <div class="acc-summary-text">
+            <b id="acc-summary-name">–</b>
+            <small id="acc-summary-email"></small>
+            <span class="acc-meta"><span class="acc-role" id="acc-summary-role"></span><span id="acc-summary-since"></span></span>
+          </div>
+        </div>
+        <nav class="acc-nav" aria-label="Bagian pengaturan">
+          <a href="#profil">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0112 0v1"/></svg>
+            Profil
+          </a>
+          <a href="#alamat">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Alamat
+          </a>
+          <a href="#keamanan">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Keamanan
+          </a>
+          <a href="#notifikasi">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            Notifikasi
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Kanan: panel -->
+      <div class="acc-panels">
+
+        <!-- PROFIL -->
+        <section class="acc-panel" id="panel-profil" aria-labelledby="t-profil">
+          <div class="acc-card">
+            <div class="acc-card-head">
+              <h2 id="t-profil">Profil</h2>
+              <p>Foto dan data kontak yang terlihat oleh penjual atau pembeli.</p>
+            </div>
+
+            <div class="acc-row acc-photo">
+              <span class="acc-avatar acc-avatar--xl" id="acc-avatar-preview" aria-hidden="true"></span>
+              <div>
+                <div class="acc-photo-actions">
+                  <label class="btn-line btn-line--sm" for="acc-avatar-input">Ganti foto</label>
+                  <input type="file" id="acc-avatar-input" accept="image/jpeg,image/png,image/webp" class="visually-hidden">
+                  <button type="button" class="btn-text" id="acc-avatar-remove" hidden>Hapus foto</button>
+                </div>
+                <span class="form-hint">JPG, PNG, atau WebP, maks. 5 MB. Foto dipotong persegi otomatis.</span>
+              </div>
+            </div>
+
+            <div class="acc-fields">
+              <div class="form-group">
+                <label for="acc-name">Nama lengkap</label>
+                <input type="text" id="acc-name" class="form-control" disabled>
+                <span class="form-hint">Nama belum bisa diubah dari sini. Hubungi admin bila perlu diganti.</span>
+              </div>
+              <div class="form-group">
+                <label for="acc-email">Email</label>
+                <input type="email" id="acc-email" class="form-control" autocomplete="email">
+              </div>
+              <div class="form-group">
+                <label for="acc-phone">Nomor WhatsApp</label>
+                <input type="tel" id="acc-phone" class="form-control" placeholder="08123456789" autocomplete="tel">
+                <span class="form-hint" id="acc-phone-hint">Dipakai kurir dan penjual untuk menghubungi kamu.</span>
+              </div>
+            </div>
+
+            <div class="acc-card-foot">
+              <button type="button" class="btn-ink" data-save>Simpan profil</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ALAMAT -->
+        <section class="acc-panel" id="panel-alamat" aria-labelledby="address-title" hidden>
+          <div class="acc-card">
+            <div class="acc-card-head">
+              <h2 id="address-title">Alamat pengiriman</h2>
+              <p id="address-desc">Alamat utama untuk pesananmu. Otomatis terisi saat checkout.</p>
+            </div>
+            <div class="acc-fields">
+              <div class="form-group">
+                <label for="acc-address">Alamat lengkap</label>
+                <textarea id="acc-address" class="form-control" rows="4" placeholder="Jalan, nomor rumah, RT/RW, kecamatan, kota, kode pos" autocomplete="street-address"></textarea>
+              </div>
+            </div>
+            <div class="acc-card-foot">
+              <button type="button" class="btn-ink" data-save>Simpan alamat</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- KEAMANAN -->
+        <section class="acc-panel" id="panel-keamanan" aria-labelledby="t-keamanan" hidden>
+          <div class="acc-card">
+            <div class="acc-card-head">
+              <h2 id="t-keamanan">Kata sandi &amp; verifikasi</h2>
+              <p>Masuk cukup dengan kata sandi. Kode OTP hanya dipakai saat kamu mengganti atau lupa kata sandi, dikirim ke email atau WhatsApp-mu.</p>
+            </div>
+            <dl class="acc-verify">
+              <div><dt>Email</dt><dd id="acc-verify-email">–</dd></div>
+              <div><dt>Nomor HP</dt><dd id="acc-verify-phone">–</dd></div>
+            </dl>
+            <div class="acc-card-foot">
+              <a class="btn-ink" id="acc-change-pass" href="login.html?reset=1">Ganti kata sandi lewat OTP</a>
+            </div>
+          </div>
+
+          <div class="acc-card">
+            <div class="acc-card-head">
+              <h2>Sesi masuk</h2>
+              <p>Perangkat yang sedang masuk ke akunmu.</p>
+            </div>
+            <div class="acc-session">
+              <span class="acc-session-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="4" width="20" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </span>
+              <div class="acc-session-text">
+                <b id="acc-session-device">Browser ini</b>
+                <span class="v-status v-status--good">Perangkat ini · aktif sekarang</span>
+              </div>
+              <button type="button" class="btn-line btn-line--sm" id="acc-logout">Keluar</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- NOTIFIKASI -->
+        <section class="acc-panel" id="panel-notifikasi" aria-labelledby="t-notif" hidden>
+          <div class="acc-card">
+            <div class="acc-card-head">
+              <h2 id="t-notif">Notifikasi</h2>
+              <p>Pilih kabar yang ingin kamu terima. Preferensi disimpan di perangkat ini.</p>
+            </div>
+            <div class="acc-toggles">
+              <label class="acc-toggle">
+                <span><b>Status pesanan</b><small>Saat pesanan dikonfirmasi, dikirim, atau selesai.</small></span>
+                <input type="checkbox" data-pref="orders" checked><i aria-hidden="true"></i>
+              </label>
+              <label class="acc-toggle">
+                <span><b>Pesan chat</b><small>Balasan baru dari penjual atau pembeli.</small></span>
+                <input type="checkbox" data-pref="chat" checked><i aria-hidden="true"></i>
+              </label>
+              <label class="acc-toggle">
+                <span><b>Promo dan info Vendora</b><small>Diskon, toko baru, dan kabar fitur.</small></span>
+                <input type="checkbox" data-pref="promo"><i aria-hidden="true"></i>
+              </label>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/main.js?v=32"></script>
+</body>
+</html>

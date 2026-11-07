@@ -1,8 +1,11 @@
-import { BASE_URL } from "../config/api.js";
-import { addToCart, updateCartUI, executeCheckout } from "./transaction.js?v=6";
+import { BASE_URL } from "../config/api.js?v=5";
+import { esc } from "../ui.js?v=2";
+import { addToCart, updateCartUI, buyNow } from "./transaction.js?v=12";
+import { CATEGORIES, CATEGORY_BY_KEY, categoryOf, categoryLabel, matchesSub, SEARCH_SYNONYMS } from "../categories.js?v=1";
 
 // ─── Alert helper ──────────────────────────────────────────────────────────
 function showAlert(message, type) {
+  if (window.showAlert) { window.showAlert(message, type); return; }
   const container = document.getElementById('alert-container');
   if (!container) return;
   const div = document.createElement('div');
@@ -12,668 +15,882 @@ function showAlert(message, type) {
   setTimeout(() => div.remove(), 3500);
 }
 
-// ─── Shop cache (avoids repeated fetches) ────────────────────────────────────
-let shopCache = {};
-export let shopDetailCache = {};
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80';
+const fmtRp = (n) => `Rp ${Number(n || 0).toLocaleString('id-ID')}`;
 
-async function getShopName(shopId) {
-  if (!shopId) return '';
-  if (shopCache[shopId]) return shopCache[shopId];
-  try {
-    const res  = await fetch(`${BASE_URL}/shops`);
-    const data = await res.json();
-    (data.data || []).forEach(s => { 
-      shopCache[s.id] = s.name; 
-      shopDetailCache[s.id] = s;
-    });
-    return shopCache[shopId] || '';
-  } catch { return ''; }
+// ─── Cache data (dipakai katalog, halaman toko, dan modal detail) ───────────
+let shopCache = {};                 // id -> nama
+export let shopDetailCache = {};    // id -> objek toko
+let soldMap = {};                   // product_id -> jumlah terjual (tanpa dibatalkan)
+let allProducts = [];               // katalog lengkap terakhir
+let state = { filter: 'all', shop: null, sort: 'relevan', q: '' };
+
+/** Kategori spesifik produk untuk etalase toko: sub-kategori, atau tag "[Kategori: X]" lama. */
+export function parseCategories(p) {
+  if (p.subcategory) return [p.subcategory];
+  const m = /\[kategori:\s*([^\]]+)\]/i.exec(p.description || '');
+  if (!m) return [];
+  return m[1].split(',').map(s => s.trim()).filter(Boolean);
 }
 
-// ─── Build stock badge HTML ───────────────────────────────────────────────────
-function stockBadgeHTML(stock) {
-  if (stock === 0) return '<span class="badge badge-red">Habis</span>';
-  if (stock <= 5)  return `<span class="badge badge-yellow">Sisa ${stock}</span>`;
-  return `<span class="badge badge-primary">Tersedia</span>`;
+/** Deskripsi tanpa tag "[Kategori: …]" untuk ditampilkan ke pembeli. */
+function cleanDesc(text) {
+  return String(text || '').replace(/\s*\[kategori:[^\]]*\]\s*/ig, ' ').trim();
 }
 
-// ─── Render a single product card ─────────────────────────────────────────────
-function renderCard(p, shopName) {
-  const image    = (p.images && p.images[0]) ? p.images[0]
-    : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80';
-  const inStock  = p.stock > 0;
-  const priceStr = `Rp ${Number(p.price).toLocaleString('id-ID')}`;
-  const stockStr = p.stock > 0 ? `Stok: ${p.stock}` : 'Stok habis';
+// Pesanan lama produk contoh tersimpan sebagai "Produk Mockup (m1)". Listing itu
+// sekarang produk asli toko Apple, jadi diarahkan ke ID produk yang sama.
+const LEGACY_MOCK = {
+  m1: '6a48a951bc1d7146da66d384', // dulu iPhone 15 Pro Max → iPhone 18 Pro
+  m2: '6a48a951bc1d7146da66d385', // MacBook Pro
+  m3: '6a48a951bc1d7146da66d386', // iPad Pro
+  m4: '6a48a951bc1d7146da66d387', // AirPods Pro
+};
+export function mockIdFromName(name) {
+  const m = /^Produk Mockup \((m\d+)\)$/i.exec(String(name || '').trim());
+  return m ? (LEGACY_MOCK[m[1].toLowerCase()] || m[1]) : null;
+}
 
-  const searchStr = `${p.name} ${shopName || ''}`.toLowerCase().trim();
+const shopNameOf = (p) => p.shop_name || shopCache[p.shop_id] || '';
+const imageOf = (p) => (p.images && p.images[0]) ? p.images[0] : FALLBACK_IMG;
+const soldOf = (p) => soldMap[p.id] || 0;
+const soldText = (n) => n >= 1000 ? `${(n / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} rb terjual` : `${n} terjual`;
+const hasOptions = (p) => Array.isArray(p.options) && p.options.length > 0;
 
+/** Harga termurah & termahal dari kombinasi variasi. */
+function priceRange(p) {
+  let min = Number(p.price) || 0, max = min;
+  (p.options || []).forEach(g => {
+    const deltas = (g.values || []).map(v => Number(v.price_delta) || 0);
+    if (!deltas.length) return;
+    min += Math.min(...deltas);
+    max += Math.max(...deltas);
+  });
+  return { min, max };
+}
+
+const colorGroup = (p) => (p.options || []).find(g => (g.values || []).some(v => v.swatch));
+
+// ─── Kartu produk ───────────────────────────────────────────────────────────
+function renderCard(p) {
+  const shopName = shopNameOf(p);
+  const image = imageOf(p);
+  const inStock = p.stock > 0;
+  const sold = soldOf(p);
+  const { min, max } = priceRange(p);
+  const colors = colorGroup(p);
+
+  let badge = '';
+  if (p.stock === 0)     badge = '<span class="pc-badge pc-badge--out">Habis</span>';
+  else if (p.stock <= 5) badge = `<span class="pc-badge">Sisa ${p.stock}</span>`;
+
+  const swatches = colors ? `
+        <div class="pc-swatches" aria-label="${colors.values.length} pilihan ${esc(colors.name.toLowerCase())}">
+          ${colors.values.slice(0, 5).map(v => `<span class="pc-swatch" style="background:${esc(v.swatch || '#ddd')}" title="${esc(v.label)}"></span>`).join('')}
+          ${colors.values.length > 5 ? `<span class="pc-swatch-more">+${colors.values.length - 5}</span>` : ''}
+        </div>` : '<div class="pc-swatches" aria-hidden="true"></div>';
+
+  const data = `data-id="${esc(p.id)}"`;
   return `
-    <div class="product-card" data-product-id="${p.id}" data-search-term="${searchStr}">
+    <article class="product-card" data-product-id="${esc(p.id)}" tabindex="0" aria-label="${esc(p.name)}, ${fmtRp(min)}">
       <div class="product-img-wrapper">
-        <img class="product-img"
-             src="${image}"
-             alt="${p.name}"
-             loading="lazy"
-             onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80'">
-        <div class="product-stock-overlay">${stockBadgeHTML(p.stock)}</div>
+        <img class="product-img" src="${esc(image)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_IMG}'">
+        ${badge}
       </div>
       <div class="product-body">
+        <h3 class="product-name">${esc(p.name)}</h3>
+        ${swatches}
+        <div class="product-price-row">
+          <span class="product-price">${max > min ? '<small class="pc-from">mulai</small>' : ''}${fmtRp(min)}</span>
+          ${sold ? `<span class="pc-sold">${soldText(sold)}</span>` : ''}
+        </div>
         ${shopName ? `
-          <div class="product-shop-tag shop-clickable" data-shop-id="${p.shop_id || ''}" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; transition: all 0.25s ease; margin-bottom: 8px; width: fit-content;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5" style="flex-shrink: 0;">
-               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-               <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-            <span style="color: var(--text-secondary); font-weight: 600; font-size: 11.5px; letter-spacing: 0.5px;">${shopName}</span>
-          </div>` : ''}
-        <div class="product-name">${p.name}</div>
-        <div class="product-price">${priceStr}</div>
-        <div class="product-stock-text">${stockStr}</div>
-        <div class="product-card-actions" style="display: flex; gap: 6px; margin-top: 14px;">
-          <button
-            class="btn-add-cart"
-            data-id="${p.id}"
-            data-name="${p.name}"
-            data-price="${p.price}"
-            data-image="${image}"
-            data-shop="${shopName || ''}"
-            data-shop-id="${p.shop_id || ''}"
-            ${inStock ? '' : 'disabled'}
-            type="button"
-            style="margin-top: 0; flex: 1; padding: 10px 4px; font-size: 11.5px; border-radius: 12px; justify-content: center; gap: 4px; font-family: 'Manrope', sans-serif;"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
-            </svg>
-            ${inStock ? 'Keranjang' : 'Stok Habis'}
+        <button type="button" class="product-shop-tag shop-clickable" data-shop="${esc(shopName)}" aria-label="Kunjungi toko ${esc(shopName)}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 01-6 0 3 3 0 01-6 0 3 3 0 01-6 0z"/><path d="M5 13v8h14v-8"/></svg>
+          <span>${esc(shopName)}</span>
+        </button>` : ''}
+        <div class="pc-actions">
+          <button class="pc-cart btn-add-cart" type="button" ${data} ${inStock ? '' : 'disabled'} aria-label="Tambah ${esc(p.name)} ke keranjang">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
           </button>
-          <button
-            class="btn-buy-now"
-            data-id="${p.id}"
-            data-name="${p.name}"
-            data-price="${p.price}"
-            data-image="${image}"
-            data-shop="${shopName || ''}"
-            data-shop-id="${p.shop_id || ''}"
-            ${inStock ? '' : 'disabled'}
-            type="button"
-            style="flex: 1; padding: 10px 4px; background: ${inStock ? 'var(--button-primary)' : 'var(--bg-secondary)'}; color: ${inStock ? 'white' : 'var(--text-light)'}; border: 1.5px solid ${inStock ? 'var(--button-primary)' : 'var(--border)'}; border-radius: 12px; font-family: 'Manrope', sans-serif; font-size: 11.5px; font-weight: 600; cursor: ${inStock ? 'pointer' : 'not-allowed'}; pointer-events: ${inStock ? 'auto' : 'none'}; transition: all var(--dur-fast) var(--ease); display: flex; align-items: center; justify-content: center; gap: 4px;"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            Beli Sekarang
-          </button>
+          <button class="pc-buy btn-buy-now" type="button" ${data} ${inStock ? '' : 'disabled'}>${inStock ? 'Beli sekarang' : 'Stok habis'}</button>
         </div>
       </div>
-    </div>
-  `;
+    </article>`;
 }
 
-// ─── Load and render all catalog products ────────────────────────────────────
-export async function loadCatalogProducts(filter = 'all', shopQuery = null) {
-  const grid = document.getElementById('product-list');
-  if (!grid) return;
+/** Data barang untuk keranjang, termasuk variasi terpilih. */
+function cartPayload(p, sel = {}) {
+  let price = Number(p.price) || 0;
+  let image = imageOf(p);
+  const labels = [];
+  (p.options || []).forEach(g => {
+    const v = (g.values || []).find(x => x.label === sel[g.name]);
+    if (!v) return;
+    price += Number(v.price_delta) || 0;
+    if (v.image) image = v.image;
+    labels.push(v.label);
+  });
+  return { id: p.id, name: p.name, price, image, shopName: shopNameOf(p), shopId: p.shop_id || '',
+           options: hasOptions(p) ? { ...sel } : null, variant: labels.join(', ') };
+}
 
-  // Loading state
-  grid.innerHTML = Array(4).fill(0).map(() => `
-    <div class="product-card" style="min-height:300px;">
-      <div style="width:100%;aspect-ratio:1/1;background:var(--surface-2);animation:pulse 2s infinite;"></div>
-      <div style="padding:16px;">
-        <div style="height:14px;width:60%;background:var(--surface-2);margin-bottom:8px;border-radius:4px;"></div>
-        <div style="height:20px;width:40%;background:var(--surface-2);border-radius:4px;"></div>
-      </div>
-    </div>
-  `).join('');
+function goToShop(name) {
+  if (!name) return;
+  window.location.href = `index.html?shop=${encodeURIComponent(name)}`;
+}
 
-  try {
-    const res  = await fetch(`${BASE_URL}/products`);
-    const data = await res.json();
-    let dbProducts = data.data || [];
+/** Delegasi klik untuk grid kartu katalog. */
+function bindGrid(grid, list) {
+  grid._list = list;
+  if (grid.dataset.bound) return;
+  grid.dataset.bound = '1';
+  const find = (id) => (grid._list || []).find(p => p.id === id);
 
-    // Fetch Apple shop ID to attribute mockup transactions to Apple Seller Hub
-    let appleShopId = '';
-    try {
-      const shopRes = await fetch(`${BASE_URL}/shops`);
-      const shopData = await shopRes.json();
-      const appleShop = (shopData.data || []).find(s => s.name === 'Apple');
-      if (appleShop) appleShopId = appleShop.id;
-    } catch (e) {
-      console.warn('Failed to fetch Apple shop ID', e);
-    }
-
-    // Fallback/Mockup products matching the mockup screenshot exactly (Apple)
-    const mockProducts = [
-      { id: 'm1', name: 'iPhone 15 Pro Max', price: 23999000, stock: 50, shop_name: 'Apple', shop_id: appleShopId, description: 'Titanium. Super tangguh. Super ringan. [Kategori: Smartphone]', images: ['https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&q=80'] },
-      { id: 'm2', name: 'MacBook Pro M3 Max', price: 62500000, stock: 20, shop_name: 'Apple', shop_id: appleShopId, description: 'Chip paling mutakhir yang pernah ada di pro laptop. [Kategori: Laptop]', images: ['https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&q=80'] },
-      { id: 'm3', name: 'iPad Pro M4', price: 21500000, stock: 50, shop_name: 'Apple', shop_id: appleShopId, description: 'Desain menakjubkan, super tipis dengan layar OLED. [Kategori: Tablet]', images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&q=80'] },
-      { id: 'm4', name: 'AirPods Pro (Gen 2)', price: 4299000, stock: 100, shop_name: 'Apple', shop_id: appleShopId, description: 'Peredam bising aktif hingga 2x lebih baik. [Kategori: Audio, Aksesoris]', images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400&q=80'] },
-      { id: 'm5', name: 'Apple 20W USB-C Power Adapter', price: 449000, stock: 100, shop_name: 'Apple', shop_id: appleShopId, description: 'Pengisian daya cepat dan efisien. [Kategori: Aksesoris]', images: ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&q=80'] }
-    ];
-
-    // Include both mock products and real DB products for the presentation
-    let products = [...mockProducts, ...dbProducts];
-
-    // Remove duplicates from products list
-    products = products.filter((v, i, a) => a.findIndex(t => t.name.toLowerCase() === v.name.toLowerCase()) === i);
-
-    // Pre-fetch shop names for all unique shop IDs so we can filter them
-    const shopIds = [...new Set(products.map(p => p.shop_id).filter(Boolean))];
-    if (shopIds.length > 0) {
-      try {
-        const shopRes  = await fetch(`${BASE_URL}/shops`);
-        const shopData = await shopRes.json();
-        (shopData.data || []).forEach(s => { 
-          shopCache[s.id] = s.name; 
-          shopDetailCache[s.id] = s;
-        });
-      } catch { /* shop names are optional */ }
-    }
-
-    // Apply filtering by Shop Name if provided
-    if (shopQuery) {
-      products = products.filter(p => {
-        const pShopName = (p.shop_name || shopCache[p.shop_id] || '').toLowerCase();
-        return pShopName === shopQuery.toLowerCase();
-      });
-    }
-
-    // Apply text filtering on client side
-    if (filter !== 'all') {
-      products = products.filter(p => {
-        const desc = (p.description || '').toLowerCase();
-        const name = (p.name || '').toLowerCase();
-        return desc.includes(filter) || name.includes(filter);
-      });
-    }
-
-    if (products.length === 0) {
-      grid.innerHTML = `
-        <div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:#64748B;">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 16px;opacity:0.4;display:block;">
-            <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
-          </svg>
-          <p style="font-size:15px;font-weight:600;margin-bottom:6px;">Belum ada produk tersedia</p>
-          <span style="font-size:13px;color:#94A3B8;">Seller belum menambahkan produk. Cek kembali nanti!</span>
-        </div>`;
+  grid.addEventListener('click', async (e) => {
+    const shopBtn = e.target.closest('.shop-clickable');
+    const cartBtn = e.target.closest('.btn-add-cart');
+    const buyBtn  = e.target.closest('.btn-buy-now');
+    const card    = e.target.closest('.product-card');
+    if (shopBtn) { e.stopPropagation(); goToShop(shopBtn.dataset.shop); return; }
+    if (cartBtn) {
+      e.stopPropagation();
+      const p = find(cartBtn.dataset.id);
+      if (!p) return;
+      // Produk bervariasi: pilih warna/ukuran dulu di detail produk (seperti Shopee)
+      if (hasOptions(p)) { showProductDetailModal(p, { pickFor: 'cart' }); return; }
+      if (addToCart(cartPayload(p))) {
+        updateCartUI();
+        showAlert(`"${p.name}" masuk keranjang.`, 'success');
+        cartBtn.classList.add('is-added');
+        setTimeout(() => cartBtn.classList.remove('is-added'), 1200);
+      }
       return;
     }
-    // Render all cards
-    grid.innerHTML = products.map(p => renderCard(p, p.shop_name || shopCache[p.shop_id] || '')).join('');
+    if (buyBtn) {
+      e.stopPropagation();
+      const p = find(buyBtn.dataset.id);
+      if (!p) return;
+      if (hasOptions(p)) { showProductDetailModal(p, { pickFor: 'buy' }); return; }
+      await buyNow(cartPayload(p), 1);
+      return;
+    }
+    if (card) {
+      const p = find(card.dataset.productId);
+      if (p) showProductDetailModal(p);
+    }
+  });
+  grid.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const card = e.target.closest('.product-card');
+    if (card && e.target === card) {
+      const p = find(card.dataset.productId);
+      if (p) showProductDetailModal(p);
+    }
+  });
+}
 
-    // Bind Add-to-cart buttons
-    grid.querySelectorAll('.btn-add-cart').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const { id, name, price, image, shop: shopName, shopId } = btn.dataset;
-        const added = addToCart({ id, name, price: parseFloat(price), image, shopName, shopId });
-        if (!added) return;
+// ─── Data katalog ───────────────────────────────────────────────────────────
+async function fetchCatalog() {
+  const [prodRes, shopRes, txRes] = await Promise.all([
+    fetch(`${BASE_URL}/products`).then(r => r.json()),
+    fetch(`${BASE_URL}/shops`).then(r => r.json()).catch(() => ({ data: [] })),
+    fetch(`${BASE_URL}/transactions`).then(r => r.json()).catch(() => ({ data: [] })),
+  ]);
 
-        updateCartUI();
-        showAlert(`"${name}" ditambahkan ke keranjang!`, "success");
+  (shopRes.data || []).forEach(s => { shopCache[s.id] = s.name; shopDetailCache[s.id] = s; });
 
-        // Brief button feedback
-        btn.classList.add('pulse-add');
-        btn.textContent = '✓ Dimasukkan';
-        setTimeout(() => {
-          btn.innerHTML = `
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
-            </svg>
-            Keranjang
-          `;
-          btn.classList.remove('pulse-add');
-        }, 1000);
-      });
+  // Jumlah terjual dari transaksi asli (pesanan dibatalkan tidak dihitung)
+  soldMap = {};
+  (txRes.data || []).forEach(t => {
+    if (t.status === 'cancelled') return;
+    (t.items || []).forEach(i => {
+      const key = mockIdFromName(i.name) || i.product_id;
+      soldMap[key] = (soldMap[key] || 0) + (i.quantity || 0);
     });
+  });
 
-    // Bind Buy Now buttons
-    grid.querySelectorAll('.btn-buy-now').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const { id, name, price, image, shop: shopName, shopId } = btn.dataset;
-        const added = addToCart({ id, name, price: parseFloat(price), image, shopName, shopId });
-        if (!added) return;
+  allProducts = (prodRes.data || [])
+    .filter((v, i, a) => a.findIndex(t => t.name.toLowerCase() === v.name.toLowerCase()) === i);
+  return allProducts;
+}
 
-        updateCartUI();
-        
-        // Open cart drawer
-        document.dispatchEvent(new CustomEvent('vendora:open-cart'));
-        
-        // Directly trigger checkout process
-        await executeCheckout();
-      });
-    });
+/** Data katalog untuk halaman lain (mis. Pesanan saya): produk, toko, jumlah terjual. */
+export async function loadCatalogData() {
+  if (!allProducts.length) await fetchCatalog();
+  return { products: allProducts, shops: shopDetailCache, soldOf, imageOf, shopNameOf };
+}
 
-    // Bind Shop click events to show shop details modal
-    grid.querySelectorAll('.shop-clickable').forEach(el => {
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const { shopId } = el.dataset;
-        const name = el.querySelector('span:not(.verified-dot)').textContent.trim();
-        
-        let shop = shopDetailCache[shopId];
-        if (!shop) {
-          // Fallback untuk mock shop
-          shop = {
-            name: name,
-            description: `Toko mitra resmi ${name} yang menyediakan berbagai produk berkualitas premium untuk Anda.`,
-            owner_phone: "08123456789",
-            owner_address: "Kawasan Ruko Sentral Bisnis Blok A, Jakarta",
-            owner_avatar: name.toLowerCase() === 'apple' ? 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' : ''
-          };
-        } else {
-          // If real shop but address/phone is empty (not updated yet by seller)
-          if (!shop.owner_phone) shop.owner_phone = "08123456789";
-          if (!shop.owner_address) shop.owner_address = "Kawasan Ruko Sentral Bisnis Blok A, Jakarta";
-          if (!shop.owner_avatar && name.toLowerCase() === 'apple') shop.owner_avatar = 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg';
-        }
-        
-        // Memanggil fungsi global showShopDetailModal di main.js
-        if (typeof window.showShopDetailModal === 'function') {
-          window.showShopDetailModal(shop);
-        }
-      });
-    });
+function sortProducts(list, sort) {
+  const out = [...list];
+  const low = (p) => priceRange(p).min;
+  if (sort === 'terlaris') out.sort((a, b) => soldOf(b) - soldOf(a));
+  if (sort === 'termurah') out.sort((a, b) => low(a) - low(b));
+  if (sort === 'termahal') out.sort((a, b) => low(b) - low(a));
+  if (sort === 'terbaru')  out.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  return out;
+}
 
-    // Bind Product Card click events to open product details modal
-    grid.querySelectorAll('.product-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const productId = card.dataset.productId;
-        const product = products.find(p => p.id === productId);
-        if (product) {
-          showProductDetailModal(product, product.shop_name || shopCache[product.shop_id] || '');
-        }
-      });
-    });
+export function setCatalogSort(sort) {
+  state.sort = sort;
+  return loadCatalogProducts(state.filter, state.shop, { refetch: false });
+}
 
-    // Re-apply search filter if there's already text in the search bar
-    const searchInput = document.getElementById('nav-search-input');
-    if (searchInput && searchInput.value) {
-      searchInput.dispatchEvent(new Event('input'));
+function applyFilter(products, filter) {
+  if (!filter || filter === 'all') return products;
+  if (filter.startsWith('kat:')) {
+    const cat = filter.slice(4).toLowerCase();
+    return products.filter(p => parseCategories(p).some(c => c.toLowerCase() === cat));
+  }
+  if (filter.startsWith('sub:')) {
+    const [catKey, sub] = filter.slice(4).split('|');
+    return products.filter(p => categoryOf(p) === catKey && matchesSub(p, sub));
+  }
+  return products.filter(p => categoryOf(p) === filter);
+}
+
+function filterLabel(filter) {
+  if (!filter || filter === 'all') return '';
+  if (filter.startsWith('kat:')) return filter.slice(4);
+  if (filter.startsWith('sub:')) return filter.slice(4).split('|')[1];
+  return categoryLabel(filter);
+}
+
+/**
+ * Muat & render katalog.
+ * filter: 'all' | kunci kategori ('fashion', 'dapur', …) | 'sub:<kategori>|<sub>' | 'kat:<etalase toko>'
+ * Tanpa argumen → pakai filter/toko terakhir (mis. setelah checkout).
+ */
+export async function loadCatalogProducts(filter, shopQuery, { refetch = true } = {}) {
+  const grid = document.getElementById('product-list');
+  if (!grid) return;
+  if (filter !== undefined) state.filter = filter || 'all';
+  if (shopQuery !== undefined) state.shop = shopQuery || null;
+
+  if (refetch || !allProducts.length) {
+    grid.innerHTML = Array(10).fill(0).map(() => `
+      <div class="product-card is-skeleton" aria-hidden="true">
+        <div class="product-img-wrapper sk-block"></div>
+        <div class="product-body"><div class="sk-line" style="width:85%"></div><div class="sk-line" style="width:55%"></div><div class="sk-line" style="width:35%"></div></div>
+      </div>`).join('');
+  }
+
+  try {
+    if (refetch || !allProducts.length) await fetchCatalog();
+
+    let products = allProducts;
+    if (state.shop) {
+      const q = state.shop.toLowerCase();
+      products = products.filter(p => shopNameOf(p).toLowerCase() === q);
+    }
+    const shopProducts = products;
+
+    products = applyFilter(products, state.filter);
+    if (state.q) {
+      const ranked = searchProducts(state.q, products);
+      products = state.sort === 'relevan' ? ranked : sortProducts(ranked, state.sort);
+    } else {
+      products = sortProducts(products, state.sort);
     }
 
+    // Beri tahu halaman (header toko, etalase kategori, jumlah hasil)
+    document.dispatchEvent(new CustomEvent('vendora:catalog-loaded', {
+      detail: { shopProducts, shown: products.length, soldOf, parseCategories, shop: state.shop, shopDetailCache,
+                q: state.q, filter: state.filter, filterLabel: filterLabel(state.filter) }
+    }));
+
+    if (!products.length) {
+      const what = state.q ? `untuk "${esc(state.q)}"` : (state.filter !== 'all' ? `di ${esc(filterLabel(state.filter))}` : 'di sini');
+      grid.innerHTML = `
+        <div class="catalog-empty">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <h3>Belum ada produk ${what}</h3>
+          <p>${state.q ? 'Coba kata kunci lain, misalnya nama merek atau jenis barang.' : 'Penjual belum menambahkan produk di kategori ini. Coba kategori lain.'}</p>
+          <button type="button" class="btn-line" data-reset-catalog>Lihat semua produk</button>
+        </div>`;
+      grid.querySelector('[data-reset-catalog]')?.addEventListener('click', () => {
+        clearSearch();
+        document.dispatchEvent(new CustomEvent('vendora:filter-changed', { detail: { filter: 'all' } }));
+        loadCatalogProducts('all', state.shop, { refetch: false });
+      });
+      return;
+    }
+
+    grid.innerHTML = products.map(renderCard).join('');
+    bindGrid(grid, products);
   } catch (err) {
     console.error('Failed to load products:', err);
     grid.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#64748B;">
-        <p style="font-size:15px;font-weight:600;color:#EF4444;margin-bottom:6px;">Gagal memuat produk</p>
-        <span style="font-size:13px;">Gagal memuat produk. Terjadi kesalahan jaringan atau server sedang offline.</span>
+      <div class="catalog-empty">
+        <h3>Gagal memuat produk</h3>
+        <p>Periksa koneksi lalu muat ulang halaman.</p>
       </div>`;
   }
 }
 
-// ─── Show Product Detail Modal (2 Columns Luxury Layout) ──────────────────────
-function showProductDetailModal(p, shopName) {
+/** Buka detail produk berdasarkan ID (dipakai pencarian & tautan ?p=). */
+export async function openProductById(id) {
+  if (!allProducts.length) await fetchCatalog();
+  const p = allProducts.find(x => x.id === id);
+  if (p) showProductDetailModal(p);
+}
+
+// ─── Chat penjual (dari modal detail) ───────────────────────────────────────
+function openChat(shop, name) {
+  if (!shop) { showAlert('Chat belum tersedia untuk toko ini.', 'error'); return; }
+  document.getElementById('product-detail-modal')?.classList.remove('active');
+  if (window.openShopChat) window.openShopChat(shop, name);
+}
+
+// ─── Modal detail produk ────────────────────────────────────────────────────
+function sizeGuideTable(g) {
+  return `
+    <div class="pd-guide-table-wrap">
+      <table class="pd-guide-table">
+        <thead><tr>${g.columns.map(c => `<th scope="col">${esc(c)}</th>`).join('')}</tr></thead>
+        <tbody>${g.rows.map(r => `<tr>${r.map((c, i) => i === 0 ? `<th scope="row">${esc(c)}</th>` : `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>
+    </div>
+    ${g.note ? `<p class="pd-guide-note">${esc(g.note)}</p>` : ''}`;
+}
+
+function showProductDetailModal(p, { pickFor = null } = {}) {
   const modal = document.getElementById('product-detail-modal');
   const body = modal ? modal.querySelector('.product-detail-modal-body') : null;
   if (!modal || !body) return;
 
-  const mainImage = (p.images && p.images[0]) ? p.images[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80';
+  const shopName = shopNameOf(p);
+  const shop = shopDetailCache[p.shop_id];
   const inStock = p.stock > 0;
-  const priceStr = `Rp ${Number(p.price).toLocaleString('id-ID')}`;
-  
-  // Extract category and spec dynamic data
-  const descLower = (p.description || '').toLowerCase();
-  let category = 'Lain-lain';
-  if (descLower.includes('elektronik')) category = 'Elektronik';
-  else if (descLower.includes('fashion')) category = 'Fashion';
-  else if (descLower.includes('kecantikan') || descLower.includes('skincare') || descLower.includes('perfume')) category = 'Kecantikan';
-  else if (descLower.includes('olahraga')) category = 'Olahraga';
-  else if (descLower.includes('rumah') || descLower.includes('taman') || descLower.includes('bento')) category = 'Rumah & Taman';
+  const sold = soldOf(p);
+  const images = p.images && p.images.length ? p.images : [imageOf(p)];
+  const desc = cleanDesc(p.description) || 'Penjual belum menulis deskripsi.';
+  const catKey = categoryOf(p);
+  const sub = p.subcategory || parseCategories(p)[0] || '';
+  const shopList = allProducts.filter(x => shopNameOf(x) === shopName);
+  const others = shopList.filter(x => x.id !== p.id).slice(0, 6);
+  const shopSold = shopList.reduce((s, x) => s + soldOf(x), 0);
+  const since = shop && shop.created_at
+    ? new Date(shop.created_at).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }) : '';
+  const groups = p.options || [];
+  const sel = {};
+  // Pilihan tunggal langsung terpilih
+  groups.forEach(g => { if ((g.values || []).length === 1) sel[g.name] = g.values[0].label; });
 
-  let spec = {
-    brand: 'Apple',
-    category: category,
-    warna: 'Space Black / Titanium',
-    garansi: '1 Tahun Resmi iBox/Apple',
-    material: 'Premium Apple Material'
-  };
+  const specRows = [
+    ['Kategori', [catKey ? categoryLabel(catKey) : '', sub].filter((v, i, a) => v && a.indexOf(v) === i).join(' › ')],
+    ...(p.specs || []).map(s => [s.label, s.value]),
+    ['Stok', inStock ? `${p.stock} unit` : 'Habis'],
+    ['Dikirim dari', shop && shop.owner_address ? shop.owner_address : ''],
+  ].filter(r => r[1]);
 
-  const nameLower = p.name.toLowerCase();
-  if (nameLower.includes('iphone')) {
-    spec.warna = 'Natural Titanium';
-    spec.material = 'Titanium & Ceramic Shield';
-  } else if (nameLower.includes('macbook')) {
-    spec.warna = 'Space Black';
-    spec.material = '100% Recycled Aluminum';
-  } else if (nameLower.includes('ipad')) {
-    spec.warna = 'Space Black';
-    spec.material = 'Aluminum & Tandem OLED';
-  } else if (nameLower.includes('watch')) {
-    spec.warna = 'Titanium';
-    spec.material = 'Aerospace-grade Titanium';
-  } else if (nameLower.includes('airpods')) {
-    spec.warna = 'White';
-    spec.material = 'Polycarbonate';
-  } else if (nameLower.includes('vision')) {
-    spec.warna = 'Silver';
-    spec.material = 'Custom Aluminum Alloy & 3D Glass';
-  }
-
-  // Thumbnails render
-  const allImages = p.images && p.images.length > 0 ? p.images : [mainImage];
-  let galleryImages = [...allImages];
-  if (galleryImages.length === 1) {
-    // Generate context-aware additional images to populate the slider beautifully
-    if (nameLower.includes('earbuds') || nameLower.includes('headphones') || nameLower.includes('senn')) {
-      galleryImages.push('https://images.unsplash.com/photo-1608156639585-b3a032ef9689?w=400&q=80');
-      galleryImages.push('https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&q=80');
-    } else if (nameLower.includes('watch') || nameLower.includes('jam')) {
-      galleryImages.push('https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=80');
-      galleryImages.push('https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=400&q=80');
-    } else if (nameLower.includes('bottle') || nameLower.includes('botol')) {
-      galleryImages.push('https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&q=80');
-      galleryImages.push('https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&q=80');
-    } else if (nameLower.includes('perfume') || nameLower.includes('parfum')) {
-      galleryImages.push('https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80');
-      galleryImages.push('https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&q=80');
-    } else if (nameLower.includes('shoes') || nameLower.includes('sepatu') || nameLower.includes('nike')) {
-      galleryImages.push('https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80');
-      galleryImages.push('https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&q=80');
-    } else {
-      galleryImages.push('https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80');
-    }
-  }
-
-  const thumbnailsHtml = galleryImages.map((img, idx) => `
-    <div class="p-thumb ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
-      <img src="${img}" alt="Thumbnail ${idx + 1}">
-    </div>
-  `).join('');
-
-  // Short description extraction
-  let shortDesc = p.description || 'Produk premium berkualitas tinggi untuk menyempurnakan gaya hidup modern Anda.';
-  if (shortDesc.length > 150) {
-    shortDesc = shortDesc.slice(0, 150) + '...';
-  }
-
-  // Get shop address fallback
-  const shopDetail = shopDetailCache[p.shop_id];
-  const shopAddress = shopDetail ? shopDetail.owner_address : 'Kawasan Ruko Sentral Bisnis Blok A, Jakarta';
+  const optionHTML = groups.map((g, gi) => {
+    const isSize = /ukuran|size/i.test(g.name);
+    return `
+      <div class="pd-opt" data-group="${gi}">
+        <div class="pd-opt-head">
+          <span class="pd-opt-name">${esc(g.name)}${groups.length ? `<b class="pd-opt-picked" data-picked="${gi}"></b>` : ''}</span>
+          ${isSize && p.size_guide ? `<button type="button" class="pd-guide-link" data-open-guide>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21.3 8.7 8.7 21.3a1 1 0 0 1-1.4 0l-4.6-4.6a1 1 0 0 1 0-1.4L15.3 2.7a1 1 0 0 1 1.4 0l4.6 4.6a1 1 0 0 1 0 1.4z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
+            Panduan ukuran</button>` : ''}
+        </div>
+        <div class="pd-opt-values" role="radiogroup" aria-label="${esc(g.name)}">
+          ${(g.values || []).map((v, vi) => `
+            <button type="button" class="pd-chip${v.swatch ? ' pd-chip--color' : ''}" role="radio" aria-checked="false"
+                    data-g="${gi}" data-v="${vi}">
+              ${v.swatch ? `<span class="pd-chip-swatch" style="background:${esc(v.swatch)}"></span>` : ''}
+              <span>${esc(v.label)}</span>
+            </button>`).join('')}
+        </div>
+        <p class="pd-opt-error" data-error="${gi}" hidden>Pilih ${esc(g.name.toLowerCase())} dulu.</p>
+      </div>`;
+  }).join('');
 
   body.innerHTML = `
-    <div class="p-detail-container">
-      <!-- KIRI: Galeri -->
-      <div class="p-detail-gallery">
-        <div class="p-main-img-wrapper">
-          <img id="p-main-img" src="${mainImage}" alt="${p.name}">
+    <div class="pd">
+      <div class="pd-top">
+        <div class="pd-gallery">
+          <div class="pd-main"><img id="p-main-img" src="${esc(images[0])}" alt="${esc(p.name)}" onerror="this.onerror=null;this.src='${FALLBACK_IMG}'"></div>
+          ${images.length > 1 ? `<div class="pd-thumbs">${images.map((src, i) => `
+            <button type="button" class="pd-thumb ${i === 0 ? 'active' : ''}" data-src="${esc(src)}" aria-label="Foto ${i + 1}"><img src="${esc(src)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
         </div>
-        <div class="p-thumbnails">
-          ${thumbnailsHtml}
-        </div>
-      </div>
-      
-      <!-- KANAN: Informasi -->
-      <div class="p-detail-info">
-        <div>
-          <div class="p-info-category">${spec.category}</div>
-          <h1 class="p-info-name">${p.name}</h1>
-        </div>
-        
-        <div class="p-info-price">${priceStr}</div>
-        
-        <p class="p-info-desc-short">${shortDesc}</p>
-        
-        <div class="p-info-stock">
-          Status: ${inStock ? `<strong>${p.stock} unit tersedia</strong>` : '<span style="color:var(--danger); font-weight:700;">Habis</span>'}
-        </div>
-        
-        <div class="p-info-qty">
-          <span>Jumlah:</span>
-          <div class="qty-selector">
-            <button class="qty-btn" id="qty-minus" type="button" ${inStock ? '' : 'disabled'}>-</button>
-            <input type="number" id="qty-input" value="1" min="1" max="${p.stock}" readonly>
-            <button class="qty-btn" id="qty-plus" type="button" ${inStock ? '' : 'disabled'}>+</button>
+
+        <div class="pd-info">
+          <h1 class="pd-name">${esc(p.name)}</h1>
+          <div class="pd-meta">
+            <span>${sold ? soldText(sold) : 'Belum ada penjualan'}</span>
+            <span class="pd-dot" aria-hidden="true"></span>
+            <span>${esc(catKey ? categoryLabel(catKey) : 'Lainnya')}</span>
           </div>
-        </div>
-        
-        <div class="p-info-actions">
-          <button class="btn-p-add-cart" id="modal-add-cart-btn" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}" data-image="${mainImage}" data-shop="${shopName}" data-shop-id="${p.shop_id || ''}" ${inStock ? '' : 'disabled'} type="button">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
-            </svg>
-            Tambah ke Keranjang
-          </button>
-          <button class="btn-p-buy-now" id="modal-buy-now-btn" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}" data-image="${mainImage}" data-shop="${shopName}" data-shop-id="${p.shop_id || ''}" ${inStock ? '' : 'disabled'} type="button">
-            Beli Sekarang
-          </button>
-        </div>
-        
-        <!-- Accordions -->
-        <div class="p-detail-accordions">
-          <!-- SPESIFIKASI PRODUK -->
-          <div class="p-accordion-item">
-            <button class="p-accordion-header" type="button">
-              <span>SPESIFIKASI PRODUK</span>
-              <svg class="p-accordion-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="p-accordion-content">
-              <table class="p-spec-table">
-                <tr><td>Brand</td><td>${spec.brand}</td></tr>
-                <tr><td>Kategori</td><td>${spec.category}</td></tr>
-                <tr><td>Warna</td><td>${spec.warna}</td></tr>
-                <tr><td>Garansi</td><td>${spec.garansi}</td></tr>
-                <tr><td>Material</td><td>${spec.material}</td></tr>
-                <tr><td>Stok</td><td>${p.stock} unit</td></tr>
-              </table>
-            </div>
-          </div>
-          
-          <!-- DESKRIPSI PRODUK -->
-          <div class="p-accordion-item">
-            <button class="p-accordion-header" type="button">
-              <span>DESKRIPSI PRODUK</span>
-              <svg class="p-accordion-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="p-accordion-content">
-              <p class="p-spec-desc">${p.description || 'Tidak ada deskripsi produk.'}</p>
-            </div>
-          </div>
-          
-          <!-- INFORMASI PENJUAL -->
-          <div class="p-accordion-item">
-            <button class="p-accordion-header" type="button">
-              <span>INFORMASI PENJUAL</span>
-              <svg class="p-accordion-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="p-accordion-content">
-              <div class="p-seller-info">
-                <div class="p-seller-name">${shopName || 'Toko Mitra Resmi'}</div>
-                <div class="p-seller-verified">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="color:var(--primary)"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  <span>Merchant Terverifikasi</span>
-                </div>
-                ${shopAddress ? `<div class="p-seller-address"><strong>Alamat Toko:</strong> ${shopAddress}</div>` : ''}
+          <div class="pd-price" id="pd-price"></div>
+
+          ${groups.length ? `<div class="pd-options" id="pd-options">${optionHTML}</div>` : ''}
+
+          <dl class="pd-rows">
+            <div><dt>Pengiriman</dt><dd><b>Gratis ongkir</b>${shop && shop.owner_address ? `<small>Dikirim dari ${esc(shop.owner_address)}</small>` : ''}</dd></div>
+            <div><dt>Kuantitas</dt><dd class="pd-qty-row">
+              <div class="qty-selector">
+                <button class="qty-btn" id="qty-minus" type="button" aria-label="Kurangi" ${inStock ? '' : 'disabled'}>−</button>
+                <input type="number" id="qty-input" value="1" min="1" max="${p.stock}" aria-label="Jumlah" ${inStock ? '' : 'disabled'}>
+                <button class="qty-btn" id="qty-plus" type="button" aria-label="Tambah" ${inStock ? '' : 'disabled'}>+</button>
               </div>
-            </div>
+              ${inStock ? `<span class="pd-stock${p.stock <= 5 ? ' is-low' : ''}">Tersisa ${p.stock} unit</span>` : '<span class="v-status v-status--bad">Stok habis</span>'}
+            </dd></div>
+          </dl>
+
+          <div class="pd-actions">
+            <button class="btn-p-add-cart" id="modal-add-cart-btn" type="button" ${inStock ? '' : 'disabled'}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+              Masukkan keranjang
+            </button>
+            <button class="btn-p-buy-now" id="modal-buy-now-btn" type="button" ${inStock ? '' : 'disabled'}>Beli sekarang</button>
           </div>
+          <p class="pd-assure">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
+            Dijual oleh merchant terverifikasi Vendora
+          </p>
         </div>
       </div>
-    </div>
-  `;
 
-  // Bind Thumbnail Click events to swap main image
+      ${shopName ? `
+      <section class="pd-shop">
+        <span class="pd-shop-avatar" aria-hidden="true">${esc(shopName.charAt(0).toUpperCase())}</span>
+        <div class="pd-shop-id">
+          <b>${esc(shopName)}</b>
+          <span class="v-status v-status--good">Merchant terverifikasi</span>
+        </div>
+        <dl class="pd-shop-stats">
+          <div><dt>Produk</dt><dd>${shopList.length}</dd></div>
+          <div><dt>Terjual</dt><dd>${shopSold.toLocaleString('id-ID')}</dd></div>
+          ${since ? `<div><dt>Bergabung</dt><dd>${esc(since)}</dd></div>` : ''}
+        </dl>
+        <div class="pd-shop-actions">
+          ${shop ? `<button type="button" class="btn-line btn-line--sm" id="pd-chat">Chat</button>` : ''}
+          <button type="button" class="btn-ink btn-ink--sm" id="pd-visit">Kunjungi toko</button>
+        </div>
+      </section>` : ''}
+
+      <div class="pd-details">
+        <section>
+          <h2>Spesifikasi produk</h2>
+          <dl class="pd-spec">${specRows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
+        </section>
+        <section>
+          <h2>Deskripsi produk</h2>
+          <p class="pd-desc">${esc(desc)}</p>
+          ${p.size_guide ? `<h2 class="pd-guide-title" id="pd-guide-section">Panduan ukuran</h2>${sizeGuideTable(p.size_guide)}` : ''}
+        </section>
+      </div>
+
+      ${others.length ? `
+      <section class="pd-more">
+        <div class="pd-more-head">
+          <h2>Produk lain dari ${esc(shopName)}</h2>
+          <button type="button" class="link-plain" id="pd-more-all">Lihat semua</button>
+        </div>
+        <div class="pd-more-grid">${others.map(o => `
+          <button type="button" class="pd-mini" data-id="${esc(o.id)}">
+            <img src="${esc(imageOf(o))}" alt="" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_IMG}'">
+            <span class="pd-mini-name">${esc(o.name)}</span>
+            <span class="pd-mini-price">${fmtRp(priceRange(o).min)}</span>
+          </button>`).join('')}</div>
+      </section>` : ''}
+
+      ${p.size_guide ? `
+      <div class="pd-guide-sheet" id="pd-guide-sheet" hidden>
+        <div class="pd-guide-card" role="dialog" aria-modal="true" aria-labelledby="pd-guide-h">
+          <div class="pd-guide-head">
+            <h3 id="pd-guide-h">Panduan ukuran</h3>
+            <button type="button" class="modal-close" data-close-guide aria-label="Tutup">&times;</button>
+          </div>
+          ${sizeGuideTable(p.size_guide)}
+        </div>
+      </div>` : ''}
+    </div>`;
+
+  // Galeri
   const mainImg = body.querySelector('#p-main-img');
-  const thumbs = body.querySelectorAll('.p-thumb');
-  thumbs.forEach(thumb => {
-    thumb.addEventListener('click', () => {
-      thumbs.forEach(t => t.classList.remove('active'));
-      thumb.classList.add('active');
-      const idx = parseInt(thumb.dataset.idx);
-      mainImg.src = galleryImages[idx];
-    });
-  });
+  const setMain = (src) => {
+    if (!src) return;
+    mainImg.src = src;
+    body.querySelectorAll('.pd-thumb').forEach(x => x.classList.toggle('active', x.dataset.src === src));
+  };
+  body.querySelectorAll('.pd-thumb').forEach(t => t.addEventListener('click', () => setMain(t.dataset.src)));
 
-  // Bind Qty Selector logic
-  const qtyInput = body.querySelector('#qty-input');
-  const btnMinus = body.querySelector('#qty-minus');
-  const btnPlus = body.querySelector('#qty-plus');
-  if (btnMinus && btnPlus && qtyInput && inStock) {
-    btnMinus.addEventListener('click', () => {
-      let val = parseInt(qtyInput.value);
-      if (val > 1) {
-        qtyInput.value = val - 1;
-      }
-    });
-    btnPlus.addEventListener('click', () => {
-      let val = parseInt(qtyInput.value);
-      if (val < p.stock) {
-        qtyInput.value = val + 1;
-      }
-    });
-  }
+  // Harga mengikuti variasi
+  const priceEl = body.querySelector('#pd-price');
+  const renderPrice = () => {
+    const allPicked = groups.every(g => sel[g.name]);
+    const { min, max } = priceRange(p);
+    if (allPicked || max === min) {
+      priceEl.textContent = fmtRp(cartPayload(p, sel).price);
+    } else {
+      priceEl.innerHTML = `${fmtRp(min)} <span class="pd-price-sep">–</span> ${fmtRp(max)}`;
+    }
+  };
 
-  // Bind Cart Action inside Modal
-  const modalAddCartBtn = body.querySelector('#modal-add-cart-btn');
-  if (modalAddCartBtn && inStock) {
-    modalAddCartBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const qty = parseInt(qtyInput.value) || 1;
-      
-      let added = false;
-      for (let i = 0; i < qty; i++) {
-        added = addToCart({
-          id: p.id,
-          name: p.name,
-          price: parseFloat(p.price),
-          image: mainImage,
-          shopName: shopName,
-          shopId: p.shop_id || ''
-        });
-      }
-
-      if (!added) return;
-      updateCartUI();
-      showAlert(`"${p.name}" (${qty} item) ditambahkan ke keranjang!`, "success");
-
-      // Button feedback
-      modalAddCartBtn.classList.add('pulse-add');
-      modalAddCartBtn.textContent = '✓ Dimasukkan';
-      setTimeout(() => {
-        modalAddCartBtn.innerHTML = `
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-            <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
-          </svg>
-          Tambah ke Keranjang
-        `;
-        modalAddCartBtn.classList.remove('pulse-add');
-      }, 1200);
-    });
-  }
-
-  // Bind Buy Now Action inside Modal
-  const modalBuyNowBtn = body.querySelector('#modal-buy-now-btn');
-  if (modalBuyNowBtn && inStock) {
-    modalBuyNowBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const qty = parseInt(qtyInput.value) || 1;
-      
-      let added = false;
-      for (let i = 0; i < qty; i++) {
-        added = addToCart({
-          id: p.id,
-          name: p.name,
-          price: parseFloat(p.price),
-          image: mainImage,
-          shopName: shopName,
-          shopId: p.shop_id || ''
-        });
-      }
-
-      if (!added) return;
-      updateCartUI();
-
-      // Close product modal, open cart drawer
-      modal.classList.remove('active');
-      document.dispatchEvent(new CustomEvent('vendora:open-cart'));
-    });
-  }
-
-  // Bind Accordion expand/collapse
-  const accordionItems = body.querySelectorAll('.p-accordion-item');
-  accordionItems.forEach(item => {
-    const header = item.querySelector('.p-accordion-header');
-    const content = item.querySelector('.p-accordion-content');
-    
-    header.addEventListener('click', () => {
-      const isActive = item.classList.contains('active');
-      
-      // Close other accordions
-      accordionItems.forEach(otherItem => {
-        otherItem.classList.remove('active');
-        otherItem.querySelector('.p-accordion-content').style.maxHeight = null;
+  // Variasi
+  const syncOptions = () => {
+    groups.forEach((g, gi) => {
+      body.querySelectorAll(`.pd-chip[data-g="${gi}"]`).forEach(btn => {
+        const on = g.values[+btn.dataset.v].label === sel[g.name];
+        btn.classList.toggle('is-active', on);
+        btn.setAttribute('aria-checked', String(on));
       });
-
-      if (!isActive) {
-        item.classList.add('active');
-        content.style.maxHeight = content.scrollHeight + "px";
-      }
+      const picked = body.querySelector(`[data-picked="${gi}"]`);
+      if (picked) picked.textContent = sel[g.name] ? `: ${sel[g.name]}` : '';
     });
-  });
+    renderPrice();
+  };
+  body.querySelectorAll('.pd-chip').forEach(btn => btn.addEventListener('click', () => {
+    const g = groups[+btn.dataset.g];
+    const v = g.values[+btn.dataset.v];
+    sel[g.name] = v.label;
+    body.querySelector(`[data-error="${btn.dataset.g}"]`).hidden = true;
+    btn.closest('.pd-opt').classList.remove('is-missing');
+    if (v.image) setMain(v.image);
+    syncOptions();
+  }));
+  syncOptions();
 
-  // Open the modal
+  const missingGroup = () => {
+    const gi = groups.findIndex(g => !sel[g.name]);
+    if (gi < 0) return false;
+    const opt = body.querySelector(`.pd-opt[data-group="${gi}"]`);
+    body.querySelector(`[data-error="${gi}"]`).hidden = false;
+    opt.classList.remove('is-missing'); void opt.offsetWidth; opt.classList.add('is-missing');
+    opt.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return true;
+  };
+
+  // Panduan ukuran
+  const sheet = body.querySelector('#pd-guide-sheet');
+  body.querySelector('[data-open-guide]')?.addEventListener('click', () => { sheet.hidden = false; sheet.querySelector('[data-close-guide]').focus(); });
+  sheet?.addEventListener('click', (e) => { if (e.target === sheet || e.target.closest('[data-close-guide]')) sheet.hidden = true; });
+
+  // Kuantitas
+  const qtyInput = body.querySelector('#qty-input');
+  const clampQty = () => {
+    let v = parseInt(qtyInput.value, 10) || 1;
+    v = Math.min(Math.max(1, v), Math.max(1, p.stock));
+    qtyInput.value = v;
+    return v;
+  };
+  body.querySelector('#qty-minus')?.addEventListener('click', () => { qtyInput.value = clampQty() - 1; clampQty(); });
+  body.querySelector('#qty-plus')?.addEventListener('click', () => { qtyInput.value = clampQty() + 1; clampQty(); });
+  qtyInput?.addEventListener('change', clampQty);
+
+  // Aksi
+  body.querySelector('#modal-add-cart-btn')?.addEventListener('click', () => {
+    if (missingGroup()) return;
+    const qty = clampQty();
+    const item = cartPayload(p, sel);
+    if (!addToCart(item, qty)) return;
+    updateCartUI();
+    showAlert(`${qty} × "${p.name}${item.variant ? ` (${item.variant})` : ''}" masuk keranjang.`, 'success');
+  });
+  body.querySelector('#modal-buy-now-btn')?.addEventListener('click', async () => {
+    if (missingGroup()) return;
+    const qty = clampQty();
+    modal.classList.remove('active');
+    await buyNow(cartPayload(p, sel), qty);
+  });
+  body.querySelector('#pd-visit')?.addEventListener('click', () => goToShop(shopName));
+  body.querySelector('#pd-more-all')?.addEventListener('click', () => goToShop(shopName));
+  body.querySelector('#pd-chat')?.addEventListener('click', () => openChat(shop, shopName));
+  body.querySelectorAll('.pd-mini').forEach(btn => btn.addEventListener('click', () => {
+    const next = allProducts.find(x => x.id === btn.dataset.id);
+    if (next) showProductDetailModal(next);
+  }));
+
+  body.scrollTop = 0;
   modal.classList.add('active');
+
+  // Dibuka dari tombol kartu: arahkan langsung ke pilihan variasi
+  if (pickFor && groups.length) {
+    const opts = body.querySelector('#pd-options');
+    opts?.classList.add('is-prompt');
+    const actionBtn = body.querySelector(pickFor === 'buy' ? '#modal-buy-now-btn' : '#modal-add-cart-btn');
+    actionBtn?.classList.add('is-primary-pick');
+    setTimeout(() => opts?.querySelector('.pd-chip')?.focus({ preventScroll: true }), 250);
+  }
 }
 
-// Bind close button on product detail modal
+// Tutup modal detail
 document.addEventListener('DOMContentLoaded', () => {
   const closeBtn = document.getElementById('product-detail-close-btn');
   const modal = document.getElementById('product-detail-modal');
   if (closeBtn && modal) {
-    closeBtn.addEventListener('click', () => {
-      modal.classList.remove('active');
-    });
-    // Close modal on escape key
+    closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') modal.classList.remove('active');
+      if (e.key !== 'Escape') return;
+      const sheet = document.getElementById('pd-guide-sheet');
+      if (sheet && !sheet.hidden) { sheet.hidden = true; return; }
+      modal.classList.remove('active');
     });
   }
 });
 
-// ─── Real-time Search ───────────────────────────────────────────────────────
-export function initSearch() {
-  const searchInput = document.getElementById('nav-search-input');
-  if (!searchInput) return;
+// ─── Pencarian ──────────────────────────────────────────────────────────────
+const norm = (s) => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '');
 
-  searchInput.addEventListener('input', (e) => {
-    const term = e.target.value.toLowerCase().trim();
-    const cards = document.querySelectorAll('.product-card');
-    let hasVisible = false;
-    
-    cards.forEach(card => {
-      const searchData = card.getAttribute('data-search-term') || '';
-      if (searchData.includes(term)) {
-        card.style.display = 'flex';
-        hasVisible = true;
-      } else {
-        card.style.display = 'none';
-      }
-    });
-    
-    // Optionally handle empty state here if needed
-    const grid = document.getElementById('product-grid');
-    let emptyState = document.getElementById('search-empty-state');
-    
-    if (!hasVisible && cards.length > 0) {
-      if (!emptyState) {
-        emptyState = document.createElement('div');
-        emptyState.id = 'search-empty-state';
-        emptyState.style.gridColumn = '1/-1';
-        emptyState.style.textAlign = 'center';
-        emptyState.style.padding = '40px 20px';
-        emptyState.style.color = '#64748B';
-        emptyState.innerHTML = 'Tidak ditemukan produk yang cocok dengan pencarianmu.';
-        if (grid) grid.appendChild(emptyState);
-      } else {
-        emptyState.style.display = 'block';
-      }
-    } else if (emptyState) {
-      emptyState.style.display = 'none';
-    }
-    });
+function expandTerms(q) {
+  const words = norm(q).split(/\s+/).filter(Boolean);
+  return words.map(w => [w, ...(SEARCH_SYNONYMS[w] || [])]);
 }
+
+/** Cari produk: setiap kata harus cocok (atau sinonimnya). Hasil diurutkan menurut skor. */
+export function searchProducts(q, list = allProducts) {
+  const groups = expandTerms(q);
+  if (!groups.length) return [];
+  const scored = [];
+  list.forEach(p => {
+    const name = norm(p.name);
+    const shop = norm(shopNameOf(p));
+    const cat = categoryOf(p);
+    const catText = norm(`${cat ? categoryLabel(cat) : ''} ${p.subcategory || ''} ${parseCategories(p).join(' ')}`);
+    const desc = norm(cleanDesc(p.description));
+    const opts = norm((p.options || []).flatMap(g => g.values.map(v => v.label)).join(' '));
+    let score = 0;
+    for (const alts of groups) {
+      let best = 0;
+      for (const w of alts) {
+        if (name.startsWith(w)) best = Math.max(best, 12);
+        else if (new RegExp(`(^|\\s)${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(name)) best = Math.max(best, 10);
+        else if (name.includes(w)) best = Math.max(best, 7);
+        else if (shop.includes(w)) best = Math.max(best, 6);
+        else if (catText.includes(w)) best = Math.max(best, 5);
+        else if (opts.includes(w)) best = Math.max(best, 4);
+        else if (desc.includes(w)) best = Math.max(best, 2);
+      }
+      if (!best) return; // satu kata tidak cocok → produk tidak tampil
+      score += best;
+    }
+    scored.push({ p, score: score + Math.min(soldOf(p), 50) / 100 });
+  });
+  return scored.sort((a, b) => b.score - a.score).map(x => x.p);
+}
+
+function highlight(text, q) {
+  const safe = esc(text);
+  const words = norm(q).split(/\s+/).filter(w => w.length > 1);
+  if (!words.length) return safe;
+  const re = new RegExp(`(${words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'ig');
+  return safe.replace(re, '<mark>$1</mark>');
+}
+
+const RECENT_KEY = 'vendora_recent_search';
+const readRecent = () => { try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch { return []; } };
+const pushRecent = (q) => {
+  try {
+    const list = [q, ...readRecent().filter(x => x.toLowerCase() !== q.toLowerCase())].slice(0, 6);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+  } catch { /* penyimpanan tidak tersedia */ }
+};
+
+export function clearSearch() {
+  state.q = '';
+  const input = document.getElementById('nav-search-input');
+  if (input) { input.value = ''; input.closest('.nav-search')?.classList.remove('has-value'); }
+}
+
+/** Jalankan pencarian penuh: filter katalog di beranda, atau pindah ke beranda dari halaman lain. */
+export function applySearch(q) {
+  q = String(q || '').trim();
+  if (!q) return;
+  pushRecent(q);
+  const grid = document.getElementById('product-list');
+  const onHome = grid && !new URLSearchParams(location.search).get('shop');
+  if (!onHome) { window.location.href = `index.html?q=${encodeURIComponent(q)}#catalog-anchor`; return; }
+  state.q = q;
+  state.filter = 'all';
+  document.dispatchEvent(new CustomEvent('vendora:filter-changed', { detail: { filter: 'all' } }));
+  loadCatalogProducts('all', state.shop, { refetch: !allProducts.length }).then(() => {
+    const anchor = document.getElementById('catalog-anchor');
+    if (anchor) window.scrollTo({ top: anchor.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' });
+  });
+}
+
+export function initSearch() {
+  const input = document.getElementById('nav-search-input');
+  if (!input || input.dataset.bound) return;
+  input.dataset.bound = '1';
+  const wrap = input.closest('.nav-search');
+  wrap.setAttribute('role', 'search');
+
+  // Tombol hapus sendiri (tombol bawaan browser berwarna biru & tidak serasi)
+  const clearBtn = document.createElement('button');
+  clearBtn.type = 'button';
+  clearBtn.className = 'nav-search-clear';
+  clearBtn.setAttribute('aria-label', 'Hapus kata kunci');
+  clearBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  wrap.appendChild(clearBtn);
+
+  const panel = document.createElement('div');
+  panel.className = 'search-suggest';
+  panel.id = 'search-suggest';
+  panel.setAttribute('role', 'listbox');
+  panel.hidden = true;
+  wrap.appendChild(panel);
+  input.setAttribute('role', 'combobox');
+  input.setAttribute('aria-controls', 'search-suggest');
+  input.setAttribute('aria-expanded', 'false');
+  input.setAttribute('aria-autocomplete', 'list');
+
+  let active = -1;
+  let timer = null;
+  const items = () => [...panel.querySelectorAll('[data-sg]')];
+  const open = () => { panel.hidden = false; input.setAttribute('aria-expanded', 'true'); wrap.classList.add('is-open'); };
+  const close = () => { panel.hidden = true; input.setAttribute('aria-expanded', 'false'); wrap.classList.remove('is-open'); active = -1; };
+  const setActive = (i) => {
+    const list = items();
+    active = list.length ? (i + list.length) % list.length : -1;
+    list.forEach((el, idx) => el.classList.toggle('is-active', idx === active));
+    if (active >= 0) { list[active].scrollIntoView({ block: 'nearest' }); input.setAttribute('aria-activedescendant', list[active].id); }
+  };
+
+  const renderEmpty = () => {
+    const recent = readRecent();
+    panel.innerHTML = `
+      ${recent.length ? `
+      <div class="sg-section">
+        <div class="sg-head"><span>Pencarian terakhir</span><button type="button" class="sg-clear-recent">Hapus</button></div>
+        <div class="sg-chips">${recent.map((r, i) => `<button type="button" class="sg-chip" id="sg-r${i}" data-sg="query" data-q="${esc(r)}">${esc(r)}</button>`).join('')}</div>
+      </div>` : ''}
+      <div class="sg-section">
+        <div class="sg-head"><span>Kategori populer</span></div>
+        <div class="sg-chips">${CATEGORIES.slice(0, 8).map((c, i) => `<button type="button" class="sg-chip" id="sg-c${i}" data-sg="cat" data-cat="${c.key}">${esc(c.label)}</button>`).join('')}</div>
+      </div>`;
+    panel.querySelector('.sg-clear-recent')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      try { localStorage.removeItem(RECENT_KEY); } catch { /* abaikan */ }
+      renderEmpty();
+    });
+    active = -1;
+    open();
+  };
+
+  const render = async (q) => {
+    if (!allProducts.length) {
+      panel.innerHTML = '<div class="sg-loading">Mencari…</div>';
+      open();
+      try { await fetchCatalog(); } catch { panel.innerHTML = '<div class="sg-loading">Gagal memuat produk.</div>'; return; }
+      if (input.value.trim() !== q) return;
+    }
+    const prods = searchProducts(q).slice(0, 6);
+    const nq = norm(q);
+    const shops = Object.values(shopDetailCache)
+      .filter(s => s.status === 'active' && norm(s.name).includes(nq)).slice(0, 3);
+    const cats = [];
+    CATEGORIES.forEach(c => {
+      if (norm(c.label).includes(nq)) cats.push({ filter: c.key, label: c.label, parent: '' });
+      c.subs.forEach(s => { if (norm(s).includes(nq)) cats.push({ filter: `sub:${c.key}|${s}`, label: s, parent: c.label }); });
+    });
+
+    if (!prods.length && !shops.length && !cats.length) {
+      panel.innerHTML = `
+        <div class="sg-none">
+          <b>Tidak ada hasil untuk "${esc(q)}"</b>
+          <span>Coba kata lain, misalnya nama merek atau jenis barang.</span>
+        </div>`;
+      open();
+      return;
+    }
+
+    panel.innerHTML = `
+      ${cats.length ? `<div class="sg-section"><div class="sg-head"><span>Kategori</span></div>
+        <div class="sg-chips">${cats.slice(0, 5).map((c, i) => `<button type="button" class="sg-chip" id="sg-k${i}" data-sg="filter" data-filter="${esc(c.filter)}">${c.parent ? `<small>${esc(c.parent)} ›</small> ` : ''}${highlight(c.label, q)}</button>`).join('')}</div></div>` : ''}
+      ${prods.length ? `<div class="sg-section"><div class="sg-head"><span>Produk</span></div>
+        ${prods.map((p, i) => `
+        <button type="button" class="sg-product" id="sg-p${i}" data-sg="product" data-id="${esc(p.id)}" role="option">
+          <img src="${esc(imageOf(p))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+          <span class="sg-product-text">
+            <span class="sg-product-name">${highlight(p.name, q)}</span>
+            <span class="sg-product-meta">${esc(shopNameOf(p))}</span>
+          </span>
+          <span class="sg-product-price">${fmtRp(priceRange(p).min)}</span>
+        </button>`).join('')}</div>` : ''}
+      ${shops.length ? `<div class="sg-section"><div class="sg-head"><span>Toko</span></div>
+        ${shops.map((s, i) => `
+        <button type="button" class="sg-shop" id="sg-s${i}" data-sg="shop" data-shop="${esc(s.name)}" role="option">
+          <span class="sg-shop-avatar" aria-hidden="true">${esc(s.name.charAt(0).toUpperCase())}</span>
+          <span>${highlight(s.name, q)}</span>
+          <small>Kunjungi toko ›</small>
+        </button>`).join('')}</div>` : ''}
+      <button type="button" class="sg-all" id="sg-all" data-sg="query" data-q="${esc(q)}">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Lihat semua hasil untuk <b>"${esc(q)}"</b></span>
+      </button>`;
+    active = -1;
+    open();
+  };
+
+  const choose = (el) => {
+    if (!el) return;
+    const kind = el.dataset.sg;
+    close();
+    if (kind === 'product') {
+      pushRecent(input.value.trim() || '');
+      if (document.getElementById('product-detail-modal')) openProductById(el.dataset.id);
+      else window.location.href = `index.html?p=${encodeURIComponent(el.dataset.id)}`;
+    } else if (kind === 'shop') {
+      goToShop(el.dataset.shop);
+    } else if (kind === 'query') {
+      input.value = el.dataset.q;
+      wrap.classList.add('has-value');
+      applySearch(el.dataset.q);
+    } else if (kind === 'cat' || kind === 'filter') {
+      const filter = kind === 'cat' ? el.dataset.cat : el.dataset.filter;
+      clearSearch();
+      document.dispatchEvent(new CustomEvent('vendora:pick-category', { detail: { filter } }));
+    }
+  };
+
+  panel.addEventListener('mousedown', (e) => e.preventDefault()); // fokus tetap di input
+  panel.addEventListener('click', (e) => choose(e.target.closest('[data-sg]')));
+
+  input.addEventListener('focus', () => {
+    const q = input.value.trim();
+    if (q) render(q); else renderEmpty();
+  });
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    wrap.classList.toggle('has-value', !!input.value);
+    clearTimeout(timer);
+    if (!q) {
+      renderEmpty();
+      if (state.q) { state.q = ''; loadCatalogProducts(state.filter, state.shop, { refetch: false }); }
+      return;
+    }
+    timer = setTimeout(() => render(q), 90);
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (panel.hidden) input.dispatchEvent(new Event('focus')); setActive(active + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (active >= 0) choose(items()[active]);
+      else if (input.value.trim()) { close(); applySearch(input.value); input.blur(); }
+    } else if (e.key === 'Escape') { close(); input.blur(); }
+  });
+  input.addEventListener('blur', () => setTimeout(close, 120));
+  clearBtn.addEventListener('mousedown', (e) => e.preventDefault());
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    wrap.classList.remove('has-value');
+    input.focus();
+    renderEmpty();
+    if (state.q) { state.q = ''; loadCatalogProducts(state.filter, state.shop, { refetch: false }); }
+  });
+  // Ikon kaca pembesar ikut menjalankan pencarian
+  wrap.querySelector('.nav-search-icon')?.addEventListener('click', () => { if (input.value.trim()) applySearch(input.value); });
+
+  // ?q= dari halaman lain
+  const q = new URLSearchParams(location.search).get('q');
+  if (q) { input.value = q; wrap.classList.add('has-value'); state.q = q.trim(); }
+}
+
+export const currentSearch = () => state.q;
+export const cartItemFor = cartPayload;
+export { CATEGORIES, CATEGORY_BY_KEY };

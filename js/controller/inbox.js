@@ -1,4 +1,4 @@
-import { BASE_URL, getActiveSession } from "../config/api.js";
+import { BASE_URL, getActiveSession } from "../config/api.js?v=5";
 
 export function initSellerInboxWidget() {
   const session = getActiveSession();

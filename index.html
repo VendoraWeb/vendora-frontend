@@ -7,136 +7,88 @@
   <meta name="description" content="Platform e-commerce premium dengan konsep sewa ruko virtual. Temukan produk terbaik dari merchant terpercaya di Vendora.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=12">
-
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="icon" type="image/png" href="logo.png?v=2">
+  <link rel="apple-touch-icon" href="logo.png?v=2">
+  <meta name="theme-color" content="#0E0E0D">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=14">
+  <link rel="stylesheet" href="css/theme.css?v=7">
+  <link rel="stylesheet" href="css/storefront.css?v=15">
+  <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
 
-  <style>
-    @media(max-width: 768px) {
-      .top-bar-banner { display: none !important; }
-    }
-  </style>
-
-  <!-- Top Bar Banner -->
-  <div class="top-bar-banner" style="background: var(--bg-primary); border-bottom: 1px solid var(--border); padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-secondary); font-family: var(--font);">
-    <div style="display: flex; gap: 20px; align-items: center; font-weight: 500;">
-      <span style="display: flex; align-items: center; gap: 4px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Marketplace Premium #1 Indonesia
-      </span>
-      <span>|</span>
-      <span style="display: flex; align-items: center; gap: 4px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
-        100% Verified Merchant
-      </span>
-      <span>|</span>
-      <span style="display: flex; align-items: center; gap: 4px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Garansi Produk Original
-      </span>
-    </div>
-    <div style="display: flex; gap: 20px; align-items: center;">
-      <a href="#" style="text-decoration: none; color: inherit; font-weight: 500;">Bantuan</a>
-      <span>|</span>
-      <a href="#" style="text-decoration: none; color: inherit; font-weight: 500;">Tentang Vendora</a>
-    </div>
-  </div>
-
   <!-- ============================================================
-       NAVBAR — DARK PREMIUM
+       NAVBAR
        ============================================================ -->
-  <nav id="main-navbar">
-    <a href="index.html" class="nav-logo">
-      <div class="nav-logo-mark">
-        <img src="logo.png" alt="Vendora Logo">
-      </div>
-      <span class="nav-logo-text">ENDORA</span>
+  <nav id="main-navbar" class="is-overlay">
+    <a href="index.html" class="nav-logo vlogo" aria-label="Vendora — beranda">
+      <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=3" alt="">EN</span>DORA</span>
     </a>
 
     <div class="mega-menu-wrapper">
       <button class="nav-category-btn" id="nav-cat-btn" type="button">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         Kategori
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
-      <!-- Mega Dropdown Panel -->
-      <div class="mega-dropdown">
-        <div class="mega-item">
-          <div class="mega-title">Pakaian Pria</div>
-          <a href="#" class="mega-link">Kemeja &amp; Kaos</a>
-          <a href="#" class="mega-link">Celana &amp; Jeans</a>
-          <a href="#" class="mega-link">Jaket &amp; Hoodie</a>
-          <a href="#" class="mega-link">Sepatu Sneakers</a>
-        </div>
-        <div class="mega-item">
-          <div class="mega-title">Pakaian Wanita</div>
-          <a href="#" class="mega-link">Gaun &amp; Dress</a>
-          <a href="#" class="mega-link">Atasan &amp; Blus</a>
-          <a href="#" class="mega-link">Aksesoris Fashion</a>
-          <a href="#" class="mega-link">Tas &amp; Dompet</a>
-        </div>
-        <div class="mega-item">
-          <div class="mega-title">Elektronik</div>
-          <a href="#" class="mega-link">Smartphone &amp; Tablet</a>
-          <a href="#" class="mega-link">Laptop &amp; PC</a>
-          <a href="#" class="mega-link">Kamera &amp; Lensa</a>
-          <a href="#" class="mega-link">Audio &amp; Headphone</a>
-        </div>
-      </div>
+      <div class="mega-dropdown" role="menu" aria-label="Semua kategori"><!-- diisi main.js (categories.js) --></div>
     </div>
 
     <div class="nav-search">
-      <input type="search" id="nav-search-input" placeholder="Cari produk, toko, atau kategori..." autocomplete="off">
-      <svg class="nav-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="nav-search-input" placeholder="Cari produk atau toko" autocomplete="off">
+      <svg class="nav-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </div>
 
     <div class="nav-actions">
       <button class="nav-icon-btn" id="cart-toggle-btn" title="Keranjang Belanja" type="button">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
         <span class="nav-cart-badge" id="cart-count">0</span>
       </button>
       <button class="nav-icon-btn" title="Notifikasi" type="button">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       </button>
       <div class="nav-divider"></div>
-      <div id="nav-auth-guest" style="display:flex;align-items:center;gap:6px;">
+      <div id="nav-auth-guest" style="display:flex;align-items:center;gap:8px;">
         <a href="login.html" class="btn-nav-login">Masuk</a>
-        <a href="login.html" class="btn-nav-register">Daftar</a>
+        <a href="login.html?tab=daftar" class="btn-nav-register">Daftar</a>
       </div>
-      <div id="nav-auth-user" style="display:none;align-items:center;gap:6px;">
-        <div class="nav-profile-dropdown">
-          <div class="nav-user" id="nav-user-panel" style="cursor:pointer;">
-            <div class="nav-avatar" id="nav-avatar-text">U</div>
-            <span class="nav-role-badge buyer" id="nav-role-badge">buyer</span>
-          </div>
-          <div class="dropdown-menu">
-            <a href="#" class="dropdown-item" id="nav-profile-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <span>Pengaturan Profil</span>
+      <div id="nav-auth-user" style="display:none;align-items:center;">
+        <div class="nav-profile-dropdown" id="nav-profile-dropdown">
+          <button class="nav-user" id="nav-user-panel" type="button" aria-haspopup="menu" aria-expanded="false">
+            <span class="nav-avatar" id="nav-avatar-text" aria-hidden="true">U</span>
+            <span class="nav-user-name" id="nav-user-name">Akun</span>
+            <svg class="nav-user-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="dropdown-menu" role="menu">
+            <div class="dropdown-head">
+              <span class="nav-avatar nav-avatar--lg" id="nav-avatar-lg" aria-hidden="true">U</span>
+              <div><b id="nav-dd-name">Akun</b><small id="nav-dd-email"></small></div>
+            </div>
+            <a href="pesanan.html" class="dropdown-item" id="nav-history-btn" role="menuitem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+              <span>Pesanan saya</span>
             </a>
-            <a href="#" class="dropdown-item" id="nav-history-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              <span>Riwayat Belanja</span>
+            <a href="akun.html" class="dropdown-item" id="nav-profile-btn" role="menuitem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              <span>Pengaturan akun</span>
             </a>
-            <a href="#" class="dropdown-item" id="dropdown-shop-action">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-              <span>Buka Ruko Vendora</span>
+            <a href="seller.html" class="dropdown-item" id="dropdown-shop-action" role="menuitem" style="display:none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 01-6 0 3 3 0 01-6 0 3 3 0 01-6 0z"/><path d="M5 13v8h14v-8"/></svg>
+              <span>Toko saya</span>
             </a>
             <div class="dropdown-divider"></div>
-            <a href="#" class="dropdown-item danger" id="nav-logout-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <a href="#" class="dropdown-item danger" id="nav-logout-btn" role="menuitem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               <span>Keluar</span>
             </a>
           </div>
         </div>
       </div>
     </div>
-    
-    <!-- Mobile hamburger button on the right -->
+
     <button class="nav-mobile-menu-btn" id="nav-mobile-menu-btn" type="button" aria-label="Menu">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="3" y1="12" x2="21" y2="12"></line>
         <line x1="3" y1="6" x2="21" y2="6"></line>
         <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -148,297 +100,194 @@
   <div id="alert-container"></div>
 
   <!-- ============================================================
-       HERO LANDSCAPE VIDEO — IMMERSIVE
+       HERO SLIDER — full-bleed, bisa digeser (gaya Aimeos)
        ============================================================ -->
-  <!-- ============================================================
-       HERO LIGHT LUXURY SECTION
-       ============================================================ -->
-  <section id="hero-section" class="hero-section" style="background: var(--bg-primary); overflow: hidden; position: relative;">
-    <style>
-      .hero-container {
-        display: flex;
-        align-items: flex-start;
-        max-width: 1440px;
-        margin: 0 auto;
-        padding-left: clamp(30px, 6vw, 80px);
-        position: relative;
-      }
-      .hero-left {
-        width: 100%;
-        max-width: 550px;
-        padding-right: 40px;
-        padding-top: 40px;
-        padding-bottom: 60px;
-        z-index: 2;
-      }
-      .hero-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 18px;
-        background: transparent;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        color: var(--text-secondary);
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        margin-bottom: 32px;
-      }
-      .hero-badge svg { color: var(--text-primary); }
-      .hero-title {
-        font-family: var(--font-display);
-        font-size: clamp(36px, 4.5vw, 56px);
-        font-weight: 800;
-        line-height: 1.1;
-        letter-spacing: -1px;
-        color: var(--text-primary);
-        margin-bottom: 20px;
-        margin-top: 20px;
-      }
-      .hero-desc {
-        font-size: 16px;
-        line-height: 1.6;
-        color: var(--text-secondary);
-        margin-bottom: 32px;
-        max-width: 95%;
-      }
-      .hero-button {
-        font-family: var(--font);
-        font-size: 15px;
-        font-weight: 600;
-        background: #111111;
-        color: #ffffff;
-        padding: 16px 32px;
-        border-radius: 12px;
-        border: none;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        transition: all 0.3s ease;
-      }
-      .hero-button:hover {
-        background: #222222;
-        transform: translateY(-2px);
-      }
-      .trust-badges-container {
-        display: flex;
-        gap: 16px;
-        margin-top: 48px;
-        flex-wrap: wrap;
-      }
-      .trust-badge-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .trust-badge-icon {
-        width: 32px;
-        height: 32px;
-        background: transparent;
-        border: 1px solid var(--border);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--text-primary);
-        flex-shrink: 0;
-      }
-      .trust-badge-text-title {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 2px;
-      }
-      .trust-badge-text-sub {
-        font-size: 10px;
-        color: var(--text-secondary);
-      }
-      .hero-right-wrapper {
-        position: absolute;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 52vw;
-        aspect-ratio: 16 / 9;
-        height: auto;
-        z-index: 1;
-      }
-      .hero-video-box {
-        width: 100%;
-        height: 100%;
-        background: #000;
-        border-radius: 40px 0 0 40px;
-        overflow: hidden;
-        position: relative;
-      }
-      .hero-video-box iframe {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 100%;
-        height: 100%;
-        transform: translate(-50%, -50%);
-        pointer-events: none;
-        border: none;
-      }
+  <section id="hero-section" class="sf-hero" aria-roledescription="carousel" aria-label="Promo Vendora" tabindex="-1">
+    <div class="sf-slides">
 
-      @media(max-width: 992px) {
-        body, html { max-width: 100vw; overflow-x: hidden; }
-        .catalog-filter-bar {
-          display: flex;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          padding-bottom: 10px;
-          gap: 8px;
-        }
-        .catalog-filter-bar::-webkit-scrollbar { display: none; }
-        .product-card-actions { flex-direction: column !important; gap: 6px !important; }
-        .product-card-actions button { width: 100% !important; padding: 10px 4px !important; }
-        .hero-container {
-          flex-direction: column;
-          padding-right: clamp(20px, 5vw, 80px);
-        }
-        .hero-left { width: 100%; padding-right: 0; margin-bottom: 40px; margin-top: 40px; padding-top: 0; padding-bottom: 0; }
-        .hero-right-wrapper {
-          position: relative;
-          width: 100%;
-          height: auto;
-          aspect-ratio: 16 / 9;
-          top: 0; bottom: 0;
-          transform: none;
-          border-radius: 24px;
-        }
-        .hero-video-box { border-radius: 24px; }
-        .hero-video-box iframe {
-          width: 100%;
-          height: 100%;
-          transform: translate(-50%, -50%) scale(1.2);
-        }
+      <article class="sf-slide is-active" aria-roledescription="slide" aria-label="1 dari 3">
+        <img class="sf-slide-img"
+             src="https://images.unsplash.com/photo-1445205170230-053b83016050?w=1920&q=80&auto=format&fit=crop"
+             srcset="https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&q=75&auto=format&fit=crop 800w,
+                     https://images.unsplash.com/photo-1445205170230-053b83016050?w=1280&q=80&auto=format&fit=crop 1280w,
+                     https://images.unsplash.com/photo-1445205170230-053b83016050?w=1920&q=80&auto=format&fit=crop 1920w"
+             sizes="100vw" alt="" fetchpriority="high">
+        <div class="sf-container sf-slide-copy">
+          <p class="sf-slide-eyebrow">Koleksi 2026</p>
+          <h1 class="sf-slide-title">Koleksi baru<br>sudah tiba</h1>
+          <p class="sf-slide-desc">Pakaian, sepatu, dan aksesoris langsung dari toko resminya.</p>
+          <a href="#catalog-anchor" class="sf-btn sf-btn--outline" data-cat="fashion">Lihat koleksi</a>
+        </div>
+      </article>
 
-      }
-    </style>
-    
-    <div class="hero-container">
-      <div class="hero-left">
-        <div class="hero-badge">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Marketplace Premium #1 Indonesia
+      <article class="sf-slide" aria-roledescription="slide" aria-label="2 dari 3" aria-hidden="true">
+        <img class="sf-slide-img"
+             src="https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=1920&q=80&auto=format&fit=crop"
+             srcset="https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=800&q=75&auto=format&fit=crop 800w,
+                     https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=1280&q=80&auto=format&fit=crop 1280w,
+                     https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=1920&q=80&auto=format&fit=crop 1920w"
+             sizes="100vw" alt="" fetchpriority="low">
+        <div class="sf-container sf-slide-copy">
+          <p class="sf-slide-eyebrow">Elektronik</p>
+          <h2 class="sf-slide-title">Gadget original,<br>garansi resmi</h2>
+          <p class="sf-slide-desc">Smartphone, laptop, dan audio dari merchant terverifikasi.</p>
+          <a href="#catalog-anchor" class="sf-btn sf-btn--outline" data-cat="elektronik">Lihat gadget</a>
         </div>
-        <h1 class="hero-title">Produk Asli,<br>Harga Terjamin.</h1>
-        <p class="hero-subtitle">Belanja dengan tenang. Semua merchant di Vendora telah terverifikasi untuk menjamin kualitas dan keaslian produk Anda.</p>
-        <a href="#catalog-anchor" class="hero-button">
-          Belanja Sekarang
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </a>
-        
-        <div class="trust-badges-container">
-          <div class="trust-badge-item">
-            <div class="trust-badge-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
-            <div>
-              <div class="trust-badge-text-title">100% Original</div>
-              <div class="trust-badge-text-sub">Produk dijamin asli</div>
-            </div>
-          </div>
-          <div class="trust-badge-item">
-            <div class="trust-badge-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
-            </div>
-            <div>
-              <div class="trust-badge-text-title">Merchant Terverifikasi</div>
-              <div class="trust-badge-text-sub">Hanya merchant terpercaya</div>
-            </div>
-          </div>
-          <div class="trust-badge-item">
-            <div class="trust-badge-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-            </div>
-            <div>
-              <div class="trust-badge-text-title">Garansi Uang Kembali</div>
-              <div class="trust-badge-text-sub">Jika barang tidak sesuai</div>
-            </div>
-          </div>
+      </article>
+
+      <article class="sf-slide" aria-roledescription="slide" aria-label="3 dari 3" aria-hidden="true">
+        <img class="sf-slide-img"
+             src="https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=1920&q=80&auto=format&fit=crop"
+             srcset="https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=800&q=75&auto=format&fit=crop 800w,
+                     https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=1280&q=80&auto=format&fit=crop 1280w,
+                     https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=1920&q=80&auto=format&fit=crop 1920w"
+             sizes="100vw" alt="" fetchpriority="low">
+        <div class="sf-container sf-slide-copy">
+          <p class="sf-slide-eyebrow">Ruko virtual</p>
+          <h2 class="sf-slide-title">Buka tokomu<br>tanpa sewa tempat</h2>
+          <p class="sf-slide-desc">Kelola produk, pesanan, dan chat pembeli dari satu dashboard.</p>
+          <a href="login.html?tab=daftar&amp;role=seller" class="sf-btn sf-btn--outline" data-open-shop>Buka toko</a>
         </div>
+      </article>
+
+    </div>
+
+    <button class="sf-slider-nav sf-slider-nav--prev" type="button" aria-label="Slide sebelumnya">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="sf-slider-nav sf-slider-nav--next" type="button" aria-label="Slide berikutnya">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <div class="sf-container sf-slider-bar">
+      <div class="sf-dots" role="tablist" aria-label="Pilih slide">
+        <button class="sf-dot is-active" type="button" role="tab" aria-label="Slide 1" aria-selected="true"><span class="sf-dot-fill"></span></button>
+        <button class="sf-dot" type="button" role="tab" aria-label="Slide 2" aria-selected="false"><span class="sf-dot-fill"></span></button>
+        <button class="sf-dot" type="button" role="tab" aria-label="Slide 3" aria-selected="false"><span class="sf-dot-fill"></span></button>
       </div>
-      
-      <div class="hero-right-wrapper">
-        <div class="hero-video-box" id="hero-video-box">
-          <video id="hero-vid-1" src="videos/hero-vid-1.mp4" autoplay muted loop playsinline style="position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; object-fit: cover; transform: translate(-50%, -50%); transition: opacity 1s ease; opacity: 1; z-index: 2; pointer-events: none;"></video>
-          <video id="hero-vid-2" src="videos/hero-vid-2.mp4" autoplay muted loop playsinline style="position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; object-fit: cover; transform: translate(-50%, -50%); transition: opacity 1s ease; opacity: 0; z-index: 1; pointer-events: none;"></video>
+      <span class="sf-slide-count" aria-hidden="true"><b>01</b> / 03</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       KATEGORI — 3 tile menempel (gaya Aimeos)
+       ============================================================ -->
+  <section class="sf-tiles sf-tiles--3" id="category-section" aria-label="Kategori">
+    <a href="#catalog-anchor" class="sf-tile" data-cat="fashion" data-reveal>
+      <img src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=900&q=75&auto=format&fit=crop" alt="" loading="lazy">
+      <span class="sf-tile-copy"><b>Fashion</b><small>Koleksi terbaru</small></span>
+    </a>
+    <a href="#catalog-anchor" class="sf-tile" data-cat="elektronik" data-reveal>
+      <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=900&q=75&auto=format&fit=crop" alt="" loading="lazy">
+      <span class="sf-tile-copy"><b>Elektronik</b><small>Gadget original</small></span>
+    </a>
+    <a href="#catalog-anchor" class="sf-tile" data-cat="kecantikan" data-reveal>
+      <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=900&q=75&auto=format&fit=crop" alt="" loading="lazy">
+      <span class="sf-tile-copy"><b>Kecantikan</b><small>Perawatan harian</small></span>
+    </a>
+  </section>
+
+  <!-- Shop profile banner (dipakai saat ?shop=...) -->
+  <div id="shop-banner-container" style="display:none; padding: 40px clamp(16px, 5vw, 80px); max-width: 1440px; margin: 0 auto;"></div>
+
+  <!-- ============================================================
+       KATALOG
+       ============================================================ -->
+  <section class="catalog-section-wrap sf-section" id="catalog-anchor">
+    <div class="sf-container">
+      <div class="sf-head-center" data-reveal>
+        <h2 class="sf-title-caps">Produk pilihan</h2>
+        <p class="catalog-sub">Dikurasi dari merchant terverifikasi di Vendora</p>
+      </div>
+
+      <div class="catalog-toolbar" data-reveal>
+        <div class="catalog-filter-bar" id="catalog-filter-bar">
+          <button class="filter-chip active" data-filter="all" type="button">Semua</button>
+          <button class="filter-chip" data-filter="fashion" type="button">Fashion</button>
+          <button class="filter-chip" data-filter="elektronik" type="button">Elektronik</button>
+          <button class="filter-chip" data-filter="kecantikan" type="button">Kecantikan</button>
+          <button class="filter-chip" data-filter="olahraga" type="button">Olahraga</button>
+          <button class="filter-chip" data-filter="rumah" type="button">Rumah &amp; Taman</button>
         </div>
-        <script>
-          setInterval(() => {
-            const vid1 = document.getElementById('hero-vid-1');
-            const vid2 = document.getElementById('hero-vid-2');
-            if(vid1 && vid2) {
-              if (vid1.style.opacity === '1') {
-                vid1.style.opacity = '0';
-                vid2.style.opacity = '1';
-                vid2.style.zIndex = '2';
-                vid1.style.zIndex = '1';
-              } else {
-                vid1.style.opacity = '1';
-                vid2.style.opacity = '0';
-                vid1.style.zIndex = '2';
-                vid2.style.zIndex = '1';
-              }
-            }
-          }, 15000); // Ganti setiap 15 detik
-        </script>
+        <label class="sort-wrap">
+          <span>Urutkan</span>
+          <select id="catalog-sort">
+            <option value="relevan">Paling sesuai</option>
+            <option value="terlaris">Terlaris</option>
+            <option value="termurah">Harga terendah</option>
+            <option value="termahal">Harga tertinggi</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="catalog-results" class="catalog-results" role="status" hidden></div>
+      <div id="product-list" class="products-grid"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       JELAJAHI KATEGORI — carousel, geser kiri/kanan (diisi main.js)
+       ============================================================ -->
+  <section class="cc sf-section" id="cat-carousel" aria-roledescription="carousel" aria-label="Jelajahi kategori">
+    <div class="sf-container cc-head" data-reveal>
+      <div>
+        <h2 class="sf-title-caps">Jelajahi kategori</h2>
+        <p class="catalog-sub">Geser untuk melihat kategori lainnya</p>
+      </div>
+      <div class="cc-nav">
+        <button class="cc-prev" type="button" aria-label="Kategori sebelumnya">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="cc-next" type="button" aria-label="Kategori berikutnya">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="cc-track" tabindex="0" aria-label="Daftar kategori"></div>
+  </section>
+
+  <!-- ============================================================
+       KENAPA VENDORA
+       ============================================================ -->
+  <section class="sf-section">
+    <div class="sf-container">
+      <div class="sf-head-center" data-reveal>
+        <h2 class="sf-title-caps">Kenapa belanja di Vendora</h2>
+      </div>
+      <div class="sf-why">
+        <div class="sf-why-item" data-reveal>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
+          <h3>Merchant terverifikasi</h3>
+          <p>Setiap toko melewati verifikasi identitas dan legalitas sebelum bisa berjualan.</p>
+        </div>
+        <div class="sf-why-item" data-reveal>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <h3>Pembayaran aman</h3>
+          <p>QRIS, virtual account, kartu, atau bayar di gerai. Dana diteruskan ke penjual setelah barang diterima.</p>
+        </div>
+        <div class="sf-why-item" data-reveal>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          <h3>Pengembalian mudah</h3>
+          <p>Barang tidak sesuai? Ajukan pengembalian dan uangmu kembali utuh.</p>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- ============================================================
-       FLASH SALE + BENTO GRID
+       PITA PENJUAL — full-bleed + parallax (gaya Aimeos)
        ============================================================ -->
-  <!-- ============================================================
-       CATALOG SECTION
-       ============================================================ -->
-  <!-- ============================================================
-       SHOP PROFILE BANNER (HIDDEN BY DEFAULT)
-       ============================================================ -->
-  <div id="shop-banner-container" style="display:none; padding: 40px clamp(20px, 5vw, 80px); max-width: 1440px; margin: 0 auto;"></div>
-
-  <section class="catalog-section-wrap" id="catalog-anchor">
-
-    <!-- Editorial header -->
-    <div class="catalog-head">
-      <div class="catalog-head-left">
-        <div class="catalog-eyebrow">Rekomendasi Harian</div>
-        <div class="catalog-title">Produk Pilihan Terbaik</div>
-        <div class="catalog-sub">Dikurasi dari merchant terverifikasi di seluruh platform Vendora</div>
-      </div>
-      <a href="#product-list" class="section-link" id="link-lihat-semua">
-        Lihat semua produk
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </a>
+  <section class="sf-band sf-section" id="seller-cta">
+    <div class="sf-band-media">
+      <img class="sf-band-img" src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&q=75&auto=format&fit=crop" alt="" loading="lazy" data-parallax>
     </div>
-
-    <!-- Filter chips -->
-    <div class="catalog-filter-bar">
-      <button class="filter-chip active" data-filter="all" type="button">Semua</button>
-      <button class="filter-chip" data-filter="fashion" type="button">Fashion</button>
-      <button class="filter-chip" data-filter="elektronik" type="button">Elektronik</button>
-      <button class="filter-chip" data-filter="kecantikan" type="button">Kecantikan</button>
-      <button class="filter-chip" data-filter="olahraga" type="button">Olahraga</button>
-      <button class="filter-chip" data-filter="rumah" type="button">Rumah & Taman</button>
+    <div class="sf-band-copy" data-reveal>
+      <p class="sf-slide-eyebrow">Untuk penjual</p>
+      <h2 class="sf-band-title">Punya produk? Sewa ruko virtualmu.</h2>
+      <p class="sf-band-desc">Buka toko tanpa biaya sewa tempat fisik.</p>
+      <a href="login.html?tab=daftar&amp;role=seller" class="sf-btn sf-btn--light" data-open-shop>Buka toko sekarang</a>
     </div>
-
-    <!-- Product grid -->
-    <div id="product-list" class="products-grid">
-      <!-- Skeleton placeholders rendered by JS or shown here as fallback -->
-    </div>
-
   </section>
-
-  <!-- Bottom padding -->
-  <div style="height: 80px;"></div>
 
   <!-- ============================================================
        CART DRAWER
@@ -483,227 +332,137 @@
     </div>
   </aside>
 
-  <footer style="text-align:center; padding: 40px; border-top: 1px solid var(--border); margin-top: 40px; color: var(--text-muted); font-size: 14px;">
-    &copy; 2026 Vendora Marketplace. <a href="terms.html" style="color:var(--primary); font-weight:600; text-decoration:none; margin-left:12px;">Syarat & Ketentuan Sewa Ruko</a>
+  <footer class="sf-footer">
+    <div class="sf-container">
+      <div class="sf-footer-grid">
+        <div class="sf-footer-brand">
+          <a href="index.html" class="vlogo vlogo--stack" aria-label="Vendora — beranda">
+            <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=3" alt="">EN</span>DORA</span>
+            <span class="vlogo-tag">Your digital marketplace</span>
+          </a>
+          <p>Marketplace ruko virtual. Belanja dari merchant terverifikasi di seluruh Indonesia.</p>
+        </div>
+        <div>
+          <h4>Belanja</h4>
+          <a href="#catalog-anchor" data-cat="fashion">Fashion</a>
+          <a href="#catalog-anchor" data-cat="elektronik">Elektronik</a>
+          <a href="#catalog-anchor" data-cat="kecantikan">Kecantikan</a>
+          <a href="#catalog-anchor" data-cat="rumah">Rumah &amp; Taman</a>
+          <a href="#catalog-anchor" data-cat="dapur">Dapur</a>
+        </div>
+        <div>
+          <h4>Vendora</h4>
+          <a href="tentang.html">Tentang kami</a>
+          <a href="login.html?tab=daftar&amp;role=seller" data-open-shop>Buka toko</a>
+          <a href="terms.html">Syarat &amp; ketentuan sewa ruko</a>
+        </div>
+        <div>
+          <h4>Bantuan</h4>
+          <a href="bantuan.html">Pusat bantuan</a>
+          <a href="pesanan.html">Lacak pesanan</a>
+          <a href="bantuan.html#pengembalian">Pengembalian</a>
+        </div>
+      </div>
+      <div class="sf-footer-bottom">
+        <span>&copy; 2026 Vendora Marketplace</span>
+        <span>Bahasa Indonesia &middot; IDR</span>
+      </div>
+    </div>
   </footer>
 
   <!-- ============================================================
        MODALS
        ============================================================ -->
-  <!-- Profile Update Modal -->
-  <div class="modal-overlay" id="profile-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">Update Profil</h3>
-        <button class="modal-close" id="profile-close-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
-        <div class="auth-group">
-          <label class="auth-label" id="profile-email-label">Email Baru</label>
-          <input type="email" id="profile-email" class="auth-input" placeholder="email@contoh.com">
+  <!-- Detail toko -->
+  <div class="modal-overlay" id="shop-detail-modal" role="dialog" aria-modal="true" aria-labelledby="shop-modal-name">
+    <div class="modal-content shop-modal">
+      <div class="shop-modal-head">
+        <div class="shop-modal-avatar">
+          <span id="shop-modal-initial">T</span>
+          <img id="shop-modal-logo" src="" alt="" style="display:none;">
         </div>
-        <div class="auth-group">
-          <label class="auth-label" id="profile-phone-label">Nomor WhatsApp</label>
-          <input type="text" id="profile-phone" class="auth-input" placeholder="08123456789">
+        <div class="shop-modal-title">
+          <h3 id="shop-modal-name">Nama toko</h3>
+          <span class="v-status v-status--good">Merchant terverifikasi</span>
         </div>
-        <div class="auth-group">
-          <label class="auth-label" id="profile-address-label">Alamat Ruko / Pengiriman</label>
-          <textarea id="profile-address" class="auth-input" placeholder="Alamat lengkap..." style="min-height:80px; resize:vertical;"></textarea>
-        </div>
-
-        <button class="auth-submit" id="profile-save-btn" style="width:100%; margin-top:8px;">Simpan Perubahan</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Shop Detail Modal -->
-  <div class="modal-overlay" id="shop-detail-modal">
-    <div class="modal-content" style="max-width: 480px; padding:0; overflow:hidden;">
-      <div class="modal-header" style="position:absolute; right:10px; top:10px; border:none; padding:0; z-index:10;">
-        <button onclick="document.getElementById('shop-detail-modal').classList.remove('active');" class="modal-close" id="shop-detail-close-btn" style="background:rgba(0,0,0,0.5); color:white; border-radius:50%; padding:4px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="modal-body" style="padding:0;">
-        <div style="background: linear-gradient(135deg, var(--gold) 0%, #856920 100%); padding: 32px 24px 24px; display:flex; align-items:center; gap:16px;">
-          <div style="width: 72px; height: 72px; background: var(--bg-1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: var(--gold); border: 2px solid rgba(255,255,255,0.8); flex-shrink:0; position:relative; overflow:hidden;">
-            <span id="shop-modal-initial">T</span>
-            <img id="shop-modal-logo" src="" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; display:none;" alt="Logo">
-          </div>
-          <div style="color: #fff; overflow:hidden;">
-            <h3 id="shop-modal-name" style="font-size: 22px; font-weight: 700; margin-bottom: 4px; font-family: var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nama Toko</h3>
-            <div style="font-size: 13px; opacity: 0.9; display:flex; align-items:center; gap:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span>Verified Merchant</span>
-            </div>
-          </div>
-        </div>
-        
-        <div style="padding: 24px; display:flex; flex-direction:column; gap:20px; background:var(--bg-1);">
-          <div style="display:flex; justify-content:space-between; text-align:center; border-bottom: 1px solid var(--border); padding-bottom: 20px;">
-            <div><div style="font-size:18px; font-weight:700; color:var(--gold);">1.2K</div><div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:4px;">Produk</div></div>
-            <div><div style="font-size:18px; font-weight:700; color:var(--gold);">4.9</div><div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:4px;">Rating</div></div>
-            <div><div style="font-size:18px; font-weight:700; color:var(--gold);">98%</div><div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:4px;">Chat Dibalas</div></div>
-          </div>
-          
-          <div>
-            <div style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px;">Deskripsi Toko</div>
-            <div id="shop-modal-desc" style="font-size:14px; color:var(--text-main); line-height:1.6;">-</div>
-          </div>
-          
-          <div>
-            <div style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px;">Lokasi Pengiriman</div>
-            <div id="shop-modal-address" style="font-size:14px; color:var(--text-main); line-height:1.6;">-</div>
-          </div>
-
-          <div style="display:flex; gap:12px; margin-top: 12px;">
-            <button id="shop-modal-view-btn" style="flex:1; text-align:center; padding:12px; background:var(--bg-2); border:1px solid var(--gold); color:var(--gold); border-radius:8px; text-decoration:none; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--bg-1)';" onmouseout="this.style.background='var(--bg-2)'; this.style.color='var(--gold)';">Lihat Produk</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Product Detail Modal -->
-  <div class="modal-overlay" id="product-detail-modal">
-    <div class="modal-content product-detail-modal-content" style="max-width: 1400px; width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
-      <div class="modal-header" style="border-bottom: 1px solid var(--border); padding: 16px 24px; flex-shrink: 0;">
-        <h3 class="modal-title">Detail Produk</h3>
-        <button class="modal-close" id="product-detail-close-btn" type="button">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="modal-body product-detail-modal-body" style="padding: 0; overflow-y: auto; flex: 1;">
-        <!-- Konten 2 Kolom di-render di sini secara dinamis -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Order History Modal -->
-  <div class="modal-overlay" id="order-history-modal">
-    <div class="modal-content" style="max-width: 600px; width: 95%;">
-      <div class="modal-header" style="border-bottom: 1px solid var(--border); padding-bottom: 12px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          <h3 class="modal-title">Riwayat Belanja & Lacak Barang</h3>
-        </div>
-        <button class="modal-close" id="order-history-close-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="modal-body" style="padding-top:16px; max-height: 480px; overflow-y: auto;">
-        <div id="order-history-list" style="display: flex; flex-direction: column; gap: 16px;">
-          <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
-            Memuat riwayat belanja...
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Snap Payment Gateway Mock Modal -->
-  <div class="modal-overlay" id="snap-modal">
-    <div class="modal-content" style="max-width:400px;">
-      <div class="modal-header" style="background:#F8FAFC; border-bottom:1px solid var(--border);">
-        <h3 class="modal-title" style="font-size:16px;">Pembayaran Aman Vendora</h3>
-        <button class="modal-close" id="snap-close-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+        <button class="modal-close" id="shop-detail-close-btn" type="button" aria-label="Tutup"
+                onclick="document.getElementById('shop-detail-modal').classList.remove('active');">&times;</button>
       </div>
       <div class="modal-body">
-        <div style="text-align:center; margin-bottom:8px; color:var(--text-muted); font-size:14px;">Total Pembayaran</div>
-        <div class="snap-amount" id="snap-amount-display">Rp 0</div>
-        
-        <div style="margin-bottom:16px; padding:12px; border:1px solid var(--border); border-radius:8px; background:var(--bg-secondary); position:relative;">
-          <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Detail Pengiriman</div>
-          
-          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted);">Nama Penerima</label>
-          <input type="text" id="checkout-recipient-name" class="auth-input" style="margin-bottom:12px; background:var(--bg-1);" placeholder="Nama Penerima">
-          
-          <label style="display:block; font-size:12px; margin-bottom:4px; color:var(--text-muted);">Alamat Pengiriman</label>
-          <textarea id="checkout-address-input" class="auth-input" style="min-height:60px; resize:vertical; background:var(--bg-1);" placeholder="Alamat lengkap..."></textarea>
-        </div>
-        
-        <div style="font-size:14px; font-weight:700; margin-bottom:12px; color:var(--text-main);">Pilih Metode Pembayaran</div>
-        <div class="snap-methods">
-          <button class="snap-method-btn" onclick="window.snapProcess('QRIS')">
-            <div class="snap-method-icon">QRIS</div>
-            <div style="flex:1;">
-              <div style="font-weight:700; font-size:14px; color:var(--text-main);">GoPay, OVO, Dana</div>
-              <div style="font-size:12px; color:var(--text-muted);">Pindai QR Code</div>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-          <button class="snap-method-btn" onclick="window.snapProcess('VA_BCA')">
-            <div class="snap-method-icon">BCA</div>
-            <div style="flex:1;">
-              <div style="font-weight:700; font-size:14px; color:var(--text-main);">BCA Virtual Account</div>
-              <div style="font-size:12px; color:var(--text-muted);">Transfer Otomatis</div>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-          <button class="snap-method-btn" onclick="window.snapProcess('CARD')">
-            <div class="snap-method-icon">CARD</div>
-            <div style="flex:1; text-align:left;">
-              <div style="font-weight:700; font-size:14px; color:var(--text-main);">Kartu Kredit / Debit / ATM</div>
-              <div style="font-size:12px; color:var(--text-muted);">Visa, MasterCard, JCB, GPN</div>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-          <button class="snap-method-btn" onclick="window.snapProcess('RETAIL')">
-            <div class="snap-method-icon">IND</div>
-            <div style="flex:1;">
-              <div style="font-weight:700; font-size:14px; color:var(--text-main);">Indomaret / Alfamart</div>
-              <div style="font-size:12px; color:var(--text-muted);">Bayar di Gerai</div>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
+        <dl class="shop-modal-info">
+          <div><dt>Produk di katalog</dt><dd id="shop-modal-products">–</dd></div>
+          <div><dt>Tentang toko</dt><dd id="shop-modal-desc">–</dd></div>
+          <div><dt>Dikirim dari</dt><dd id="shop-modal-address">–</dd></div>
+        </dl>
+      </div>
+      <div class="modal-footer shop-modal-actions">
+        <button id="shop-modal-chat-btn" type="button" class="btn-line">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          Chat penjual
+        </button>
+        <button id="shop-modal-view-btn" type="button" class="btn-ink">Lihat produk toko</button>
       </div>
     </div>
   </div>
 
-  <!-- Chat Penjual Modal -->
-  <div class="modal-overlay" id="chat-modal">
-    <div class="modal-content" style="max-width: 400px; padding: 0; display: flex; flex-direction: column; height: 500px; max-height: 90vh;">
-      <div style="background: var(--gold); color: var(--bg-1); padding: 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 12px 12px 0 0;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 40px; height: 40px; background: var(--bg-1); color: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px;" id="chat-shop-initial">T</div>
-          <div>
-            <div style="font-weight: 700; font-size: 16px;" id="chat-shop-name">Nama Toko</div>
-            <div style="font-size: 12px; opacity: 0.8; display: flex; align-items: center; gap: 4px;">
-              <div style="width: 8px; height: 8px; background: #34D399; border-radius: 50%;"></div>
-              Online
+  <!-- Detail produk -->
+  <div class="modal-overlay" id="product-detail-modal" role="dialog" aria-modal="true" aria-label="Detail produk">
+    <div class="modal-content product-detail-modal-content">
+      <button class="modal-close product-modal-close" id="product-detail-close-btn" type="button" aria-label="Tutup">&times;</button>
+      <div class="modal-body product-detail-modal-body">
+        <!-- Konten 2 kolom dirender oleh product.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout (pembayaran simulasi) -->
+  <div class="modal-overlay" id="snap-modal" role="dialog" aria-modal="true" aria-labelledby="snap-title">
+    <div class="modal-content checkout-modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="snap-title">Checkout</h3>
+        <button class="modal-close" id="snap-close-btn" type="button" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="checkout-grid">
+        <div class="checkout-main">
+          <section class="checkout-section">
+            <h4><span class="step-no">1</span>Alamat pengiriman</h4>
+            <div class="form-group">
+              <label for="checkout-recipient-name">Nama penerima</label>
+              <input type="text" id="checkout-recipient-name" class="auth-input" placeholder="Nama lengkap penerima" autocomplete="name">
             </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="checkout-address-input">Alamat lengkap</label>
+              <textarea id="checkout-address-input" class="auth-input" style="min-height:84px;" placeholder="Jalan, nomor rumah, kecamatan, kota, kode pos" autocomplete="street-address"></textarea>
+              <span class="form-hint">Simpan alamat di <a href="akun.html">Pengaturan akun</a> supaya terisi otomatis.</span>
+            </div>
+          </section>
+          <section class="checkout-section">
+            <h4><span class="step-no">2</span>Metode pembayaran</h4>
+          <div class="pay-methods" role="radiogroup" aria-label="Metode pembayaran">
+            <label class="pay-method"><input type="radio" name="pay-method" value="QRIS" checked><span class="pay-icon">QRIS</span><span class="pay-text"><b>GoPay, OVO, Dana</b><small>Pindai kode QR</small></span></label>
+            <label class="pay-method"><input type="radio" name="pay-method" value="VA_BCA"><span class="pay-icon">BCA</span><span class="pay-text"><b>BCA Virtual Account</b><small>Transfer otomatis</small></span></label>
+            <label class="pay-method"><input type="radio" name="pay-method" value="CARD"><span class="pay-icon">CARD</span><span class="pay-text"><b>Kartu kredit / debit</b><small>Visa, Mastercard, JCB, GPN</small></span></label>
+            <label class="pay-method"><input type="radio" name="pay-method" value="RETAIL"><span class="pay-icon">IND</span><span class="pay-text"><b>Indomaret / Alfamart</b><small>Bayar di gerai</small></span></label>
           </div>
+          </section>
         </div>
-        <button class="modal-close" id="chat-close-btn" style="background: transparent; border: none; color: var(--bg-1); cursor: pointer; padding: 4px;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      
-      <div id="chat-messages" style="flex: 1; background: var(--bg-1); overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-        <div style="align-self: center; background: var(--bg-2); padding: 6px 12px; border-radius: 16px; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
-          Pesan diamankan dengan enkripsi end-to-end.
-        </div>
-        <div style="align-self: flex-start; background: var(--bg-2); padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%; font-size: 14px; color: var(--text-main); line-height: 1.5; border: 1px solid var(--border);">
-          Halo! Ada yang bisa kami bantu seputar produk dari <strong id="chat-welcome-shop">Toko</strong>?
-          <div style="font-size: 10px; color: var(--text-muted); text-align: right; margin-top: 4px;">12:00</div>
-        </div>
-      </div>
-
-      <div style="padding: 16px; background: var(--bg-1); border-top: 1px solid var(--border); border-radius: 0 0 12px 12px; display: flex; gap: 8px;">
-        <input type="text" id="chat-input" placeholder="Tulis pesan..." style="flex: 1; background: var(--bg-2); border: 1px solid var(--border); border-radius: 20px; padding: 10px 16px; color: var(--text-main); font-size: 14px; outline: none;">
-        <button id="chat-send-btn" style="background: var(--gold); color: var(--bg-1); border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 2px; margin-top: 2px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
+        <aside class="checkout-summary">
+          <h4>Ringkasan pesanan</h4>
+          <ul id="checkout-items" class="checkout-items"></ul>
+          <dl class="checkout-totals">
+            <div><dt>Subtotal</dt><dd id="checkout-subtotal">Rp 0</dd></div>
+            <div><dt>Ongkos kirim</dt><dd>Gratis</dd></div>
+            <div class="checkout-grand"><dt>Total</dt><dd class="snap-amount" id="snap-amount-display">Rp 0</dd></div>
+          </dl>
+          <button type="button" class="btn-ink pay-now-btn" id="pay-now-btn">Bayar sekarang</button>
+          <p class="checkout-note">Ini pembayaran simulasi. Pesanan langsung diteruskan ke penjual.</p>
+        </aside>
       </div>
     </div>
   </div>
 
-  <script type="module" src="js/main.js?v=15"></script>
+  <script type="module" src="js/main.js?v=32"></script>
+  <script src="js/storefront.js?v=4" defer></script>
 
 
 </body>

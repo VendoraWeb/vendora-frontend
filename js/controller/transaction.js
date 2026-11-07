@@ -1,5 +1,6 @@
-import { BASE_URL, getActiveSession } from "../config/api.js";
-import { loadCatalogProducts }         from "./product.js";
+import { BASE_URL, getActiveSession } from "../config/api.js?v=5";
+import { esc } from "../ui.js?v=2";
+import { loadCatalogProducts }         from "./product.js?v=15";
 
 // ─── Alert helper ──────────────────────────────────────────────────────────
 function showAlert(message, type) {
@@ -22,7 +23,9 @@ function loadCart() {
   const key = getCartKey();
   if (!key) return [];
   try {
-    return JSON.parse(localStorage.getItem(key) || '[]');
+    const items = JSON.parse(localStorage.getItem(key) || '[]');
+    // Produk contoh lama (m1, m2, …) sudah diganti produk asli toko Apple
+    return Array.isArray(items) ? items.filter(i => i && !/^m\d+$/.test(String(i.id))) : [];
   } catch (e) {
     return [];
   }
@@ -51,8 +54,15 @@ export function initCart() {
   }
 }
 
+// Kunci baris keranjang: ID produk + variasi
+export function cartKeyOf(item) {
+  if (item.key) return item.key;
+  return item.variant ? `${item.id}::${item.variant}` : item.id;
+}
+
 // ─── Public: add item ────────────────────────────────────────────────────────
-export function addToCart(product) {
+export function addToCart(product, qty = 1) {
+  qty = Math.max(1, parseInt(qty, 10) || 1);
   const session = getActiveSession();
   if (!session || !session.user) {
     showAlert('Silakan login terlebih dahulu untuk belanja.', 'error');
@@ -73,23 +83,42 @@ export function addToCart(product) {
     }
   }
 
-  const existing = cart.find(item => item.id === product.id);
+  // Variasi berbeda (mis. Burgundy 256 GB vs Silver 512 GB) = baris keranjang berbeda
+  const key = cartKeyOf(product);
+  const existing = cart.find(item => cartKeyOf(item) === key);
   if (existing) {
-    existing.quantity += 1;
+    existing.quantity += qty;
+    existing.selected = true;
   } else {
     cart.push({
+      key,
       id:       product.id,
       name:     product.name,
+      variant:  product.variant || '',
+      options:  product.options || null,
       price:    product.price,
       image:    product.image  || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80',
       shopName: product.shopName || '',
       shopId:   product.shopId   || '',
-      quantity: 1,
+      quantity: qty,
       selected: true
     });
   }
   saveCart();
   updateCartUI();
+  return true;
+}
+
+// ─── Public: beli sekarang (checkout hanya barang ini) ──────────────────────
+export async function buyNow(product, qty = 1) {
+  if (!addToCart(product, qty)) return false;
+  // Seperti "Beli Sekarang" di marketplace: hanya barang ini yang dicheckout,
+  // barang lain di keranjang tetap tersimpan (tidak terpilih).
+  const key = cartKeyOf(product);
+  cart.forEach(item => { item.selected = cartKeyOf(item) === key; });
+  saveCart();
+  updateCartUI();
+  await executeCheckout();
   return true;
 }
 
@@ -149,23 +178,24 @@ export async function updateCartUI() {
     const itemTotal = item.price * item.quantity;
     const checkedHtml = item.selected ? 'checked' : '';
     html += `
-      <div class="cart-item" data-cart-id="${item.id}" style="${!item.selected ? 'opacity: 0.6;' : ''}">
-        <input type="checkbox" class="cart-item-checkbox" data-id="${item.id}" ${checkedHtml} style="margin-right: 12px; transform: scale(1.2); accent-color: var(--gold); cursor: pointer;">
-        <img class="cart-item-img" src="${item.image}" alt="${item.name}" loading="lazy"
-             onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80'">
+      <div class="cart-item${item.selected ? '' : ' is-unselected'}" data-cart-id="${esc(cartKeyOf(item))}">
+        <input type="checkbox" class="cart-item-checkbox" data-id="${esc(cartKeyOf(item))}" ${checkedHtml} aria-label="Pilih ${esc(item.name)} untuk checkout">
+        <img class="cart-item-img" src="${esc(item.image)}" alt="" loading="lazy"
+             onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80'">
         <div class="cart-item-info">
-          <div class="cart-item-name" title="${item.name}">${item.name}</div>
-          <div class="cart-item-price">
-            ${fmt(item.price)} &times; ${item.quantity} =
-            <strong>${fmt(itemTotal)}</strong>
-          </div>
-          <div class="cart-item-qty">
-            <button class="qty-btn btn-qty-minus" data-id="${item.id}" type="button">−</button>
-            <span class="qty-value">${item.quantity}</span>
-            <button class="qty-btn btn-qty-plus"  data-id="${item.id}" type="button">+</button>
+          <div class="cart-item-name" title="${esc(item.name)}">${esc(item.name)}</div>
+          ${item.variant ? `<div class="cart-item-variant">Variasi: ${esc(item.variant)}</div>` : ''}
+          ${item.shopName ? `<div class="cart-item-shop">${esc(item.shopName)}</div>` : ''}
+          <div class="cart-item-row">
+            <div class="cart-item-qty" role="group" aria-label="Jumlah">
+              <button class="qty-btn btn-qty-minus" data-id="${esc(cartKeyOf(item))}" type="button" aria-label="Kurangi">−</button>
+              <span class="qty-value">${item.quantity}</span>
+              <button class="qty-btn btn-qty-plus"  data-id="${esc(cartKeyOf(item))}" type="button" aria-label="Tambah">+</button>
+            </div>
+            <div class="cart-item-price"><strong>${fmt(itemTotal)}</strong></div>
           </div>
         </div>
-        <button class="cart-item-remove btn-cart-remove" data-id="${item.id}" type="button" title="Hapus">
+        <button class="cart-item-remove btn-cart-remove" data-id="${esc(cartKeyOf(item))}" type="button" title="Hapus" aria-label="Hapus ${esc(item.name)}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
             <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
@@ -185,7 +215,7 @@ export async function updateCartUI() {
   cartItemsEl.querySelectorAll('.cart-item-checkbox').forEach(cb => {
     cb.addEventListener('change', (e) => {
       const id = e.target.dataset.id;
-      const item = cart.find(i => i.id === id);
+      const item = cart.find(i => cartKeyOf(i) === id);
       if (item) {
         item.selected = e.target.checked;
         saveCart();
@@ -198,9 +228,9 @@ export async function updateCartUI() {
   cartItemsEl.querySelectorAll('.btn-qty-minus').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
-      const item = cart.find(i => i.id === id);
+      const item = cart.find(i => cartKeyOf(i) === id);
       if (!item) return;
-      if (item.quantity > 1) { item.quantity--; } else { cart = cart.filter(i => i.id !== id); }
+      if (item.quantity > 1) { item.quantity--; } else { cart = cart.filter(i => cartKeyOf(i) !== id); }
       saveCart();
       updateCartUI();
     });
@@ -210,7 +240,7 @@ export async function updateCartUI() {
   cartItemsEl.querySelectorAll('.btn-qty-plus').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
-      const item = cart.find(i => i.id === id);
+      const item = cart.find(i => cartKeyOf(i) === id);
       if (item) { item.quantity++; saveCart(); updateCartUI(); }
     });
   });
@@ -219,7 +249,7 @@ export async function updateCartUI() {
   cartItemsEl.querySelectorAll('.btn-cart-remove').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
-      cart = cart.filter(i => i.id !== id);
+      cart = cart.filter(i => cartKeyOf(i) !== id);
       saveCart();
       updateCartUI();
     });
@@ -244,7 +274,7 @@ export async function updateCartUI() {
         return;
       }
 
-      const itemEl = cartItemsEl.querySelector(`.cart-item[data-cart-id="${item.id}"]`);
+      const itemEl = cartItemsEl.querySelector(`.cart-item[data-cart-id="${CSS.escape(cartKeyOf(item))}"]`);
       if (!itemEl) return;
 
       const stock = stockMap[item.id];
@@ -331,9 +361,29 @@ export async function executeCheckout() {
     if (addressInput) {
       addressInput.value = session.user.address || '';
     }
+
+    // Ringkasan barang yang dipilih
+    const itemsEl = document.getElementById('checkout-items');
+    if (itemsEl) {
+      itemsEl.innerHTML = selectedCart.map(item => `
+        <li>
+          <img src="${esc(item.image)}" alt="" onerror="this.style.visibility='hidden'">
+          <div><b>${esc(item.name)}</b>${item.variant ? `<small>Variasi: ${esc(item.variant)}</small>` : ''}<small>${item.quantity} × Rp ${Number(item.price).toLocaleString('id-ID')}</small></div>
+          <span>Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</span>
+        </li>`).join('');
+    }
+    const subEl = document.getElementById('checkout-subtotal');
+    if (subEl) subEl.textContent = 'Rp ' + totalAmount.toLocaleString('id-ID');
     
     // Define global snapProcess callback for cart checkout
     window.snapProcess = async (method) => {
+      const recName = nameInput ? nameInput.value.trim() : '';
+      const recAddr = addressInput ? addressInput.value.trim() : '';
+      if (!recName || !recAddr) {
+        showAlert('Lengkapi nama penerima dan alamat pengiriman dulu.', 'error');
+        (recName ? addressInput : nameInput)?.focus();
+        return;
+      }
       let defaultShopId = '';
       try {
         const shopRes = await fetch(`${BASE_URL}/shops`);
@@ -342,14 +392,13 @@ export async function executeCheckout() {
         if (appleShop) defaultShopId = appleShop.id;
       } catch(e){}
 
-      const payloadItems = selectedCart.map(item => ({ 
-        product_id: item.id, 
+      const payloadItems = selectedCart.map(item => ({
+        product_id: item.id,
         shop_id: item.shopId || defaultShopId,
-        quantity: item.quantity 
+        quantity: item.quantity,
+        ...(item.options ? { options: item.options } : {}),
       }));
       
-      const recName = nameInput ? nameInput.value.trim() : '';
-      const recAddr = addressInput ? addressInput.value.trim() : '';
       
       try {
         const res  = await fetch(`${BASE_URL}/checkout`, {
@@ -366,7 +415,7 @@ export async function executeCheckout() {
         
         if (data.status === 201) {
           let methodName = method === 'QRIS' ? 'GoPay/OVO/Dana' : method === 'VA_BCA' ? 'BCA Virtual Account' : method === 'CARD' ? 'Kartu Kredit' : 'Indomaret/Alfamart';
-          showAlert(`Pembayaran via ${methodName} Berhasil! Pesanan langsung diteruskan ke Penjual.`, 'success');
+          showAlert(`Pembayaran via ${methodName} berhasil. Pesanan diteruskan ke penjual.`, 'success');
           snapModal.classList.remove('active');
           cart = cart.filter(item => !item.selected);
           saveCart(); updateCartUI(); loadCatalogProducts();

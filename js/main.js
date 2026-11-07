@@ -1,10 +1,15 @@
-import { initAuth }                                from "./controller/auth.js?v=3";
-import { loadCatalogProducts, initSearch }                      from "./controller/product.js?v=5";
-import { initCart, updateCartUI }                   from "./controller/transaction.js?v=7";
-import { initSellerDashboard, initAdminDashboard }  from "./controller/dashboard.js?v=3";
-import { getActiveSession, clearActiveSession, BASE_URL }      from "./config/api.js?v=4";
-import { initSellerInboxWidget }                  from "./controller/inbox.js?v=3";
-import { initAdminTickets }                       from "./controller/ticket.js?v=3";
+import { initAuth }                                from "./controller/auth.js?v=10";
+import { loadCatalogProducts, initSearch, setCatalogSort, clearSearch, openProductById } from "./controller/product.js?v=15";
+import { initCart, updateCartUI }                   from "./controller/transaction.js?v=12";
+import { CATEGORIES, CATEGORY_BY_KEY, categoryImage } from "./categories.js?v=1";
+import { initChatDock }                           from "./controller/chat.js?v=1";
+import { initSellerDashboard, initAdminDashboard }  from "./controller/dashboard.js?v=9";
+import { getActiveSession, clearActiveSession, BASE_URL }      from "./config/api.js?v=5";
+import { esc, fmtRp, fmtDateTime, shortId, normStatus, txStatusHTML } from "./ui.js?v=2";
+import { initAdminTickets }                       from "./controller/ticket.js?v=4";
+import { initAccountPage }                        from "./controller/account.js?v=4";
+import { initOrdersPage }                         from "./controller/orders.js?v=4";
+import { initAboutPage, initHelpPage }            from "./controller/pages.js?v=1";
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
 const $  = (sel, ctx = document) => ctx.querySelector(sel);
@@ -21,49 +26,60 @@ window.showAlert = function(message, type) {
 const showAlert = window.showAlert;
 
 // ─── Navbar session UI ────────────────────────────────────────────────────────
-function initNavbarSession() {
-  const session     = getActiveSession();
-  const guestEl     = $('#nav-auth-guest');
-  const userEl      = $('#nav-auth-user');
-  const avatarEl    = $('#nav-avatar-text');
-  const roleBadgeEl = $('#nav-role-badge');
-  const logoutBtn   = $('#nav-logout-btn');
+function paintNavAvatar(el, user) {
+  if (!el) return;
+  if (user.avatar) {
+    el.style.backgroundImage = `url("${String(user.avatar).replace(/"/g, '%22')}")`;
+    el.textContent = '';
+    el.classList.add('has-photo');
+  } else {
+    el.style.backgroundImage = '';
+    el.textContent = (user.name || 'U').trim().charAt(0).toUpperCase();
+    el.classList.remove('has-photo');
+  }
+}
 
-  if (session) {
-    if (guestEl)   guestEl.style.display  = 'none';
-    if (userEl)    userEl.style.display   = 'flex';
-    if (avatarEl)  avatarEl.textContent   = (session.user.name || 'U')[0].toUpperCase();
-    if (roleBadgeEl) {
-      roleBadgeEl.textContent  = session.user.role;
-      roleBadgeEl.className    = `nav-role-badge ${session.user.role}`;
+function initNavbarSession() {
+  const session  = getActiveSession();
+  const guestEl  = $('#nav-auth-guest');
+  const userEl   = $('#nav-auth-user');
+  const logoutBtn = $('#nav-logout-btn');
+
+  if (session && session.user) {
+    const u = session.user;
+    if (guestEl) guestEl.style.display = 'none';
+    if (userEl)  userEl.style.display  = 'flex';
+    paintNavAvatar($('#nav-avatar-text'), u);
+    paintNavAvatar($('#nav-avatar-lg'), u);
+    const first = (u.name || 'Akun').trim().split(/\s+/)[0];
+    if ($('#nav-user-name')) $('#nav-user-name').textContent = first;
+    if ($('#nav-dd-name'))   $('#nav-dd-name').textContent = u.name || 'Akun';
+    if ($('#nav-dd-email'))  $('#nav-dd-email').textContent = u.email || '';
+
+    const shopAction = $('#dropdown-shop-action');
+    if (shopAction) {
+      const label = shopAction.querySelector('span');
+      if (u.role === 'admin') {
+        shopAction.style.display = 'flex';
+        shopAction.href = 'admin.html';
+        if (label) label.textContent = 'Konsol admin';
+      } else if (u.role === 'seller') {
+        shopAction.style.display = 'flex';
+        shopAction.href = 'seller.html';
+        if (label) label.textContent = u.has_shop ? 'Toko saya' : 'Buka ruko';
+      } else {
+        shopAction.style.display = 'none';
+      }
     }
 
-    const profileBtn = $('#nav-profile-btn');
-    const shopActionBtn = $('#dropdown-shop-action');
-
-    if (session.user.role === 'admin') {
-      if (profileBtn) profileBtn.style.display = 'none'; // Sembunyikan pengaturan profil untuk admin
-      if (shopActionBtn) {
-        shopActionBtn.style.display = 'flex';
-        shopActionBtn.querySelector('span').textContent = 'Masuk ke Konsol Admin';
-        shopActionBtn.href = 'admin.html';
-      }
-    } else {
-      if (profileBtn) profileBtn.style.display = 'flex';
-      if (shopActionBtn) {
-        if (session.user.role === 'seller') {
-          shopActionBtn.style.display = 'flex';
-          if (session.user.has_shop) {
-            shopActionBtn.querySelector('span').textContent = 'Switch ke Hub Penjual';
-            shopActionBtn.href = 'seller.html';
-          } else {
-            shopActionBtn.querySelector('span').textContent = 'Buka Ruko Vendora';
-            shopActionBtn.href = 'seller.html';
-          }
-        } else {
-          shopActionBtn.style.display = 'none'; // Sembunyikan untuk pembeli (buyer) biasa
-        }
-      }
+    // Dropdown: hover (desktop) + klik (sentuh / keyboard)
+    const dd = $('#nav-profile-dropdown');
+    const trigger = $('#nav-user-panel');
+    if (dd && trigger) {
+      const setOpen = (open) => { dd.classList.toggle('open', open); trigger.setAttribute('aria-expanded', open); };
+      trigger.addEventListener('click', (e) => { e.stopPropagation(); setOpen(!dd.classList.contains('open')); });
+      document.addEventListener('click', (e) => { if (!dd.contains(e.target)) setOpen(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
     }
   } else {
     if (guestEl) guestEl.style.display = 'flex';
@@ -71,7 +87,8 @@ function initNavbarSession() {
   }
 
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
       clearActiveSession();
       window.location.href = 'index.html';
     });
@@ -80,6 +97,26 @@ function initNavbarSession() {
   initProfileModal();
   initOrderHistoryModal();
 }
+
+// ─── Tombol "Bayar sekarang" (checkout & sewa ruko) ──────────────────────────
+// Metode dipilih dulu, baru dibayar — sebelumnya satu klik di metode langsung
+// membuat pesanan dan klik ganda bisa membuat pesanan dobel.
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('#pay-now-btn');
+  if (!btn || btn.disabled) return;
+  const picked = document.querySelector('input[name="pay-method"]:checked');
+  if (!picked) { showAlert('Pilih metode pembayaran dulu.', 'error'); return; }
+  if (typeof window.snapProcess !== 'function') return;
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Memproses…';
+  try {
+    await window.snapProcess(picked.value);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+});
 
 // ─── Profile Update Modal ──────────────────────────────────────────────────
 function initProfileModal() {
@@ -243,46 +280,190 @@ function initFlashSaleCountdown() {
 }
 
 // ─── Filter Chips ─────────────────────────────────────────────────────────────
+function scrollToCatalog() {
+  const anchor = document.getElementById('catalog-anchor');
+  if (anchor) window.scrollTo({ top: anchor.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' });
+}
+
+function syncChips(filter) {
+  const bar = document.getElementById('catalog-filter-bar');
+  if (!bar) return;
+  filter = filter || 'all';
+  const key = filter.startsWith('sub:') ? filter.slice(4).split('|')[0] : filter;
+  bar.querySelectorAll('.filter-chip').forEach(c => {
+    const on = c.dataset.filter === filter || c.dataset.filter === key;
+    c.classList.toggle('active', on);
+    c.setAttribute('aria-pressed', String(on));
+  });
+  const active = bar.querySelector('.filter-chip.active');
+  if (active) bar.scrollTo({ left: active.offsetLeft - bar.clientWidth / 2 + active.clientWidth / 2, behavior: 'smooth' });
+}
+
+/** Pilih kategori dari mana saja (menu, carousel, saran pencarian, footer). */
+function pickCategory(filter, { scroll = true } = {}) {
+  if (!document.getElementById('product-list') || new URLSearchParams(window.location.search).get('shop')) {
+    window.location.href = `index.html?cat=${encodeURIComponent(filter)}`;
+    return;
+  }
+  clearSearch();
+  syncChips(filter);
+  loadCatalogProducts(filter, null, { refetch: false });
+  if (scroll) scrollToCatalog();
+}
+
 function initFilterChips() {
-  const chips = $$('.filter-chip');
-  chips.forEach(chip => {
-    chip.addEventListener('click', () => {
-      chips.forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      const filter = chip.dataset.filter;
-      const shopQuery = new URLSearchParams(window.location.search).get('shop');
-      loadCatalogProducts(filter, shopQuery);
-    });
+  const bar = document.getElementById('catalog-filter-bar') || document.querySelector('.catalog-filter-bar');
+  if (!bar) return;
+  const isShopPage = new URLSearchParams(window.location.search).get('shop');
+  if (!isShopPage) {
+    bar.innerHTML = `<button class="filter-chip active" data-filter="all" type="button" aria-pressed="true">Semua</button>` +
+      CATEGORIES.map(c => `<button class="filter-chip" data-filter="${c.key}" type="button" aria-pressed="false">${esc(c.label)}</button>`).join('');
+  }
+  bar.addEventListener('click', (e) => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    if (isShopPage) {
+      // Etalase toko: filter di dalam toko ini saja
+      bar.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c === chip));
+      loadCatalogProducts(chip.dataset.filter, isShopPage, { refetch: false });
+      return;
+    }
+    pickCategory(chip.dataset.filter, { scroll: false });
+  });
+  document.addEventListener('vendora:filter-changed', (e) => { if (!isShopPage) syncChips(e.detail.filter); });
+  document.addEventListener('vendora:pick-category', (e) => pickCategory(e.detail.filter));
+
+  // Tautan kategori lama (hero, footer) memakai data-cat
+  document.querySelectorAll('a[data-cat]').forEach(a => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    pickCategory(a.dataset.cat);
+  }));
+}
+
+// ─── Mega Menu Kategori ─────────────────────────────────────────────────────
+function initMegaMenuLinks() {
+  const menu = document.querySelector('.mega-dropdown');
+  if (!menu) return;
+  menu.innerHTML = CATEGORIES.map(c => `
+    <div class="mega-item">
+      <a href="index.html?cat=${c.key}" class="mega-title" data-filter="${c.key}">${esc(c.label)}</a>
+      ${c.subs.map(sub => `<a href="index.html?cat=${encodeURIComponent(`sub:${c.key}|${sub}`)}" class="mega-link" data-filter="${esc(`sub:${c.key}|${sub}`)}">${esc(sub)}</a>`).join('')}
+    </div>`).join('');
+
+  const wrapper = menu.closest('.mega-menu-wrapper');
+  const btn = document.getElementById('nav-cat-btn');
+  const setOpen = (open) => {
+    wrapper.classList.toggle('is-open', open);
+    btn?.setAttribute('aria-expanded', String(open));
+  };
+  btn?.setAttribute('aria-haspopup', 'true');
+  btn?.setAttribute('aria-expanded', 'false');
+  btn?.addEventListener('click', (e) => { e.stopPropagation(); setOpen(!wrapper.classList.contains('is-open')); });
+  document.addEventListener('click', (e) => { if (!wrapper.contains(e.target)) setOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+
+  menu.addEventListener('click', (e) => {
+    const link = e.target.closest('[data-filter]');
+    if (!link) return;
+    e.preventDefault();
+    setOpen(false);
+    link.blur();
+    pickCategory(link.dataset.filter);
   });
 }
 
-// ─── Mega Menu Links ────────────────────────────────────────────────────────
-function initMegaMenuLinks() {
-  const megaLinks = $$('.mega-link');
-  megaLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      // Dropdown closes via CSS :hover or JS depending on implementation, but filtering happens here
-      let filterVal = link.textContent.trim().toLowerCase();
-      
-      // Simplify filterVal to match our mockup product descriptions
-      if (filterVal.includes('kemeja')) filterVal = 'kemeja';
-      else if (filterVal.includes('sepatu')) filterVal = 'sepatu';
-      else if (filterVal.includes('gaun')) filterVal = 'gaun';
-      else if (filterVal.includes('tas')) filterVal = 'tas';
-      else if (filterVal.includes('smartphone')) filterVal = 'smartphone';
-      else if (filterVal.includes('headphone')) filterVal = 'headphone';
-      else if (filterVal.includes('laptop')) filterVal = 'laptop';
-      else if (filterVal.includes('jaket')) filterVal = 'jaket';
-      else if (filterVal.includes('serum')) filterVal = 'serum';
-      else filterVal = filterVal.split(' ')[0]; // fallback to first word
+// ─── Carousel kategori (bisa digeser kiri/kanan) ────────────────────────────
+function initCategoryCarousel() {
+  const root = document.getElementById('cat-carousel');
+  if (!root) return;
+  if (new URLSearchParams(window.location.search).get('shop')) { root.hidden = true; return; }
+  const track = root.querySelector('.cc-track');
+  track.innerHTML = CATEGORIES.map(c => `
+    <a href="index.html?cat=${c.key}" class="cc-card" data-filter="${c.key}" draggable="false">
+      <img src="${categoryImage(c, 1000)}" alt="" loading="lazy" draggable="false">
+      <span class="cc-copy">
+        <small>${esc(c.label)}</small>
+        <b>${esc(c.tagline)}</b>
+        <em>Belanja sekarang</em>
+      </span>
+    </a>`).join('');
 
-      const targetEl = $('#product-list');
-      if (targetEl) {
-        const offsetTop = targetEl.getBoundingClientRect().top + window.scrollY - 80;
-        window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+  const prev = root.querySelector('.cc-prev');
+  const next = root.querySelector('.cc-next');
+  const step = () => (track.querySelector('.cc-card')?.getBoundingClientRect().width || 300) + 16;
+  const update = () => {
+    const max = track.scrollWidth - track.clientWidth - 2;
+    prev.disabled = track.scrollLeft <= 2;
+    next.disabled = track.scrollLeft >= max;
+  };
+  prev.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }));
+  next.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
+  track.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+  window.addEventListener('resize', update);
+  update();
+
+  // Geser dengan mouse (sentuh/trackpad sudah bawaan browser)
+  let down = false, startX = 0, startLeft = 0, moved = false;
+  track.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    down = true; moved = false; startX = e.clientX; startLeft = track.scrollLeft;
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!down) return;
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > 5) { moved = true; track.classList.add('is-dragging'); }
+    if (moved) track.scrollLeft = startLeft - dx;
+  });
+  window.addEventListener('pointerup', () => {
+    if (!down) return;
+    down = false;
+    if (!moved) return;
+    track.classList.remove('is-dragging');
+    // Menempel ke kartu terdekat setelah dilepas
+    const w = step();
+    track.scrollTo({ left: Math.round(track.scrollLeft / w) * w, behavior: 'smooth' });
+  });
+  track.addEventListener('click', (e) => {
+    const card = e.target.closest('.cc-card');
+    if (!card) return;
+    e.preventDefault();
+    if (moved) { moved = false; return; } // hasil seret, bukan klik
+    pickCategory(card.dataset.filter);
+  });
+  root.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); next.click(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev.click(); }
+  });
+}
+
+// ─── Info hasil pencarian / kategori di atas katalog ─────────────────────────
+function initResultsBar() {
+  const bar = document.getElementById('catalog-results');
+  if (!bar) return;
+  document.addEventListener('vendora:catalog-loaded', (e) => {
+    const d = e.detail;
+    if (d.shop || (!d.q && (!d.filter || d.filter === 'all'))) { bar.hidden = true; return; }
+    const parts = [];
+    if (d.q) parts.push(`Hasil pencarian <b>"${esc(d.q)}"</b>`);
+    if (d.filterLabel) parts.push(`${d.q ? 'di' : 'Kategori'} <b>${esc(d.filterLabel)}</b>`);
+    bar.innerHTML = `
+      <span>${parts.join(' ')} <span class="cr-count">· ${d.shown} produk</span></span>
+      <button type="button" class="cr-clear">${d.q ? 'Hapus pencarian' : 'Lihat semua kategori'}</button>`;
+    bar.hidden = false;
+    bar.querySelector('.cr-clear').addEventListener('click', () => pickCategory('all', { scroll: false }));
+  });
+}
+
+// ─── Tombol "Buka toko" → daftar sebagai penjual ────────────────────────────
+function initOpenShopLinks() {
+  document.querySelectorAll('[data-open-shop]').forEach(a => {
+    a.setAttribute('href', 'login.html?tab=daftar&role=seller');
+    a.addEventListener('click', (e) => {
+      const session = getActiveSession();
+      if (session && session.user && session.user.role === 'seller') {
+        e.preventDefault();
+        window.location.href = 'seller.html';
       }
-      loadCatalogProducts(filterVal);
     });
   });
 }
@@ -362,11 +543,9 @@ function initApp() {
 
   initNavbarSession();
 
-  // Dynamically load support chat widget for logged in sellers
-  const session = getActiveSession();
-  if (session && session.user && session.user.role === 'seller') {
-    initSellerInboxWidget();
-  }
+  // Dock chat (pembeli & penjual) di semua halaman
+  if (!isPage('login.html') && !isPage('admin.html')) initChatDock();
+  initOpenShopLinks();
 
   // ── Homepage ─────────────────────────────────────────────────────────────
   if (isPage('index.html') || path === '/' || path.endsWith('/')) {
@@ -374,6 +553,8 @@ function initApp() {
     initFlashSaleCountdown();
     initFilterChips();
     initMegaMenuLinks();
+    initCategoryCarousel();
+    initResultsBar();
     initSmoothScroll();
     initCartDrawer();
     initCart();
@@ -381,106 +562,108 @@ function initApp() {
 
     const urlParams = new URLSearchParams(window.location.search);
     const shopQuery = urlParams.get('shop');
+    if (urlParams.get('cart') === '1') {
+      setTimeout(() => document.dispatchEvent(new CustomEvent('vendora:open-cart')), 300);
+      history.replaceState(null, '', window.location.pathname + (shopQuery ? `?shop=${encodeURIComponent(shopQuery)}` : ''));
+    }
+
+    // Urutkan katalog
+    const sortSel = document.getElementById('catalog-sort');
+    if (sortSel) sortSel.addEventListener('change', () => setCatalogSort(sortSel.value));
 
     if (shopQuery) {
+      // ── Halaman toko (index.html?shop=Nama) ──
       const heroSection = document.getElementById('hero-section');
       if (heroSection) heroSection.style.display = 'none';
+      const titleEl = document.querySelector('#catalog-anchor .sf-title-caps');
+      const subEl = document.querySelector('#catalog-anchor .catalog-sub');
+      if (titleEl) titleEl.textContent = 'Semua produk';
+      if (subEl) subEl.textContent = `Etalase ${shopQuery}`;
 
-      const bannerContainer = document.getElementById('shop-banner-container');
-      if (bannerContainer) {
-        bannerContainer.style.display = 'block';
-        const videoSrc = shopQuery.toLowerCase() === 'puma' ? 'videos/hero-vid-2.mp4' : 'videos/hero-vid-1.mp4';
-        bannerContainer.innerHTML = `
-          <div style="position: relative; border-radius: 20px; display: flex; align-items: center; gap: 24px; color: #fff; overflow: hidden; min-height: 240px; padding: 40px; box-shadow: var(--shadow-lg);">
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;">
-              <video width="100%" height="150%" style="position:absolute; top:-25%; left:0; scale: 1.2; opacity: 0.85; object-fit: cover;" src="${videoSrc}" autoplay muted loop playsinline></video>
-            </div>
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(20,20,20,0.4) 100%); z-index: 1;"></div>
-            
-            <div style="position: relative; z-index: 2; width: 100px; height: 100px; background: var(--bg-1); color: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; border: 4px solid rgba(255,255,255,0.2); flex-shrink: 0;">
-              ${shopQuery.charAt(0).toUpperCase()}
-            </div>
-            <div style="position: relative; z-index: 2; flex: 1;">
-              <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 8px;">${shopQuery}</h1>
-              <div style="display: flex; gap: 16px; font-size: 14px; opacity: 0.9;">
-                <span style="display: flex; align-items: center; gap: 6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Verified Merchant</span>
-                <span style="display: flex; align-items: center; gap: 6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 4.9 Rating</span>
+      const banner = document.getElementById('shop-banner-container');
+      if (banner) {
+        banner.style.display = 'block';
+        banner.innerHTML = `
+          <nav class="crumbs" aria-label="Lokasi"><a href="index.html">Beranda</a><span aria-hidden="true">›</span><span>${esc(shopQuery)}</span></nav>
+          <section class="shop-head">
+            <div class="shop-head-main">
+              <span class="shop-head-avatar" aria-hidden="true">${esc(shopQuery.charAt(0).toUpperCase())}</span>
+              <div class="shop-head-id">
+                <h1>${esc(shopQuery)}</h1>
+                <span class="v-status v-status--good">Merchant terverifikasi</span>
+                <p class="shop-head-desc" id="sh-desc"></p>
+              </div>
+              <div class="shop-head-actions">
+                <button type="button" class="btn-line" id="banner-chat-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                  Chat penjual
+                </button>
+                <button type="button" class="btn-line" id="shop-share-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  Bagikan
+                </button>
               </div>
             </div>
-            
-            <button id="banner-chat-btn" style="position: relative; z-index: 2; background: var(--gold); color: var(--bg-1); border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(212,175,55,0.3);" onmouseover="this.style.opacity='0.9'; this.style.transform='translateY(-2px)';" onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)';">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-              </svg>
-              Chat Penjual
-            </button>
-          </div>
-        `;
-        
-        // Setup banner chat button event listener
-        setTimeout(() => {
-          const bannerChatBtn = document.getElementById('banner-chat-btn');
-          if (bannerChatBtn) {
-            bannerChatBtn.addEventListener('click', async () => {
-              const chatModal = document.getElementById('chat-modal');
-              if (!chatModal) return;
+            <dl class="shop-head-stats">
+              <div><dt>Produk</dt><dd id="sh-products">–</dd></div>
+              <div><dt>Terjual</dt><dd id="sh-sold">–</dd></div>
+              <div><dt>Bergabung</dt><dd id="sh-since">–</dd></div>
+              <div><dt>Dikirim dari</dt><dd id="sh-addr">–</dd></div>
+            </dl>
+          </section>`;
 
-              // Tampilkan modal terlebih dahulu dengan state loading
-              document.getElementById('chat-shop-name').textContent = "Memuat...";
-              document.getElementById('chat-shop-initial').textContent = shopQuery.charAt(0).toUpperCase();
-              document.getElementById('chat-welcome-shop').textContent = shopQuery;
-              chatModal.classList.add('active');
+        let shopInfo = null;
+        // Isi header + etalase kategori setelah katalog toko termuat (sekali)
+        document.addEventListener('vendora:catalog-loaded', (e) => {
+          const d = e.detail;
+          if (!d.shop || banner.dataset.filled) return;
+          banner.dataset.filled = '1';
+          shopInfo = Object.values(d.shopDetailCache || {}).find(x => x.name.toLowerCase() === shopQuery.toLowerCase()) || null;
+          const sold = d.shopProducts.reduce((sum, p) => sum + d.soldOf(p), 0);
+          document.getElementById('sh-products').textContent = d.shopProducts.length;
+          document.getElementById('sh-sold').textContent = sold.toLocaleString('id-ID');
+          document.getElementById('sh-since').textContent = shopInfo && shopInfo.created_at
+            ? new Date(shopInfo.created_at).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : '–';
+          document.getElementById('sh-addr').textContent = (shopInfo && shopInfo.owner_address) || 'Belum diisi';
+          document.getElementById('sh-desc').textContent = (shopInfo && shopInfo.description) || '';
+          if (!shopInfo) document.getElementById('banner-chat-btn').hidden = true;
 
-              let shopId = '';
-              let ownerId = '';
-              try {
-                const res = await fetch(`${BASE_URL}/shops`);
-                if (res.ok) {
-                  const data = await res.json();
-                  const shop = (data.data || []).find(s => s.name.toLowerCase() === shopQuery.toLowerCase());
-                  if (shop) {
-                    shopId = shop.id;
-                    ownerId = shop.owner_id;
-                  }
-                }
-              } catch (e) { console.error(e); }
-
-              if (!shopId) {
-                // Jika toko tidak ditemukan, tutup modal dan beri alert
-                chatModal.classList.remove('active');
-                if (typeof showAlert === 'function') showAlert("Toko tidak ditemukan", "error");
-                else alert("Toko tidak ditemukan");
-                return;
-              }
-
-              window.currentChatShopId = shopId;
-              window.currentChatOwnerId = ownerId;
-              document.getElementById('chat-shop-name').textContent = shopQuery;
-              
-              if (window.startChatPolling) window.startChatPolling();
-            });
+          // Etalase: kategori dari produk toko ini
+          const counts = {};
+          d.shopProducts.forEach(p => d.parseCategories(p).forEach(c => { counts[c] = (counts[c] || 0) + 1; }));
+          const bar = document.getElementById('catalog-filter-bar');
+          if (bar) {
+            bar.innerHTML = `<button class="filter-chip active" data-filter="all" type="button">Semua <span class="chip-count">${d.shopProducts.length}</span></button>` +
+              Object.entries(counts).sort((x, y) => y[1] - x[1]).map(([c, n]) =>
+                `<button class="filter-chip" data-filter="kat:${esc(c)}" type="button">${esc(c)} <span class="chip-count">${n}</span></button>`).join('');
           }
-        }, 50);
+        });
+
+        document.getElementById('banner-chat-btn').addEventListener('click', () => {
+          if (!shopInfo) { showAlert('Chat belum tersedia untuk toko ini.', 'error'); return; }
+          if (window.openShopChat) window.openShopChat(shopInfo, shopInfo.name);
+        });
+        document.getElementById('shop-share-btn').addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(window.location.href);
+            showAlert('Tautan toko disalin.', 'success');
+          } catch {
+            showAlert('Salin tautan dari address bar browser.', 'error');
+          }
+        });
       }
 
-      const filterBar = document.querySelector('.catalog-filter-bar');
-      if (filterBar && shopQuery.toLowerCase() === 'apple') {
-        filterBar.innerHTML = `
-          <button class="filter-chip active" data-filter="all" type="button">Semua</button>
-          <button class="filter-chip" data-filter="smartphone" type="button">Smartphone</button>
-          <button class="filter-chip" data-filter="laptop" type="button">Laptop</button>
-          <button class="filter-chip" data-filter="tablet" type="button">Tablet</button>
-          <button class="filter-chip" data-filter="audio" type="button">Audio</button>
-          <button class="filter-chip" data-filter="aksesoris" type="button">Aksesoris</button>
-        `;
-        // Re-initialize filter chips
-        setTimeout(() => initFilterChips(), 100);
-      }
-      
       loadCatalogProducts('all', shopQuery);
     } else {
-      // Auto-load products on the homepage if no shopQuery is present
-      loadCatalogProducts('all', null);
+      // Beranda: dukung tautan ?cat= (menu/kategori), ?q= (pencarian), ?p= (produk)
+      const cat = urlParams.get('cat');
+      const validCat = cat && (cat === 'all' || CATEGORY_BY_KEY[cat] || (cat.startsWith('sub:') && CATEGORY_BY_KEY[cat.slice(4).split('|')[0]]));
+      if (validCat) syncChips(cat);
+      loadCatalogProducts(validCat ? cat : 'all', null).then(() => {
+        if (validCat || urlParams.get('q')) setTimeout(scrollToCatalog, 150);
+        const pid = urlParams.get('p');
+        if (pid) openProductById(pid);
+      });
     }
 
     // --- CACHE BUSTER DOM FIX ---
@@ -507,163 +690,17 @@ function initApp() {
        });
     }
     
-    // Setup Chat Modal logic
-    if (document.getElementById('chat-modal')) {
-      // REAL BUYER CHAT LOGIC
-      let chatPollInterval = null;
-      
-      const chatModal = document.getElementById('chat-modal');
-      const chatCloseBtn = document.getElementById('chat-close-btn');
-      const chatSendBtn = document.getElementById('chat-send-btn');
-      const chatInput = document.getElementById('chat-input');
-      const chatMessages = document.getElementById('chat-messages');
-
-      if (chatCloseBtn) {
-        chatCloseBtn.addEventListener('click', () => {
-          chatModal.classList.remove('active');
-          if (chatPollInterval) clearInterval(chatPollInterval);
-        });
-      }
-      
-      async function loadChatHistory() {
-        const session = getActiveSession();
-        if (!session) return;
-        const buyerId = session.user.id;
-        const shopId = window.currentChatShopId;
-        if (!shopId) return;
-
-        try {
-          const res = await fetch(`${BASE_URL}/chat/history?buyer_id=${buyerId}&shop_id=${shopId}`);
-          const data = await res.json();
-          if (res.ok) {
-            chatMessages.innerHTML = '';
-            const encNotice = document.createElement('div');
-            encNotice.style = "align-self: center; background: var(--bg-2); padding: 6px 12px; border-radius: 16px; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;";
-            encNotice.textContent = "Pesan terhubung langsung dengan penjual.";
-            chatMessages.appendChild(encNotice);
-
-            (data.data || []).forEach(msg => {
-              const isMe = msg.sender_id === buyerId;
-              const msgDiv = document.createElement('div');
-              const timeStr = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-              if (isMe) {
-                msgDiv.style = "align-self: flex-end; background: var(--gold); padding: 12px 16px; border-radius: 16px 16px 0 16px; max-width: 80%; font-size: 14px; color: var(--bg-1); line-height: 1.5;";
-                msgDiv.innerHTML = `${msg.text}<div style="font-size: 10px; color: rgba(255,255,255,0.7); text-align: right; margin-top: 4px;">${timeStr}</div>`;
-              } else {
-                msgDiv.style = "align-self: flex-start; background: var(--bg-2); padding: 12px 16px; border-radius: 16px 16px 16px 0; max-width: 80%; font-size: 14px; color: var(--text-main); line-height: 1.5; border: 1px solid var(--border);";
-                msgDiv.innerHTML = `${msg.text}<div style="font-size: 10px; color: var(--text-muted); text-align: right; margin-top: 4px;">${timeStr}</div>`;
-              }
-              chatMessages.appendChild(msgDiv);
-            });
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-          }
-        } catch (e) { console.error(e); }
-      }
-
-      window.startChatPolling = function() {
-        if (chatPollInterval) clearInterval(chatPollInterval);
-        const chatMessages = document.getElementById('chat-messages');
-        if (chatMessages) chatMessages.innerHTML = '<div style="text-align:center; padding:20px; font-size:12px; color:var(--text-muted);">Memuat percakapan...</div>';
-        loadChatHistory();
-        chatPollInterval = setInterval(loadChatHistory, 3000);
-      };
-      
-      async function sendBotReply(buyerId, shopId, ownerId) {
-        let actualOwnerId = ownerId;
-        if (!actualOwnerId) {
-          try {
-            const res = await fetch(`${BASE_URL}/shops`);
-            const data = await res.json();
-            const shop = (data.data || []).find(s => s.id === shopId);
-            if (shop) actualOwnerId = shop.owner_id;
-          } catch (e) { console.error(e); }
-        }
-        if (!actualOwnerId) return;
-
-        const payload = {
-          sender_id: actualOwnerId,
-          receiver_id: buyerId,
-          shop_id: shopId,
-          text: "Terima kasih! Pesan Anda sudah kami terima dan akan segera dibalas oleh admin toko."
-        };
-
-        try {
-          await fetch(`${BASE_URL}/chat/send`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          loadChatHistory();
-        } catch (e) {
-          console.error("Bot reply failed:", e);
-        }
-      }
-
-      async function sendChatMessage() {
-        const text = chatInput.value.trim();
-        if (!text) return;
-
-        const session = getActiveSession();
-        if (!session) {
-          showAlert("Silakan Sign In terlebih dahulu", "error");
-          return;
-        }
-        
-        // Cek apakah ini pesan pertama di chat ini
-        let isFirstMessage = false;
-        try {
-          const histRes = await fetch(`${BASE_URL}/chat/history?buyer_id=${session.user.id}&shop_id=${window.currentChatShopId}`);
-          if (histRes.ok) {
-            const histData = await histRes.json();
-            if (!histData.data || histData.data.length === 0) {
-              isFirstMessage = true;
-            }
-          }
-        } catch(e) {
-          isFirstMessage = true;
-        }
-
-        const payload = {
-          sender_id: session.user.id,
-          shop_id: window.currentChatShopId,
-          text: text
-        };
-
-        try {
-          const res = await fetch(`${BASE_URL}/chat/send`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (res.ok) {
-            chatInput.value = '';
-            loadChatHistory();
-            
-            // Auto reply dari bot HANYA JIKA ini pesan pertama
-            if (isFirstMessage) {
-              setTimeout(() => {
-                sendBotReply(session.user.id, window.currentChatShopId, window.currentChatOwnerId);
-              }, 1500);
-            }
-          } else {
-            showAlert("Gagal mengirim pesan", "error");
-          }
-        } catch (e) {
-          showAlert("Error jaringan", "error");
-        }
-      }
-
-      if (chatSendBtn) chatSendBtn.addEventListener('click', sendChatMessage);
-      if (chatInput) chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendChatMessage();
-      });
-    }
   }
 
   // ── Login ─────────────────────────────────────────────────────────────────
   else if (isPage('login.html')) {
     const session = getActiveSession();
-    if (session) {
+    // Sudah masuk → arahkan ke beranda, kecuali sedang ganti kata sandi (login.html?reset=1)
+    const qs = new URLSearchParams(window.location.search);
+    const wantsReset = qs.get('reset') === '1';
+    // Pembeli yang menekan "Buka toko" tetap boleh membuat akun penjual
+    const wantsSellerSignup = qs.get('tab') === 'daftar' && qs.get('role') === 'seller' && session && session.user.role === 'buyer';
+    if (session && !wantsReset && !wantsSellerSignup) {
       const routes = { admin: 'admin.html', seller: 'seller.html', buyer: 'index.html' };
       window.location.href = routes[session.user.role] || 'index.html';
     } else {
@@ -672,8 +709,24 @@ function initApp() {
   }
 
   // ── Seller Hub ────────────────────────────────────────────────────────────
+  else if (isPage('pesanan.html')) {
+    initOrdersPage();
+  }
+
+  else if (isPage('akun.html')) {
+    initAccountPage();
+  }
+
   else if (isPage('seller.html')) {
     initSellerDashboard();
+  }
+
+  // ── Halaman konten (footer) ───────────────────────────────────────────────
+  else if (isPage('bantuan.html')) {
+    initHelpPage();
+  }
+  else if (isPage('tentang.html')) {
+    initAboutPage();
   }
 
   // ── Admin Console ─────────────────────────────────────────────────────────
@@ -713,7 +766,19 @@ window.showShopDetailModal = function(shop) {
   if (initialEl) initialEl.style.display = 'block';
 
   if (descEl) descEl.textContent = shop.description || 'Tidak ada deskripsi toko.';
-  if (addressEl) addressEl.textContent = shop.owner_address || 'Tidak ada alamat toko.';
+  const countEl = document.getElementById('shop-modal-products');
+  if (countEl) {
+    countEl.textContent = 'Memuat…';
+    if (shop.id) {
+      fetch(`${BASE_URL}/products?shop_id=${encodeURIComponent(shop.id)}`)
+        .then(r => r.json())
+        .then(d => { countEl.textContent = `${(d.data || []).length} produk`; })
+        .catch(() => { countEl.textContent = '–'; });
+    } else {
+      countEl.textContent = '–';
+    }
+  }
+  if (addressEl) addressEl.textContent = shop.owner_address || 'Belum diisi penjual';
   
   const viewBtn = document.getElementById('shop-modal-view-btn');
 
@@ -727,16 +792,7 @@ window.showShopDetailModal = function(shop) {
   if (chatBtn) {
     chatBtn.onclick = function() {
       modal.classList.remove('active');
-      const chatModal = document.getElementById('chat-modal');
-      if (chatModal) {
-        window.currentChatShopId = shop.id;
-        window.currentChatOwnerId = shop.owner_id;
-        document.getElementById('chat-shop-name').textContent = shopName;
-        document.getElementById('chat-shop-initial').textContent = shopName.charAt(0).toUpperCase();
-        document.getElementById('chat-welcome-shop').textContent = shopName;
-        chatModal.classList.add('active');
-        if (window.startChatPolling) window.startChatPolling();
-      }
+      if (window.openShopChat) window.openShopChat(shop, shopName);
     };
   }
 
@@ -762,146 +818,67 @@ function initOrderHistoryModal() {
       return;
     }
 
-    listEl.innerHTML = `
-      <div style="text-align: center; padding: 40px 0; color: var(--text-secondary);">
-        <div style="font-size:14px; font-weight:600; margin-bottom:4px; animation: pulse 1.5s infinite;">Memuat riwayat belanja...</div>
-      </div>`;
+    listEl.innerHTML = `<div class="order-empty"><p>Memuat riwayat belanja…</p></div>`;
     modal.classList.add('active');
 
     try {
       const res = await fetch(`${BASE_URL}/transactions?buyer_id=${session.user.id}`);
       const data = await res.json();
-      
       if (!res.ok || data.status !== 200) {
-        listEl.innerHTML = `<div style="text-align:center; padding:30px 0; color:#EF4444;">Gagal memuat transaksi.</div>`;
+        listEl.innerHTML = `<div class="order-empty"><p>Gagal memuat riwayat belanja. Coba lagi.</p></div>`;
         return;
       }
 
-      const txs = data.data || [];
-      if (txs.length === 0) {
+      const txs = (data.data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      if (!txs.length) {
         listEl.innerHTML = `
-          <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px; opacity:0.4; display:block;">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <p style="font-weight:600; font-size:14px; margin-bottom:4px;">Belum ada riwayat belanja</p>
-            <span style="font-size:12px; color:var(--text-muted);">Keranjang belanja Anda masih kosong. Mari mulai belanja!</span>
+          <div class="order-empty">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            <h4>Belum ada pesanan</h4>
+            <p>Pesanan yang kamu buat akan muncul di sini.</p>
           </div>`;
         return;
       }
 
-      // Sort transactions by date descending
-      txs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const STEPS = ['Dipesan', 'Diproses', 'Selesai'];
+      const stepIndex = { pending: 0, paid: 1, success: 2 };
+      const note = (st, resi) => ({
+        pending:   'Menunggu penjual mengonfirmasi pesanan.',
+        paid:      `Pesanan sedang dikemas penjual. Resi ${resi}.`,
+        success:   `Paket sudah diterima. Resi ${resi}.`,
+        cancelled: 'Pesanan ini dibatalkan.',
+      }[st] || '');
 
-      const statusColors = {
-        'pending': '#F59E0B',
-        'processing': '#3B82F6',
-        'success': '#10B981',
-        'cancelled': '#EF4444'
-      };
-      const statusLabels = {
-        'pending': 'Menunggu Konfirmasi',
-        'processing': 'Sedang Diproses',
-        'success': 'Pesanan Selesai',
-        'cancelled': 'Dibatalkan'
-      };
-
-      let html = '';
-      txs.forEach(t => {
-        const date = t.created_at ? new Date(t.created_at).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '-';
-        const statusColor = statusColors[t.status] || '#94A3B8';
-        const statusLabel = statusLabels[t.status] || t.status;
-        const shortId = t.id ? t.id.slice(-8).toUpperCase() : '-';
-
-        // Lacak barang simulation data
-        let trackingHtml = '';
-        if (t.status === 'success') {
-          trackingHtml = `
-            <div style="margin-top: 12px; padding: 12px; background: rgba(52, 211, 153, 0.08); border-radius: 8px; border: 1px dashed #34D399;">
-              <div style="font-size:12px; font-weight:700; color:#059669; display:flex; justify-content:space-between; margin-bottom:6px;">
-                <span>Lacak Pengiriman (Vendora Express)</span>
-                <span style="font-family:monospace;">RESI: VDR-EXP-${shortId}</span>
-              </div>
-              <div style="font-size:13px; color:#047857; line-height:1.4;">
-                <strong>Posisi Terakhir:</strong> Paket telah sampai di alamat tujuan dan diterima oleh pembeli. Transaksi Selesai.
-              </div>
-            </div>`;
-        } else if (t.status === 'processing') {
-          trackingHtml = `
-            <div style="margin-top: 12px; padding: 12px; background: rgba(59, 130, 246, 0.08); border-radius: 8px; border: 1px dashed #3B82F6;">
-              <div style="font-size:12px; font-weight:700; color:#2563EB; display:flex; justify-content:space-between; margin-bottom:6px;">
-                <span>Lacak Pengiriman (Vendora Express)</span>
-                <span style="font-family:monospace;">RESI: VDR-EXP-${shortId}</span>
-              </div>
-              <div style="font-size:13px; color:#1D4ED8; line-height:1.4;">
-                <strong>Posisi Terakhir:</strong> Penjual telah mengonfirmasi. Pesanan sedang dipersiapkan dan menunggu pick up oleh kurir.
-              </div>
-            </div>`;
-        } else if (t.status === 'pending') {
-          trackingHtml = `
-            <div style="margin-top: 12px; padding: 12px; background: rgba(245, 158, 11, 0.08); border-radius: 8px; border: 1px dashed #F59E0B;">
-              <div style="font-size:12px; font-weight:700; color:#D97706; display:flex; justify-content:space-between; margin-bottom:6px;">
-                <span>Status Pemrosesan</span>
-              </div>
-              <div style="font-size:13px; color:#B45309; line-height:1.4;">
-                <strong>Info:</strong> Menunggu penjual mengonfirmasi pesanan Anda dan mengatur pengiriman.
-              </div>
-            </div>`;
-        }
-
-        let itemsHtml = (t.items || []).map(item => `
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--text-main); margin-bottom:4px;">
-            <span>${item.name} <span style="color:var(--text-secondary);">× ${item.quantity}</span></span>
-            <span style="font-weight:600;">Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</span>
-          </div>
-        `).join('');
-        
-        const recName = t.recipient_name || 'Pembeli';
-        const recAddr = t.shipping_address || '-';
-
-        html += `
-          <div style="border:1px solid var(--border); border-radius: var(--r-md); padding:16px; background:var(--surface); margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:10px;">
+      listEl.innerHTML = txs.map(t => {
+        const st = normStatus(t.status);
+        const resi = `VDR-EXP-${(t.id || '').slice(-8).toUpperCase()}`;
+        const items = (t.items || []).map(i => `
+          <li><span>${esc(i.name)} <em>×${i.quantity}</em></span><span>${fmtRp(i.price * i.quantity)}</span></li>`).join('');
+        const steps = st === 'cancelled' ? '' : `
+          <ol class="order-steps" aria-label="Progres pesanan">
+            ${STEPS.map((label, i) => `<li class="${i <= (stepIndex[st] ?? 0) ? 'done' : ''}">${label}</li>`).join('')}
+          </ol>`;
+        return `
+          <article class="order-card">
+            <header class="order-head">
               <div>
-                <span style="font-size:11px; color:var(--text-muted); display:block; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">No. Transaksi</span>
-                <span style="font-family:monospace; font-weight:700; color:var(--text-main); font-size:13px;">...${shortId}</span>
+                <span class="order-id">${esc(shortId(t.id))}</span>
+                <span class="order-date">${fmtDateTime(t.created_at)}</span>
               </div>
-              <div style="text-align:right;">
-                <span style="font-size:11px; color:var(--text-muted); display:block; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Dikirim ke</span>
-                <span style="font-weight:600; color:var(--text-main); font-size:13px; display:block;">${recName}</span>
-                <span style="font-size:11px; color:var(--text-secondary); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;" title="${recAddr}">${recAddr}</span>
-              </div>
-              <div style="text-align:right;">
-                <span style="font-size:11px; color:var(--text-muted); display:block; text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Status</span>
-                <span style="padding:2px 8px; border-radius:12px; font-size:11px; font-weight:700; background:${statusColor}22; color:${statusColor};">${statusLabel}</span>
-              </div>
-            </div>
-            
-            <div style="margin-bottom:12px;">
-              ${itemsHtml}
-            </div>
-
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:10px; margin-top:8px;">
-              <span style="font-size:12px; color:var(--text-secondary);">${date}</span>
-              <div>
-                <span style="font-size:11px; color:var(--text-muted); margin-right:4px;">Total Belanja:</span>
-                <strong style="font-size:15px; color:var(--text-main);">Rp ${t.total_amount.toLocaleString('id-ID')}</strong>
-              </div>
-            </div>
-
-            ${trackingHtml}
-          </div>
-        `;
-      });
-
-      listEl.innerHTML = html;
-
+              ${txStatusHTML(st, { long: true })}
+            </header>
+            <ul class="order-items">${items}</ul>
+            ${steps}
+            <p class="order-note">${esc(note(st, resi))}</p>
+            <footer class="order-foot">
+              <span class="order-ship">Dikirim ke <b>${esc(t.recipient_name || session.user.name || 'Pembeli')}</b>${t.shipping_address ? ` · ${esc(t.shipping_address)}` : ''}</span>
+              <span class="order-total">Total <b>${fmtRp(t.total_amount)}</b></span>
+            </footer>
+          </article>`;
+      }).join('');
     } catch (err) {
       console.error(err);
-      listEl.innerHTML = `<div style="text-align:center; padding:30px 0; color:#EF4444;">Terjadi kesalahan koneksi jaringan.</div>`;
+      listEl.innerHTML = `<div class="order-empty"><p>Koneksi bermasalah. Coba lagi sebentar.</p></div>`;
     }
   });
 
