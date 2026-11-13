@@ -3,8 +3,8 @@
 // daftar percakapan → utas pesan, kirim teks & foto, centang terkirim/dibaca.
 // "Real-time" lewat polling 2 detik (backend Vercel tidak mendukung WebSocket),
 // berhenti otomatis saat tab tidak aktif agar hemat kuota.
-import { BASE_URL, getActiveSession } from "../config/api.js?v=5";
-import { esc } from "../ui.js?v=2";
+import { BASE_URL, getActiveSession, authHeaders } from "../config/api.js?v=105";
+import { esc } from "../ui.js?v=102";
 
 const POLL_THREAD = 2000;
 const POLL_LIST = 5000;
@@ -97,14 +97,14 @@ function openLightbox(src) {
 
 // ─── API ────────────────────────────────────────────────────────────────────
 async function getJSON(url) {
-  const res = await fetch(url);
+  const res = await fetch(url, { headers: authHeaders() });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || 'Gagal memuat chat');
   return data.data;
 }
 async function postJSON(path, body) {
   const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || 'Pesan gagal terkirim');
@@ -566,15 +566,11 @@ export function initChatDock() {
     });
   };
 
-  // Salam otomatis toko untuk pesan pertama (seperti "pesan sambutan" WhatsApp Business)
-  function sendGreeting(shop) {
-    if (!shop.owner_id) return;
+  // Salam otomatis toko untuk pesan pertama kini ditangani langsung oleh backend
+  function sendGreeting() {
     setTimeout(() => {
-      postJSON('/chat/send', {
-        sender_id: shop.owner_id, receiver_id: me.id, shop_id: shop.id,
-        text: 'Terima kasih sudah menghubungi kami! Pesanmu sudah diterima dan akan segera dibalas oleh penjual.',
-      }).then(() => thread && thread.refresh()).catch(() => {});
-    }, 1200);
+      if (thread) thread.refresh();
+    }, 600);
   }
 
   dock = { open: openPanel, close: closePanel };

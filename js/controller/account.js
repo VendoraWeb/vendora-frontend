@@ -1,6 +1,6 @@
 // ─── Halaman Pengaturan Akun (akun.html) ─────────────────────────────────────
-import { BASE_URL, getActiveSession, setActiveSession, clearActiveSession } from "../config/api.js?v=5";
-import { fmtDate } from "../ui.js?v=2";
+import { BASE_URL, getActiveSession, setActiveSession, clearActiveSession, authHeaders } from "../config/api.js?v=105";
+import { fmtDate } from "../ui.js?v=102";
 
 const $ = (id) => document.getElementById(id);
 const ROLE_LABEL = { buyer: 'Pembeli', seller: 'Penjual', admin: 'Admin' };
@@ -53,13 +53,14 @@ export async function initAccountPage() {
     return;
   }
 
-  // Data terbaru dari server (avatar, alamat, tanggal bergabung)
+  // Data terbaru dari server (avatar, alamat, tanggal bergabung) melalui endpoint sesi /user/me
   let user = { ...session.user };
   try {
-    const res = await fetch(`${BASE_URL}/users`);
+    const res = await fetch(`${BASE_URL}/user/me`, { headers: authHeaders() });
     const data = await res.json();
-    const fresh = (data.data || []).find(u => u.id === user.id);
-    if (fresh) user = { ...user, ...fresh };
+    if (res.ok && data.data) {
+      user = { ...user, ...data.data };
+    }
   } catch (e) { /* tetap pakai data sesi */ }
 
   // Tautan kembali sesuai peran
@@ -72,6 +73,23 @@ export async function initAccountPage() {
     $('address-title').textContent = 'Alamat toko';
     $('address-desc').textContent = 'Lokasi ruko atau gudang. Ditampilkan ke pembeli sebagai "Dikirim dari" dan dipakai sebagai alamat pengiriman saat kamu berbelanja.';
     $('acc-phone-hint').textContent = 'Kontak toko untuk pembeli dan admin.';
+  }
+
+  // Penyesuaian tampilan khusus Administrator (sembunyikan tab Alamat & Notifikasi serta teks pembeli/penjual)
+  if (user.role === 'admin') {
+    const navAlamat = $('acc-nav-alamat') || document.querySelector('.acc-nav a[href="#alamat"]');
+    const navNotif = $('acc-nav-notifikasi') || document.querySelector('.acc-nav a[href="#notifikasi"]');
+    const panelAlamat = $('panel-alamat');
+    const panelNotif = $('panel-notifikasi');
+    if (navAlamat) navAlamat.style.display = 'none';
+    if (navNotif) navNotif.style.display = 'none';
+    if (panelAlamat) panelAlamat.remove();
+    if (panelNotif) panelNotif.remove();
+
+    if ($('acc-head-desc')) $('acc-head-desc').textContent = 'Atur profil dan keamanan akun administrator Vendora.';
+    if ($('acc-profil-desc')) $('acc-profil-desc').textContent = 'Foto dan informasi kontak akun administrator sistem.';
+    if ($('acc-name-hint')) $('acc-name-hint').textContent = 'Nama identitas akun administrator sistem.';
+    if ($('acc-phone-hint')) $('acc-phone-hint').textContent = 'Nomor kontak internal administrator untuk verifikasi keamanan.';
   }
 
   // Ringkasan akun
@@ -123,7 +141,7 @@ export async function initAccountPage() {
     try {
       const res = await fetch(`${BASE_URL}/user/profile`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ user_id: user.id, email, phone, address, avatar })
       });
       const data = await res.json();

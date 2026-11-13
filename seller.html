@@ -6,14 +6,14 @@
   <title>Toko Saya — Vendora</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
-  <link rel="icon" type="image/png" href="logo.png?v=2">
-  <link rel="apple-touch-icon" href="logo.png?v=2">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=102">
+  <link rel="icon" type="image/png" href="logo.png?v=102">
+  <link rel="apple-touch-icon" href="logo.png?v=102">
   <meta name="theme-color" content="#0E0E0D">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=14">
-  <link rel="stylesheet" href="css/theme.css?v=7">
-  <link rel="stylesheet" href="css/console.css?v=7">
+  <link rel="stylesheet" href="css/style.css?v=114">
+  <link rel="stylesheet" href="css/theme.css?v=107">
+  <link rel="stylesheet" href="css/console.css?v=107">
 </head>
 <body class="console-page">
 
@@ -22,7 +22,7 @@
     <!-- ── Sidebar ─────────────────────────────────────────── -->
     <aside class="console-sidebar">
       <a href="index.html" class="console-logo vlogo" aria-label="Vendora — beranda">
-        <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=3" alt="">EN</span>DORA</span>
+        <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=103" alt="">EN</span>DORA</span>
         <small>Penjual</small>
       </a>
 
@@ -199,6 +199,26 @@
               <div class="card">
                 <div class="card-head">
                   <div>
+                    <h2 class="card-title">Komplain pembeli <span id="seller-disputes-count" class="count-badge"></span></h2>
+                    <p class="card-sub">Dana pesanan yang dikomplain ditahan sampai admin memutuskan. Beri tanggapan + bukti kirim.</p>
+                  </div>
+                </div>
+                <ul id="seller-disputes" style="padding:0;margin:0;"><li class="chart-empty" style="list-style:none;">Memuat…</li></ul>
+              </div>
+              <div class="card">
+                <div class="card-head"><h2 class="card-title">Aturan dana</h2></div>
+                <ul style="padding-left:18px;margin:0;font-size:13px;line-height:1.6;">
+                  <li>Dana ditahan di Escrow sampai pembeli klik <b>Pesanan Diterima</b>.</li>
+                  <li>Tidak ada konfirmasi &amp; komplain? Pesanan <b>selesai otomatis</b> beberapa hari setelah dikirim.</li>
+                  <li>Penjual tidak bisa menandai pesanan "Selesai" sendiri.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="console-grid console-grid--2-1">
+              <div class="card">
+                <div class="card-head">
+                  <div>
                     <h2 class="card-title">Produk terlaris</h2>
                     <p class="card-sub">Berdasarkan jumlah terjual, tanpa pesanan dibatalkan</p>
                   </div>
@@ -206,10 +226,17 @@
                 <ul id="seller-top-products" class="breakdown"><li class="chart-empty">Memuat…</li></ul>
               </div>
               <div class="card">
-                <div class="card-head"><h2 class="card-title">Langkah cepat</h2></div>
-                <div class="quick-actions">
+                <div class="card-head"><h2 class="card-title">Dompet Escrow & Pencairan</h2></div>
+                <dl class="info-rows" style="margin-bottom: 12px;">
+                  <div><dt>Tertahan di Escrow Admin</dt><dd id="seller-escrow-held" style="font-weight:700; color:#D97706;">Rp 0</dd></div>
+                  <div><dt>Saldo Aktif (Siap Tarik)</dt><dd id="seller-balance-avail" style="font-weight:700; color:#059669;">Rp 0</dd></div>
+                  <div><dt>Total Pajak Platform (2.5%)</dt><dd id="seller-tax-paid" class="muted">Rp 0</dd></div>
+                </dl>
+                <p class="renew-hint">Dana pembeli ditahan di Escrow Admin dan otomatis cair ke Saldo Aktif (dipotong pajak 2.5%) setelah pesanan diterima pembeli.</p>
+                <div class="quick-actions" style="margin-top:10px;">
+                  <button type="button" class="btn-ink" id="btn-withdraw-balance">Tarik Saldo Aktif</button>
+                  <button type="button" class="btn-line" id="btn-broadcast-promo">Kirim Notifikasi Promo</button>
                   <button type="button" class="btn-line" data-open-add-product>Tambah produk</button>
-                  <button type="button" class="btn-line" data-goto="menu-pesanan">Proses pesanan</button>
                   <a href="#" class="btn-line" id="view-my-shop-link">Lihat toko di katalog</a>
                 </div>
               </div>
@@ -289,12 +316,20 @@
               <input type="text" id="prod-name" class="form-control" placeholder="contoh: Jaket Kulit Vintage" required>
             </div>
             <div class="form-group">
-              <label for="prod-price">Harga</label>
+              <label for="prod-price">Harga Normal</label>
               <div class="input-prefix"><span>Rp</span><input type="number" id="prod-price" class="form-control" placeholder="150000" min="0" required></div>
             </div>
             <div class="form-group">
               <label for="prod-stock">Stok</label>
               <input type="number" id="prod-stock" class="form-control" placeholder="10" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="prod-promo-price">Harga Promo <span class="label-opt">(opsional)</span></label>
+              <div class="input-prefix"><span>Rp</span><input type="number" id="prod-promo-price" class="form-control" placeholder="Kosongkan bila normal" min="0"></div>
+            </div>
+            <div class="form-group">
+              <label for="prod-promo-label">Label Promo <span class="label-opt">(opsional)</span></label>
+              <input type="text" id="prod-promo-label" class="form-control" placeholder="mis. Flash Sale / Gajian">
             </div>
             <div class="form-group span-2">
               <label for="prod-image">URL foto produk</label>
@@ -345,12 +380,20 @@
               <input type="text" id="edit-prod-name" class="form-control" required>
             </div>
             <div class="form-group">
-              <label for="edit-prod-price">Harga</label>
+              <label for="edit-prod-price">Harga Normal</label>
               <div class="input-prefix"><span>Rp</span><input type="number" id="edit-prod-price" class="form-control" min="0" required></div>
             </div>
             <div class="form-group">
               <label for="edit-prod-stock">Stok</label>
               <input type="number" id="edit-prod-stock" class="form-control" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-prod-promo-price">Harga Promo <span class="label-opt">(0 = matikan promo)</span></label>
+              <div class="input-prefix"><span>Rp</span><input type="number" id="edit-prod-promo-price" class="form-control" placeholder="0" min="0"></div>
+            </div>
+            <div class="form-group">
+              <label for="edit-prod-promo-label">Label Promo <span class="label-opt">(opsional)</span></label>
+              <input type="text" id="edit-prod-promo-label" class="form-control" placeholder="mis. Flash Sale">
             </div>
             <div class="form-group span-2">
               <label for="edit-prod-image">URL foto produk</label>
@@ -471,6 +514,6 @@
     })();
   </script>
 
-  <script type="module" src="js/main.js?v=32"></script>
+  <script type="module" src="js/main.js?v=146"></script>
 </body>
 </html>

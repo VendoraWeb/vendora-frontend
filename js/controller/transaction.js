@@ -1,6 +1,6 @@
-import { BASE_URL, getActiveSession } from "../config/api.js?v=5";
-import { esc } from "../ui.js?v=2";
-import { loadCatalogProducts }         from "./product.js?v=15";
+import { BASE_URL, getActiveSession, authHeaders } from "../config/api.js?v=105";
+import { esc } from "../ui.js?v=102";
+import { loadCatalogProducts }         from "./product.js?v=146";
 
 // ─── Alert helper ──────────────────────────────────────────────────────────
 function showAlert(message, type) {
@@ -269,11 +269,6 @@ export async function updateCartUI() {
     let hasInvalidQuantity = false;
 
     cart.forEach(item => {
-      // Abaikan cek stok real-time untuk item mockup
-      if (typeof item.id === 'string' && item.id.startsWith('m')) {
-        return;
-      }
-
       const itemEl = cartItemsEl.querySelector(`.cart-item[data-cart-id="${CSS.escape(cartKeyOf(item))}"]`);
       if (!itemEl) return;
 
@@ -374,27 +369,33 @@ export async function executeCheckout() {
     }
     const subEl = document.getElementById('checkout-subtotal');
     if (subEl) subEl.textContent = 'Rp ' + totalAmount.toLocaleString('id-ID');
+
+    const courierSelect = document.getElementById('checkout-courier-select');
+    const shipCostEl = document.getElementById('checkout-shipping-cost');
+    const refreshGrandTotal = () => {
+      const opt = courierSelect ? courierSelect.options[courierSelect.selectedIndex] : null;
+      const shipCost = opt ? (parseFloat(opt.dataset.cost || '18000') || 18000) : 18000;
+      if (shipCostEl) shipCostEl.textContent = 'Rp ' + shipCost.toLocaleString('id-ID');
+      snapAmountDisplay.textContent = 'Rp ' + (totalAmount + shipCost).toLocaleString('id-ID');
+    };
+    if (courierSelect) {
+      courierSelect.onchange = refreshGrandTotal;
+      refreshGrandTotal();
+    }
     
     // Define global snapProcess callback for cart checkout
     window.snapProcess = async (method) => {
       const recName = nameInput ? nameInput.value.trim() : '';
       const recAddr = addressInput ? addressInput.value.trim() : '';
+      const chosenCourier = courierSelect ? courierSelect.value : 'JNE';
       if (!recName || !recAddr) {
         showAlert('Lengkapi nama penerima dan alamat pengiriman dulu.', 'error');
         (recName ? addressInput : nameInput)?.focus();
         return;
       }
-      let defaultShopId = '';
-      try {
-        const shopRes = await fetch(`${BASE_URL}/shops`);
-        const shopData = await shopRes.json();
-        const appleShop = (shopData.data || []).find(s => s.name === 'Apple');
-        if (appleShop) defaultShopId = appleShop.id;
-      } catch(e){}
-
       const payloadItems = selectedCart.map(item => ({
         product_id: item.id,
-        shop_id: item.shopId || defaultShopId,
+        shop_id: item.shopId || '',
         quantity: item.quantity,
         ...(item.options ? { options: item.options } : {}),
       }));
@@ -403,19 +404,22 @@ export async function executeCheckout() {
       try {
         const res  = await fetch(`${BASE_URL}/checkout`, {
           method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
           body:    JSON.stringify({ 
             buyer_id: session.user.id, 
             recipient_name: recName,
             shipping_address: recAddr,
+            courier_code: chosenCourier,
+            payment_method: method || 'QRIS',
             items: payloadItems 
           })
         });
         const data = await res.json();
         
         if (data.status === 201) {
+          const tx = data.data || {};
           let methodName = method === 'QRIS' ? 'GoPay/OVO/Dana' : method === 'VA_BCA' ? 'BCA Virtual Account' : method === 'CARD' ? 'Kartu Kredit' : 'Indomaret/Alfamart';
-          showAlert(`Pembayaran via ${methodName} berhasil. Pesanan diteruskan ke penjual.`, 'success');
+          showAlert(`Pembayaran via ${methodName} terverifikasi! Dana diamankan di Escrow Admin · Resi ${tx.tracking_number || chosenCourier}.`, 'success');
           snapModal.classList.remove('active');
           cart = cart.filter(item => !item.selected);
           saveCart(); updateCartUI(); loadCatalogProducts();

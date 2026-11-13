@@ -6,14 +6,14 @@
   <title>Admin — Vendora</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
-  <link rel="icon" type="image/png" href="logo.png?v=2">
-  <link rel="apple-touch-icon" href="logo.png?v=2">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=102">
+  <link rel="icon" type="image/png" href="logo.png?v=102">
+  <link rel="apple-touch-icon" href="logo.png?v=102">
   <meta name="theme-color" content="#0E0E0D">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=14">
-  <link rel="stylesheet" href="css/theme.css?v=7">
-  <link rel="stylesheet" href="css/console.css?v=7">
+  <link rel="stylesheet" href="css/style.css?v=114">
+  <link rel="stylesheet" href="css/theme.css?v=107">
+  <link rel="stylesheet" href="css/console.css?v=112">
 </head>
 <body class="console-page">
 
@@ -22,7 +22,7 @@
     <!-- ── Sidebar ─────────────────────────────────────────── -->
     <aside class="console-sidebar">
       <a href="index.html" class="console-logo vlogo" aria-label="Vendora — beranda">
-        <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=3" alt="">EN</span>DORA</span>
+        <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=103" alt="">EN</span>DORA</span>
         <small>Admin</small>
       </a>
 
@@ -39,9 +39,19 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span class="item-text">Transaksi</span>
         </button>
+        <button class="sidebar-item" id="menu-komplain" type="button" data-sub="Putuskan sengketa: refund ke pembeli atau teruskan dana ke penjual">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span class="item-text">Komplain</span>
+          <span id="sidebar-disputes-badge" title="Jumlah komplain terbuka" style="margin-left:auto;background:rgba(17,17,17,0.08);color:var(--ink);font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;display:inline-block;">0</span>
+        </button>
         <button class="sidebar-item" id="menu-user" type="button" data-sub="Pembeli, penjual, dan admin">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
           <span class="item-text">Pengguna</span>
+        </button>
+        <button class="sidebar-item" id="menu-moderasi" type="button" data-sub="Pantau seluruh produk lintas toko dan tindak lanjuti laporan pelanggaran">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="item-text">Moderasi Produk</span>
+          <span id="sidebar-reports-badge" style="margin-left:auto;background:#DC2626;color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;display:none;">0</span>
         </button>
       </nav>
 
@@ -77,11 +87,61 @@
 
           <!-- ── Dashboard ───────────────────────────────── -->
           <section id="section-dashboard" class="console-section">
+            <!-- Panel Perlu Tindakan (Prioritas 3) -->
+            <div class="card action-needed-panel" id="action-needed-panel">
+              <div class="card-head" style="margin-bottom: 16px;">
+                <div>
+                  <h2 class="card-title">Perlu tindakan</h2>
+                  <p class="card-sub">Item prioritas yang memerlukan keputusan atau tindak lanjut administrator</p>
+                </div>
+              </div>
+              <div class="action-needed-grid">
+                <div class="action-needed-item" id="action-item-disputes">
+                  <div class="action-needed-info">
+                    <span class="action-needed-label">Komplain terbuka</span>
+                    <span class="action-needed-count" id="action-count-disputes">0</span>
+                    <span class="action-needed-desc" id="action-desc-disputes">Menunggu keputusan refund atau teruskan dana</span>
+                  </div>
+                  <button type="button" class="btn-sm btn-sm--ink" data-goto="menu-komplain">Tinjau komplain</button>
+                </div>
+                <div class="action-needed-item" id="action-item-expired-shops">
+                  <div class="action-needed-info">
+                    <span class="action-needed-label">Toko jatuh tempo</span>
+                    <span class="action-needed-count" id="action-count-expired-shops">0</span>
+                    <span class="action-needed-desc" id="action-desc-expired-shops">Masa sewa ruko sudah lewat batas waktu</span>
+                  </div>
+                  <button type="button" class="btn-sm btn-sm--ink" data-goto="menu-verifikasi">Kelola sewa ruko</button>
+                </div>
+                <div class="action-needed-item" id="action-item-stale-orders">
+                  <div class="action-needed-info">
+                    <span class="action-needed-label">Pesanan menunggu &gt; 24 jam</span>
+                    <span class="action-needed-count" id="action-count-stale-orders">0</span>
+                    <span class="action-needed-desc" id="action-desc-stale-orders">Belum dikonfirmasi penjual lebih dari 24 jam</span>
+                  </div>
+                  <button type="button" class="btn-sm btn-sm--ink" data-goto="menu-transaksi" data-filter-tx="pending">Lihat transaksi</button>
+                </div>
+                <!-- Kartu Produk / Toko dilaporkan (Prioritas 4) -->
+                <div class="action-needed-item" id="action-item-reports">
+                  <div class="action-needed-info">
+                    <span class="action-needed-label">Produk / toko dilaporkan</span>
+                    <span class="action-needed-count" id="action-count-reports">0</span>
+                    <span class="action-needed-desc" id="action-desc-reports">Laporan pelanggaran dari pengguna</span>
+                  </div>
+                  <button type="button" class="btn-sm btn-sm--ink" data-goto="menu-moderasi">Moderasi</button>
+                </div>
+              </div>
+            </div>
+
             <div class="kpi-grid">
               <div class="kpi">
-                <span class="kpi-label">Pendapatan sewa ruko</span>
+                <span class="kpi-label">Pendapatan platform</span>
                 <span id="stat-rental-revenue" class="kpi-value">–</span>
                 <span id="stat-rental-sub" class="kpi-sub">&nbsp;</span>
+              </div>
+              <div class="kpi">
+                <span class="kpi-label">Dana tertahan (escrow)</span>
+                <span id="stat-escrow-held" class="kpi-value">–</span>
+                <span id="stat-escrow-sub" class="kpi-sub">&nbsp;</span>
               </div>
               <div class="kpi">
                 <span class="kpi-label">Toko aktif</span>
@@ -97,6 +157,32 @@
                 <span class="kpi-label">Pesanan di platform</span>
                 <span id="stat-transactions" class="kpi-value">–</span>
                 <span id="stat-transactions-sub" class="kpi-sub">&nbsp;</span>
+              </div>
+            </div>
+
+            <!-- Grafik Pendapatan per Bulan & Pesanan per Bulan (Prioritas 3) -->
+            <div class="console-grid console-grid--1-1">
+              <div class="card">
+                <div class="card-head">
+                  <div>
+                    <h2 class="card-title">Pendapatan per bulan</h2>
+                    <p class="card-sub">6 bulan terakhir (pajak platform 2.5% + sewa ruko)</p>
+                  </div>
+                </div>
+                <div id="chart-revenue" class="bar-chart" role="img" aria-label="Grafik pendapatan per bulan">
+                  <div class="chart-empty">Memuat…</div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-head">
+                  <div>
+                    <h2 class="card-title">Jumlah pesanan per bulan</h2>
+                    <p class="card-sub">6 bulan terakhir di seluruh toko</p>
+                  </div>
+                </div>
+                <div id="chart-orders" class="bar-chart" role="img" aria-label="Grafik jumlah pesanan per bulan">
+                  <div class="chart-empty">Memuat…</div>
+                </div>
               </div>
             </div>
 
@@ -140,10 +226,12 @@
               </div>
               <div class="card">
                 <div class="card-head">
-                  <h2 class="card-title">Pengguna terbaru</h2>
-                  <button type="button" class="link-btn" data-goto="menu-user">Lihat semua</button>
+                  <div>
+                    <h2 class="card-title">Aktivitas terbaru</h2>
+                    <p class="card-sub">5 kejadian terakhir (transaksi, pendaftaran, komplain)</p>
+                  </div>
                 </div>
-                <ul id="recent-users" class="lease-list people-list"><li class="chart-empty">Memuat…</li></ul>
+                <ul id="recent-activities" class="lease-list activity-list"><li class="chart-empty">Memuat…</li></ul>
               </div>
             </div>
           </section>
@@ -174,22 +262,32 @@
 
           <!-- ── Transaksi ───────────────────────────────── -->
           <section id="section-transaksi" class="console-section card card--flush" style="display: none;">
-            <div class="card-head">
+            <div class="card-head" style="flex-wrap:wrap;gap:12px;">
               <div class="card-head-title">
                 <h2 class="card-title">Semua pesanan</h2>
                 <span id="tx-count-badge" class="count-badge"></span>
               </div>
-              <label class="select-wrap">
-                <span class="visually-hidden">Filter status</span>
-                <select id="tx-filter-status">
-                  <option value="">Semua status</option>
-                  <option value="pending">Menunggu</option>
-                  <option value="paid">Dikemas</option>
-                  <option value="shipped">Dikirim</option>
-                  <option value="success">Selesai</option>
-                  <option value="cancelled">Dibatalkan</option>
-                </select>
-              </label>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <button type="button" id="btn-cancel-stale-tx" class="btn-sm btn-sm--danger" style="display:none;">
+                  Batalkan pesanan kedaluwarsa
+                </button>
+                <button type="button" id="btn-export-tx-csv" class="btn-sm btn-sm--ink" title="Unduh laporan transaksi sesuai filter aktif (CSV)">
+                  Ekspor CSV
+                </button>
+                <input type="search" id="tx-search-input" placeholder="Cari pesanan, pembeli, toko, produk…" style="height:36px;padding:0 12px;border:1px solid var(--line);border-radius:6px;font-family:var(--font-body);font-size:13px;min-width:220px;">
+                <label class="select-wrap">
+                  <span class="visually-hidden">Filter status</span>
+                  <select id="tx-filter-status">
+                    <option value="">Semua status</option>
+                    <option value="pending">Menunggu</option>
+                    <option value="paid">Dikemas</option>
+                    <option value="shipped">Dikirim</option>
+                    <option value="disputed">Komplain</option>
+                    <option value="success">Selesai</option>
+                    <option value="cancelled">Dibatalkan</option>
+                  </select>
+                </label>
+              </div>
             </div>
             <div class="table-wrap">
               <table class="data-table" id="admin-tx-table">
@@ -197,35 +295,57 @@
                   <tr>
                     <th>Pesanan</th>
                     <th>Pembeli</th>
+                    <th>Toko</th>
                     <th>Item</th>
-                    <th class="num">Total</th>
+                    <th class="num">Nominal</th>
                     <th>Status</th>
-                    <th>Tanggal</th>
+                    <th>Waktu</th>
                   </tr>
                 </thead>
                 <tbody id="tx-list-tbody">
-                  <tr><td colspan="6" class="table-empty">Memuat transaksi…</td></tr>
+                  <tr><td colspan="7" class="table-empty">Memuat transaksi…</td></tr>
                 </tbody>
               </table>
             </div>
+            <div id="tx-pagination" style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--line);font-size:13px;color:var(--mute);"></div>
+          </section>
+
+          <!-- ── Komplain / Sengketa ─────────────────────── -->
+          <section id="section-komplain" class="console-section card" style="display: none;">
+            <div class="card-head" style="flex-wrap:wrap;gap:12px;">
+              <div class="card-head-title">
+                <h2 class="card-title">Komplain pembeli</h2>
+                <span id="admin-disputes-count" class="count-badge"></span>
+              </div>
+              <div style="display:inline-flex;gap:6px;" id="admin-dispute-tabs" role="tablist">
+                <button type="button" class="btn-sm btn-sm--ink active" data-dispute-tab="open" role="tab" aria-selected="true">Terbuka (<span id="dispute-count-open">0</span>)</button>
+                <button type="button" class="btn-sm" data-dispute-tab="resolved" role="tab" aria-selected="false">Selesai (<span id="dispute-count-resolved">0</span>)</button>
+                <button type="button" class="btn-sm" data-dispute-tab="all" role="tab" aria-selected="false">Semua (<span id="dispute-count-all">0</span>)</button>
+              </div>
+            </div>
+            <p class="card-sub" style="margin:0 0 8px;">Dana pesanan yang dikomplain tetap beku di Escrow. Baca tanggapan penjual dan bukti foto pembeli, lalu putuskan.</p>
+            <ul id="admin-disputes" style="padding:0;margin:0;"><li class="chart-empty" style="list-style:none;">Memuat…</li></ul>
           </section>
 
           <!-- ── Pengguna ────────────────────────────────── -->
           <section id="section-user" class="console-section card card--flush" style="display: none;">
-            <div class="card-head">
+            <div class="card-head" style="flex-wrap:wrap;gap:12px;">
               <div class="card-head-title">
                 <h2 class="card-title">Semua pengguna</h2>
                 <span id="user-count-badge" class="count-badge"></span>
               </div>
-              <label class="select-wrap">
-                <span class="visually-hidden">Filter peran</span>
-                <select id="user-filter-role">
-                  <option value="">Semua peran</option>
-                  <option value="buyer">Pembeli</option>
-                  <option value="seller">Penjual</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </label>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <input type="search" id="user-search-input" placeholder="Cari nama, email, peran…" style="height:36px;padding:0 12px;border:1px solid var(--line);border-radius:6px;font-family:var(--font-body);font-size:13px;min-width:210px;">
+                <label class="select-wrap">
+                  <span class="visually-hidden">Filter peran</span>
+                  <select id="user-filter-role">
+                    <option value="">Semua peran</option>
+                    <option value="buyer">Pembeli</option>
+                    <option value="seller">Penjual</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </label>
+              </div>
             </div>
             <div class="table-wrap">
               <table class="data-table" id="admin-users-table">
@@ -244,15 +364,90 @@
                 </tbody>
               </table>
             </div>
+            <div id="user-pagination" style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--line);font-size:13px;color:var(--mute);"></div>
+          </section>
+
+          <!-- ── Moderasi Produk & Laporan (Prioritas 4) ─── -->
+          <section id="section-moderasi" class="console-section" style="display: none;">
+            <!-- Daftar Laporan Pembeli -->
+            <div class="card card--flush" style="margin-bottom:24px;">
+              <div class="card-head" style="flex-wrap:wrap;gap:12px;">
+                <div class="card-head-title">
+                  <h2 class="card-title">Laporan dari pengguna</h2>
+                  <span id="reports-count-badge" class="count-badge"></span>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table" id="admin-reports-table">
+                  <thead>
+                    <tr>
+                      <th>Waktu</th>
+                      <th>Pelapor</th>
+                      <th>Target</th>
+                      <th>Alasan &amp; Catatan</th>
+                      <th>Status</th>
+                      <th class="actions">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reports-list-tbody">
+                    <tr><td colspan="6" class="table-empty">Memuat laporan…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Daftar Seluruh Produk Lintas Toko -->
+            <div class="card card--flush">
+              <div class="card-head" style="flex-wrap:wrap;gap:12px;">
+                <div class="card-head-title">
+                  <h2 class="card-title">Semua produk lintas toko</h2>
+                  <span id="mod-products-count-badge" class="count-badge"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <input type="search" id="mod-search-input" placeholder="Cari nama produk, kategori, toko…" style="height:36px;padding:0 12px;border:1px solid var(--line);border-radius:6px;font-family:var(--font-body);font-size:13px;min-width:220px;">
+                  <label class="select-wrap">
+                    <span class="visually-hidden">Filter visibilitas</span>
+                    <select id="mod-filter-status">
+                      <option value="">Semua produk</option>
+                      <option value="visible">Tampil di katalog</option>
+                      <option value="hidden">Disembunyikan admin</option>
+                      <option value="inactive_shop">Toko jatuh tempo / ditangguhkan</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table" id="admin-mod-products-table">
+                  <thead>
+                    <tr>
+                      <th>Produk</th>
+                      <th>Toko</th>
+                      <th>Kategori</th>
+                      <th class="num">Harga</th>
+                      <th class="num">Stok</th>
+                      <th>Status Katalog</th>
+                      <th class="actions">Aksi Moderasi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mod-products-tbody">
+                    <tr><td colspan="7" class="table-empty">Memuat daftar produk…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div id="mod-pagination" style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--line);font-size:13px;color:var(--mute);"></div>
+            </div>
           </section>
         </div>
 
-        <!-- Belum masuk sebagai admin -->
+        <!-- Belum masuk atau akses ditolak (403) -->
         <div id="admin-auth-callout" class="card console-callout" style="display: none;">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          <h2>Khusus administrator</h2>
-          <p>Masuk dengan akun administrator untuk mengelola sewa ruko, transaksi, dan pengguna.</p>
-          <a href="login.html" class="btn-ink">Masuk</a>
+          <h2 id="admin-callout-title">Akses ditolak</h2>
+          <p id="admin-callout-desc">Halaman ini hanya dapat diakses oleh akun administrator Vendora.</p>
+          <div style="display:inline-flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
+            <a href="index.html" id="admin-callout-catalog-btn" class="btn-ink">Kembali ke katalog</a>
+            <a href="login.html" id="admin-callout-login-btn" class="btn-line">Masuk dengan akun lain</a>
+          </div>
         </div>
       </main>
     </div>
@@ -266,7 +461,9 @@
         'menu-dashboard': document.getElementById('section-dashboard'),
         'menu-verifikasi': document.getElementById('section-verifikasi'),
         'menu-transaksi': document.getElementById('section-transaksi'),
-        'menu-user': document.getElementById('section-user')
+        'menu-komplain': document.getElementById('section-komplain'),
+        'menu-user': document.getElementById('section-user'),
+        'menu-moderasi': document.getElementById('section-moderasi')
       };
       var titleEl = document.getElementById('admin-page-title');
       var subEl = document.getElementById('admin-page-sub');
@@ -302,6 +499,6 @@
       });
     })();
   </script>
-  <script type="module" src="js/main.js?v=32"></script>
+  <script type="module" src="js/main.js?v=146"></script>
 </body>
 </html>

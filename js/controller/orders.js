@@ -1,8 +1,8 @@
 // ─── Halaman "Pesanan saya" (pesanan.html) ───────────────────────────────────
-import { BASE_URL, getActiveSession } from "../config/api.js?v=5";
-import { esc, fmtRp, fmtDateTime, shortId, TX_STATUS, normStatus, txStatusHTML } from "../ui.js?v=2";
-import { loadCatalogData, mockIdFromName, cartItemFor } from "./product.js?v=15";
-import { addToCart } from "./transaction.js?v=12";
+import { BASE_URL, getActiveSession, authHeaders } from "../config/api.js?v=105";
+import { esc, fmtRp, fmtDateTime, shortId, TX_STATUS, normStatus, txStatusHTML } from "../ui.js?v=102";
+import { loadCatalogData, mockIdFromName, cartItemFor } from "./product.js?v=146";
+import { addToCart } from "./transaction.js?v=146";
 
 const $ = (id) => document.getElementById(id);
 const STEPS = [
@@ -11,12 +11,13 @@ const STEPS = [
   { key: 'shipped', label: 'Dikirim' },
   { key: 'success', label: 'Selesai' },
 ];
-const STEP_INDEX = { pending: 0, paid: 1, shipped: 2, success: 3 };
+const STEP_INDEX = { pending: 0, paid: 1, shipped: 2, disputed: 2, success: 3 };
 const NOTE = {
   pending:   'Menunggu penjual mengonfirmasi pesananmu.',
   paid:      'Penjual sedang mengemas pesananmu.',
   shipped:   'Paket sedang dalam perjalanan ke alamatmu.',
   success:   'Paket sudah diterima. Terima kasih sudah berbelanja!',
+  disputed:  'Komplain sedang ditinjau admin. Dana kamu tetap aman di Escrow sampai ada keputusan.',
   cancelled: 'Pesanan ini dibatalkan.',
 };
 
@@ -120,7 +121,16 @@ function renderList() {
         <ol class="order-track" aria-label="Status pengiriman">
           ${STEPS.map((s, i) => `<li class="${i <= step ? 'done' : ''}${i === step ? ' current' : ''}"><span>${s.label}</span></li>`).join('')}
         </ol>` : ''}
-        <p class="order-note">${NOTE[o.status] || ''}${(o.status === 'shipped' || o.status === 'success') ? ` Resi <b>VDR-EXP-${esc((t.id || '').slice(-8).toUpperCase())}</b>.` : ''}</p>
+        <p class="order-note">
+          ${NOTE[o.status] || ''}
+          ${o.status === 'shipped' && t.auto_complete_at ? ` Jika tidak ada konfirmasi atau komplain, pesanan selesai otomatis pada <b>${fmtDateTime(t.auto_complete_at)}</b>.` : ''}
+          ${t.auto_completed ? ' (Diselesaikan otomatis oleh sistem.)' : ''}
+          ${t.courier_service ? ` Kurir: <b>${esc(t.courier_service)}</b>.` : ''}
+          ${t.tracking_number ? ` Resi: <b>${esc(t.tracking_number)}</b>.` : (o.status === 'shipped' || o.status === 'success') ? ` Resi: <b>JNE-${esc((t.id || '').slice(-8).toUpperCase())}</b>.` : ''}
+          <span style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;background:${o.status === 'success' ? '#DCFCE7;color:#166534' : o.status === 'cancelled' ? '#FEE2E2;color:#991B1B' : '#FEF3C7;color:#92400E'};">
+            ${o.status === 'success' ? 'Escrow Cair ke Penjual' : o.status === 'cancelled' ? 'Dana Escrow Dikembalikan' : o.status === 'disputed' ? 'Dana Dibekukan — Menunggu Keputusan Admin' : 'Uang Dijamin di Escrow Admin'}
+          </span>
+        </p>
 
         <footer class="order-bottom">
           <div class="order-ship">
@@ -132,7 +142,9 @@ function renderList() {
             <b>${fmtRp(t.total_amount)}</b>
           </div>
           <div class="order-actions">
-            ${canBuyAgain ? `<button type="button" class="btn-ink btn-ink--sm" data-again="${esc(t.id)}">Beli lagi</button>` : ''}
+            ${o.status !== 'cancelled' ? `<button type="button" class="btn-line btn-line--sm" data-track="${esc(t.id)}">Lacak Peta & Resi</button>` : ''}
+            ${o.status === 'shipped' ? `<button type="button" class="btn-ink btn-ink--sm" data-confirm-received="${esc(t.id)}">Pesanan Diterima</button><button type="button" class="btn-line btn-line--sm" data-dispute="${esc(t.id)}">Ajukan Komplain</button>` : ''}
+            ${canBuyAgain ? `<button type="button" class="btn-line btn-line--sm" data-again="${esc(t.id)}">Beli lagi</button>` : ''}
             ${o.groups[0] && o.groups[0].shopName ? `<a class="btn-line btn-line--sm" href="index.html?shop=${encodeURIComponent(o.groups[0].shopName)}">Lihat toko</a>` : ''}
           </div>
         </footer>
@@ -147,17 +159,27 @@ export async function initOrdersPage() {
     $('orders-app').hidden = true;
     return;
   }
+  if (session.user.role === 'admin') {
+    window.location.replace('admin.html');
+    return;
+  }
   $('orders-app').hidden = false;
 
-  try {
+  async function reloadOrders() {
     const [txRes, cat] = await Promise.all([
-      fetch(`${BASE_URL}/transactions?buyer_id=${encodeURIComponent(session.user.id)}`).then(r => r.json()),
+      fetch(`${BASE_URL}/transactions?buyer_id=${encodeURIComponent(session.user.id)}`, { headers: authHeaders() }).then(r => r.json()),
       loadCatalogData(),
     ]);
     catalog = cat;
     orders = (txRes.data || [])
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .map(enrich);
+    renderTabs();
+    renderList();
+  }
+
+  try {
+    await reloadOrders();
   } catch (e) {
     $('orders-list').innerHTML = `<div class="orders-empty"><h3>Gagal memuat pesanan</h3><p>Periksa koneksi lalu muat ulang halaman.</p></div>`;
     return;
@@ -165,10 +187,7 @@ export async function initOrdersPage() {
 
   // Tab dari hash (#dikirim) supaya bisa dibagikan
   const fromHash = location.hash.slice(1);
-  if (fromHash && (fromHash === 'all' || TX_STATUS[fromHash])) filter = fromHash;
-
-  renderTabs();
-  renderList();
+  if (fromHash && (fromHash === 'all' || TX_STATUS[fromHash])) { filter = fromHash; renderTabs(); renderList(); }
 
   document.querySelectorAll('#order-tabs [data-status]').forEach(tab => tab.addEventListener('click', () => {
     filter = tab.dataset.status;
@@ -178,8 +197,132 @@ export async function initOrdersPage() {
   }));
   $('orders-search').addEventListener('input', (e) => { query = e.target.value; renderList(); });
 
-  // Beli lagi → masukkan item yang masih tersedia ke keranjang
-  $('orders-list').addEventListener('click', (e) => {
+  // Form komplain / retur
+  const disputeModal = $('dispute-modal');
+  const closeDispute = () => disputeModal?.classList.remove('active');
+  $('dispute-close')?.addEventListener('click', closeDispute);
+  $('dispute-cancel')?.addEventListener('click', closeDispute);
+  disputeModal?.addEventListener('click', (e) => { if (e.target === disputeModal) closeDispute(); });
+  $('dispute-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submit = $('dispute-submit');
+    const evidence = ($('dispute-evidence').value || '').split('\n').map(s => s.trim()).filter(Boolean);
+    submit.disabled = true;
+    try {
+      const res = await fetch(`${BASE_URL}/disputes`, {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          transaction_id: $('dispute-tx-id').value,
+          reason: $('dispute-reason').value,
+          description: $('dispute-desc').value,
+          evidence,
+        }),
+      }).then(r => r.json());
+      if (res.status === 201) {
+        closeDispute();
+        await reloadOrders();
+        alert('Komplain terkirim. Dana kamu ditahan aman di Escrow sampai admin memutuskan.');
+      } else {
+        alert(res.message || 'Gagal mengirim komplain.');
+      }
+    } catch (err) {
+      alert('Gagal terhubung ke server.');
+    } finally {
+      submit.disabled = false;
+    }
+  });
+
+  // Beli lagi, Lacak Peta, & Konfirmasi Pesanan Diterima
+  let leafletMap = null;
+  const closeTrackModal = () => $('track-map-modal')?.classList.remove('active');
+  $('track-modal-close')?.addEventListener('click', closeTrackModal);
+  $('track-map-modal')?.addEventListener('click', (e) => { if (e.target.id === 'track-map-modal') closeTrackModal(); });
+
+  $('orders-list').addEventListener('click', async (e) => {
+    const trackBtn = e.target.closest('[data-track]');
+    if (trackBtn) {
+      const txId = trackBtn.dataset.track;
+      const modal = $('track-map-modal');
+      if (modal) modal.classList.add('active');
+      $('track-meta-box').innerHTML = '<span>Memuat data kurir & peta…</span>';
+      $('track-history-list').innerHTML = '';
+      try {
+        const res = await fetch(`${BASE_URL}/transaction/${encodeURIComponent(txId)}/track`, { headers: authHeaders() }).then(r => r.json());
+        const d = res.data || {};
+        $('track-meta-box').innerHTML = `
+          <div><small style="color:var(--mute);display:block;">Kurir Ekspedisi</small><b>${esc(d.courier_service || 'JNE Reguler')}</b></div>
+          <div><small style="color:var(--mute);display:block;">Nomor Resi</small><b style="font-family:monospace;">${esc(d.tracking_number || '-')}</b></div>
+          <div><small style="color:var(--mute);display:block;">Posisi Paket Saat Ini</small><b>${esc(d.current_location?.label || 'Gudang Penjual')}</b></div>
+        `;
+        const hist = d.tracking_history || [];
+        $('track-history-list').innerHTML = hist.slice().reverse().map((ev, idx) => `
+          <li style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:8px;background:${idx === 0 ? 'rgba(16,185,129,0.09)' : 'transparent'};border-left:3px solid ${idx === 0 ? '#10B981' : '#D1D5DB'};">
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:13px;">${esc(ev.title)}</div>
+              <div style="font-size:12px;color:var(--mute);margin-top:2px;">${esc(ev.description)}</div>
+              <div style="font-size:11px;color:var(--mute);margin-top:3px;">${esc(ev.city || '')} · ${fmtDateTime(ev.timestamp)}</div>
+            </div>
+          </li>
+        `).join('');
+
+        // Render Leaflet Map
+        if (window.L && d.route_origin && d.route_destination) {
+          setTimeout(() => {
+            const mapEl = $('order-leaflet-map');
+            if (!mapEl) return;
+            if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+            const orig = [d.route_origin.lat, d.route_origin.lng];
+            const dest = [d.route_destination.lat, d.route_destination.lng];
+            const curr = d.current_location ? [d.current_location.lat, d.current_location.lng] : orig;
+            leafletMap = window.L.map('order-leaflet-map').fitBounds([orig, dest], { padding: [35, 35] });
+            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '&copy; OpenStreetMap'
+            }).addTo(leafletMap);
+            window.L.polyline([orig, curr, dest], { color: '#111827', weight: 3, dashArray: '6, 6' }).addTo(leafletMap);
+            window.L.marker(orig).addTo(leafletMap).bindPopup(`<b>Asal Ruko:</b><br>${esc(d.route_origin.label)}`);
+            window.L.marker(dest).addTo(leafletMap).bindPopup(`<b>Tujuan Pembeli:</b><br>${esc(d.route_destination.label)}`);
+            window.L.circleMarker(curr, { radius: 9, color: '#059669', fillColor: '#10B981', fillOpacity: 0.9 })
+              .addTo(leafletMap)
+              .bindPopup(`<b>Posisi Kurir (${esc(d.courier_code || 'JNE')}):</b><br>${esc(d.current_location?.label || '')}`)
+              .openPopup();
+          }, 120);
+        }
+      } catch (err) {
+        $('track-meta-box').innerHTML = '<span>Gagal memuat informasi pelacakan.</span>';
+      }
+      return;
+    }
+
+    const confirmBtn = e.target.closest('[data-confirm-received]');
+    if (confirmBtn) {
+      const txId = confirmBtn.dataset.confirmReceived;
+      if (!confirm('Konfirmasi bahwa pesanan sudah kamu terima dengan baik? Dana di Escrow Admin akan dicairkan ke Penjual.')) return;
+      confirmBtn.disabled = true;
+      try {
+        const res = await fetch(`${BASE_URL}/transaction/${encodeURIComponent(txId)}/confirm-received`, { method: 'POST', headers: authHeaders() }).then(r => r.json());
+        if (res.status === 200) {
+          await reloadOrders();
+        } else {
+          alert(res.message || 'Gagal mengonfirmasi pesanan.');
+          confirmBtn.disabled = false;
+        }
+      } catch (err) {
+        alert('Gagal terhubung ke server.');
+        confirmBtn.disabled = false;
+      }
+      return;
+    }
+
+    const disputeBtn = e.target.closest('[data-dispute]');
+    if (disputeBtn) {
+      $('dispute-tx-id').value = disputeBtn.dataset.dispute;
+      $('dispute-form').reset();
+      $('dispute-tx-id').value = disputeBtn.dataset.dispute;
+      $('dispute-modal').classList.add('active');
+      return;
+    }
+
     const btn = e.target.closest('[data-again]');
     if (!btn) return;
     const o = orders.find(x => x.tx.id === btn.dataset.again);
@@ -187,7 +330,6 @@ export async function initOrdersPage() {
     let added = 0;
     o.items.forEach(i => {
       if (!i.product || i.product.stock <= 0) return;
-      // Variasi yang sama seperti pesanan sebelumnya ("Burgundy, 512 GB" → {Warna, Kapasitas})
       const labels = String(i.variant || '').split(',').map(x => x.trim()).filter(Boolean);
       const sel = {};
       (i.product.options || []).forEach((g, gi) => {
@@ -195,7 +337,7 @@ export async function initOrdersPage() {
         if (hit) sel[g.name] = hit.label;
       });
       const complete = (i.product.options || []).every(g => sel[g.name]);
-      if (!complete) return; // variasi lama sudah tidak dijual
+      if (!complete) return;
       const ok = addToCart(cartItemFor(i.product, sel), i.quantity);
       if (ok) added += 1;
     });

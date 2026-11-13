@@ -36,6 +36,7 @@ export const TX_STATUS = {
   paid:      { label: 'Dikemas',    long: 'Sedang dikemas penjual',      tone: '' },
   shipped:   { label: 'Dikirim',    long: 'Dalam pengiriman',            tone: '' },
   success:   { label: 'Selesai',    long: 'Pesanan selesai',             tone: 'good' },
+  disputed:  { label: 'Komplain',   long: 'Dalam sengketa — dana ditahan', tone: 'warn' },
   cancelled: { label: 'Dibatalkan', long: 'Pesanan dibatalkan',          tone: 'bad' },
 };
 

@@ -18,29 +18,40 @@ function resolveApiBase() {
 
 export const BASE_URL = resolveApiBase();
 
-// Helper to get active session user
+// Helper to get active session user (cek sessionStorage lalu fallback ke localStorage)
 export function getActiveSession() {
   try {
-    const sessionStr = sessionStorage.getItem('vendora_session');
-    if (!sessionStr) return null;
-    return JSON.parse(sessionStr);
+    const sStr = sessionStorage.getItem('vendora_session') || localStorage.getItem('vendora_session');
+    if (!sStr) return null;
+    return JSON.parse(sStr);
   } catch (e) {
     return null;
   }
 }
 
-// Helper to set active session
+// Helper to set active session (simpan di sessionStorage & localStorage agar sinkron)
 export function setActiveSession(sessionData) {
   try {
-    sessionStorage.setItem('vendora_session', JSON.stringify(sessionData));
+    const json = JSON.stringify(sessionData);
+    sessionStorage.setItem('vendora_session', json);
+    localStorage.setItem('vendora_session', json);
   } catch (e) {
     console.warn('Storage blocked', e);
   }
+}
+
+// Header Authorization untuk endpoint yang butuh login (ubah status pesanan, komplain, dompet, dll.)
+export function authHeaders(extra = {}) {
+  const s = getActiveSession();
+  const h = { ...extra };
+  if (s && s.token) h['Authorization'] = `Bearer ${s.token}`;
+  return h;
 }
 
 // Helper to clear session
 export function clearActiveSession() {
   try {
     sessionStorage.removeItem('vendora_session');
+    localStorage.removeItem('vendora_session');
   } catch (e) {}
 }

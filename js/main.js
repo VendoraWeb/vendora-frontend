@@ -1,15 +1,15 @@
-import { initAuth }                                from "./controller/auth.js?v=10";
-import { loadCatalogProducts, initSearch, setCatalogSort, clearSearch, openProductById } from "./controller/product.js?v=15";
-import { initCart, updateCartUI }                   from "./controller/transaction.js?v=12";
-import { CATEGORIES, CATEGORY_BY_KEY, categoryImage } from "./categories.js?v=1";
-import { initChatDock }                           from "./controller/chat.js?v=1";
-import { initSellerDashboard, initAdminDashboard }  from "./controller/dashboard.js?v=9";
-import { getActiveSession, clearActiveSession, BASE_URL }      from "./config/api.js?v=5";
-import { esc, fmtRp, fmtDateTime, shortId, normStatus, txStatusHTML } from "./ui.js?v=2";
-import { initAdminTickets }                       from "./controller/ticket.js?v=4";
-import { initAccountPage }                        from "./controller/account.js?v=4";
-import { initOrdersPage }                         from "./controller/orders.js?v=4";
-import { initAboutPage, initHelpPage }            from "./controller/pages.js?v=1";
+import { initAuth }                                from "./controller/auth.js?v=146";
+import { loadCatalogProducts, initSearch, setCatalogSort, clearSearch, openProductById } from "./controller/product.js?v=146";
+import { initCart, updateCartUI }                   from "./controller/transaction.js?v=146";
+import { CATEGORIES, CATEGORY_BY_KEY, categoryImage } from "./categories.js?v=101";
+import { initChatDock }                           from "./controller/chat.js?v=146";
+import { initSellerDashboard, initAdminDashboard }  from "./controller/dashboard.js?v=146";
+import { getActiveSession, clearActiveSession, authHeaders, BASE_URL } from "./config/api.js?v=105";
+import { esc, fmtRp, fmtDateTime, shortId, normStatus, txStatusHTML } from "./ui.js?v=102";
+import { initAdminTickets }                       from "./controller/ticket.js?v=146";
+import { initAccountPage }                        from "./controller/account.js?v=146";
+import { initOrdersPage }                         from "./controller/orders.js?v=146";
+import { initAboutPage, initHelpPage }            from "./controller/pages.js?v=101";
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
 const $  = (sel, ctx = document) => ctx.querySelector(sel);
@@ -57,6 +57,19 @@ function initNavbarSession() {
     if ($('#nav-dd-email'))  $('#nav-dd-email').textContent = u.email || '';
 
     const shopAction = $('#dropdown-shop-action');
+    const historyBtn = $('#nav-history-btn');
+    const cartToggleBtn = $('#cart-toggle-btn');
+
+    // Untuk akun role admin: sembunyikan menu "Pesanan saya" dan ikon keranjang di dropdown profil & navbar.
+    // Tampilkan "Konsol admin" hanya untuk admin.
+    if (u.role === 'admin') {
+      if (historyBtn) historyBtn.style.display = 'none';
+      if (cartToggleBtn) cartToggleBtn.style.display = 'none';
+    } else {
+      if (historyBtn) historyBtn.style.display = '';
+      if (cartToggleBtn) cartToggleBtn.style.display = '';
+    }
+
     if (shopAction) {
       const label = shopAction.querySelector('span');
       if (u.role === 'admin') {
@@ -173,7 +186,7 @@ function initProfileModal() {
       try {
         const res = await fetch(`${BASE_URL}/user/profile`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             user_id: session.user.id,
             email: session.user.email,
@@ -822,7 +835,7 @@ function initOrderHistoryModal() {
     modal.classList.add('active');
 
     try {
-      const res = await fetch(`${BASE_URL}/transactions?buyer_id=${session.user.id}`);
+      const res = await fetch(`${BASE_URL}/transactions?buyer_id=${session.user.id}`, { headers: authHeaders() });
       const data = await res.json();
       if (!res.ok || data.status !== 200) {
         listEl.innerHTML = `<div class="order-empty"><p>Gagal memuat riwayat belanja. Coba lagi.</p></div>`;

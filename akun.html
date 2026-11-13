@@ -6,20 +6,20 @@
   <title>Pengaturan akun — Vendora</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
-  <link rel="icon" type="image/png" href="logo.png?v=2">
-  <link rel="apple-touch-icon" href="logo.png?v=2">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=102">
+  <link rel="icon" type="image/png" href="logo.png?v=102">
+  <link rel="apple-touch-icon" href="logo.png?v=102">
   <meta name="theme-color" content="#0E0E0D">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=14">
-  <link rel="stylesheet" href="css/theme.css?v=7">
-  <link rel="stylesheet" href="css/account.css?v=5">
+  <link rel="stylesheet" href="css/style.css?v=114">
+  <link rel="stylesheet" href="css/theme.css?v=107">
+  <link rel="stylesheet" href="css/account.css?v=105">
 </head>
 <body class="account-page">
 
   <header class="acc-top">
     <a href="index.html" class="acc-logo vlogo" aria-label="Vendora — beranda">
-      <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=3" alt="">EN</span>DORA</span>
+      <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=103" alt="">EN</span>DORA</span>
     </a>
     <div class="acc-top-right">
       <a href="index.html" class="acc-back" id="account-back">
@@ -42,7 +42,7 @@
   <main id="account-app" class="acc-wrap" hidden>
     <div class="acc-head">
       <h1>Pengaturan akun</h1>
-      <p>Atur profil, alamat, keamanan, dan notifikasi akun Vendora kamu.</p>
+      <p id="acc-head-desc">Atur profil, alamat, keamanan, dan notifikasi akun Vendora kamu.</p>
     </div>
 
     <div class="acc-layout">
@@ -57,19 +57,19 @@
           </div>
         </div>
         <nav class="acc-nav" aria-label="Bagian pengaturan">
-          <a href="#profil">
+          <a href="#profil" id="acc-nav-profil">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0112 0v1"/></svg>
             Profil
           </a>
-          <a href="#alamat">
+          <a href="#alamat" id="acc-nav-alamat">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
             Alamat
           </a>
-          <a href="#keamanan">
+          <a href="#keamanan" id="acc-nav-keamanan">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Keamanan
           </a>
-          <a href="#notifikasi">
+          <a href="#notifikasi" id="acc-nav-notifikasi">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
             Notifikasi
           </a>
@@ -84,7 +84,7 @@
           <div class="acc-card">
             <div class="acc-card-head">
               <h2 id="t-profil">Profil</h2>
-              <p>Foto dan data kontak yang terlihat oleh penjual atau pembeli.</p>
+              <p id="acc-profil-desc">Foto dan data kontak yang terlihat oleh penjual atau pembeli.</p>
             </div>
 
             <div class="acc-row acc-photo">
@@ -103,7 +103,7 @@
               <div class="form-group">
                 <label for="acc-name">Nama lengkap</label>
                 <input type="text" id="acc-name" class="form-control" disabled>
-                <span class="form-hint">Nama belum bisa diubah dari sini. Hubungi admin bila perlu diganti.</span>
+                <span class="form-hint" id="acc-name-hint">Nama belum bisa diubah dari sini. Hubungi admin bila perlu diganti.</span>
               </div>
               <div class="form-group">
                 <label for="acc-email">Email</label>
@@ -202,6 +202,6 @@
     </div>
   </main>
 
-  <script type="module" src="js/main.js?v=32"></script>
+  <script type="module" src="js/main.js?v=146"></script>
 </body>
 </html>

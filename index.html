@@ -7,14 +7,14 @@
   <meta name="description" content="Platform e-commerce premium dengan konsep sewa ruko virtual. Temukan produk terbaik dari merchant terpercaya di Vendora.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
-  <link rel="icon" type="image/png" href="logo.png?v=2">
-  <link rel="apple-touch-icon" href="logo.png?v=2">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=102">
+  <link rel="icon" type="image/png" href="logo.png?v=102">
+  <link rel="apple-touch-icon" href="logo.png?v=102">
   <meta name="theme-color" content="#0E0E0D">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=14">
-  <link rel="stylesheet" href="css/theme.css?v=7">
-  <link rel="stylesheet" href="css/storefront.css?v=15">
+  <link rel="stylesheet" href="css/style.css?v=114">
+  <link rel="stylesheet" href="css/theme.css?v=107">
+  <link rel="stylesheet" href="css/storefront.css?v=115">
   <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
@@ -24,7 +24,7 @@
        ============================================================ -->
   <nav id="main-navbar" class="is-overlay">
     <a href="index.html" class="nav-logo vlogo" aria-label="Vendora — beranda">
-      <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=3" alt="">EN</span>DORA</span>
+      <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=103" alt="">EN</span>DORA</span>
     </a>
 
     <div class="mega-menu-wrapper">
@@ -337,7 +337,7 @@
       <div class="sf-footer-grid">
         <div class="sf-footer-brand">
           <a href="index.html" class="vlogo vlogo--stack" aria-label="Vendora — beranda">
-            <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=3" alt="">EN</span>DORA</span>
+            <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=103" alt="">EN</span>DORA</span>
             <span class="vlogo-tag">Your digital marketplace</span>
           </a>
           <p>Marketplace ruko virtual. Belanja dari merchant terverifikasi di seluruh Indonesia.</p>
@@ -430,14 +430,23 @@
               <label for="checkout-recipient-name">Nama penerima</label>
               <input type="text" id="checkout-recipient-name" class="auth-input" placeholder="Nama lengkap penerima" autocomplete="name">
             </div>
-            <div class="form-group" style="margin-bottom:0;">
+            <div class="form-group" style="margin-bottom:12px;">
               <label for="checkout-address-input">Alamat lengkap</label>
-              <textarea id="checkout-address-input" class="auth-input" style="min-height:84px;" placeholder="Jalan, nomor rumah, kecamatan, kota, kode pos" autocomplete="street-address"></textarea>
+              <textarea id="checkout-address-input" class="auth-input" style="min-height:84px;" placeholder="Jalan, nomor rumah, kecamatan, kota (mis. Bandung / Surabaya), kode pos" autocomplete="street-address"></textarea>
               <span class="form-hint">Simpan alamat di <a href="akun.html">Pengaturan akun</a> supaya terisi otomatis.</span>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="checkout-courier-select">Pilih kurir ekspedisi & lacak peta</label>
+              <select id="checkout-courier-select" class="auth-input">
+                <option value="JNE" data-cost="18000">JNE Reguler (2-3 Hari) — Rp 18.000</option>
+                <option value="JNT" data-cost="19000">J&amp;T Express EZ (2-3 Hari) — Rp 19.000</option>
+                <option value="SICEPAT" data-cost="22000">SiCepat BEST (1-2 Hari) — Rp 22.000</option>
+                <option value="INSTANT" data-cost="35000">Vendora Instant Same-Day (2-4 Jam) — Rp 35.000</option>
+              </select>
             </div>
           </section>
           <section class="checkout-section">
-            <h4><span class="step-no">2</span>Metode pembayaran</h4>
+            <h4><span class="step-no">2</span>Metode pembayaran (Dijamin Escrow)</h4>
           <div class="pay-methods" role="radiogroup" aria-label="Metode pembayaran">
             <label class="pay-method"><input type="radio" name="pay-method" value="QRIS" checked><span class="pay-icon">QRIS</span><span class="pay-text"><b>GoPay, OVO, Dana</b><small>Pindai kode QR</small></span></label>
             <label class="pay-method"><input type="radio" name="pay-method" value="VA_BCA"><span class="pay-icon">BCA</span><span class="pay-text"><b>BCA Virtual Account</b><small>Transfer otomatis</small></span></label>
@@ -450,19 +459,19 @@
           <h4>Ringkasan pesanan</h4>
           <ul id="checkout-items" class="checkout-items"></ul>
           <dl class="checkout-totals">
-            <div><dt>Subtotal</dt><dd id="checkout-subtotal">Rp 0</dd></div>
-            <div><dt>Ongkos kirim</dt><dd>Gratis</dd></div>
-            <div class="checkout-grand"><dt>Total</dt><dd class="snap-amount" id="snap-amount-display">Rp 0</dd></div>
+            <div><dt>Subtotal barang</dt><dd id="checkout-subtotal">Rp 0</dd></div>
+            <div><dt>Ongkos kirim kurir</dt><dd id="checkout-shipping-cost">Rp 18.000</dd></div>
+            <div class="checkout-grand"><dt>Total bayar</dt><dd class="snap-amount" id="snap-amount-display">Rp 0</dd></div>
           </dl>
           <button type="button" class="btn-ink pay-now-btn" id="pay-now-btn">Bayar sekarang</button>
-          <p class="checkout-note">Ini pembayaran simulasi. Pesanan langsung diteruskan ke penjual.</p>
+          <p class="checkout-note">🔒 <b>Jaminan Keamanan Escrow Vendora:</b> Uang pembayaranmu ditahan oleh Admin dan baru dicairkan ke penjual setelah paket kamu terima.</p>
         </aside>
       </div>
     </div>
   </div>
 
-  <script type="module" src="js/main.js?v=32"></script>
-  <script src="js/storefront.js?v=4" defer></script>
+  <script type="module" src="js/main.js?v=146"></script>
+  <script src="js/storefront.js?v=104" defer></script>
 
 
 </body>

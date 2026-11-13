@@ -1,4 +1,4 @@
-import { BASE_URL, getActiveSession } from "../config/api.js?v=5";
+import { BASE_URL, getActiveSession, authHeaders } from "../config/api.js?v=105";
 
 export function initSellerInboxWidget() {
   const session = getActiveSession();
@@ -136,7 +136,7 @@ export function initSellerInboxWidget() {
       return;
     }
     try {
-      const res = await fetch(`${BASE_URL}/chat/inbox?shop_id=${currentShopId}`);
+      const res = await fetch(`${BASE_URL}/chat/inbox?shop_id=${currentShopId}`, { headers: authHeaders() });
       const data = await res.json();
       if (res.ok) {
         if (!data.data || data.data.length === 0) {
@@ -200,7 +200,7 @@ export function initSellerInboxWidget() {
       return;
     }
     try {
-      const res = await fetch(`${BASE_URL}/chat/history?buyer_id=${buyerId}&shop_id=${currentShopId}`);
+      const res = await fetch(`${BASE_URL}/chat/history?buyer_id=${buyerId}&shop_id=${currentShopId}`, { headers: authHeaders() });
       const data = await res.json();
       if (res.ok) {
         threadMessages.innerHTML = '';
@@ -238,7 +238,7 @@ export function initSellerInboxWidget() {
     try {
       const res = await fetch(`${BASE_URL}/chat/send`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload)
       });
       if (res.ok) {

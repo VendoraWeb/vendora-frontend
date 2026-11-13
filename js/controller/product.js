@@ -1,7 +1,7 @@
-import { BASE_URL } from "../config/api.js?v=5";
-import { esc } from "../ui.js?v=2";
-import { addToCart, updateCartUI, buyNow } from "./transaction.js?v=12";
-import { CATEGORIES, CATEGORY_BY_KEY, categoryOf, categoryLabel, matchesSub, SEARCH_SYNONYMS } from "../categories.js?v=1";
+import { BASE_URL, authHeaders, getActiveSession } from "../config/api.js?v=105";
+import { esc } from "../ui.js?v=102";
+import { addToCart, updateCartUI, buyNow } from "./transaction.js?v=146";
+import { CATEGORIES, CATEGORY_BY_KEY, categoryOf, categoryLabel, matchesSub, SEARCH_SYNONYMS } from "../categories.js?v=101";
 
 // ─── Alert helper ──────────────────────────────────────────────────────────
 function showAlert(message, type) {
@@ -57,9 +57,12 @@ const soldOf = (p) => soldMap[p.id] || 0;
 const soldText = (n) => n >= 1000 ? `${(n / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} rb terjual` : `${n} terjual`;
 const hasOptions = (p) => Array.isArray(p.options) && p.options.length > 0;
 
+const basePriceOf = (p) => (p.promo_price && p.promo_price > 0 && p.promo_price < p.price) ? Number(p.promo_price) : (Number(p.price) || 0);
+const isPromo = (p) => Boolean(p.promo_price && p.promo_price > 0 && p.promo_price < p.price);
+
 /** Harga termurah & termahal dari kombinasi variasi. */
 function priceRange(p) {
-  let min = Number(p.price) || 0, max = min;
+  let min = basePriceOf(p), max = min;
   (p.options || []).forEach(g => {
     const deltas = (g.values || []).map(v => Number(v.price_delta) || 0);
     if (!deltas.length) return;
@@ -79,9 +82,11 @@ function renderCard(p) {
   const sold = soldOf(p);
   const { min, max } = priceRange(p);
   const colors = colorGroup(p);
+  const promo = isPromo(p);
 
   let badge = '';
   if (p.stock === 0)     badge = '<span class="pc-badge pc-badge--out">Habis</span>';
+  else if (promo)        badge = `<span class="pc-badge" style="background:#DC2626;color:#fff;">${esc(p.promo_label || `-${p.discount_percent || 0}%`)}</span>`;
   else if (p.stock <= 5) badge = `<span class="pc-badge">Sisa ${p.stock}</span>`;
 
   const swatches = colors ? `
@@ -101,7 +106,7 @@ function renderCard(p) {
         <h3 class="product-name">${esc(p.name)}</h3>
         ${swatches}
         <div class="product-price-row">
-          <span class="product-price">${max > min ? '<small class="pc-from">mulai</small>' : ''}${fmtRp(min)}</span>
+          <span class="product-price" ${promo ? 'style="color:#DC2626;"' : ''}>${max > min ? '<small class="pc-from">mulai</small>' : ''}${fmtRp(min)}${promo ? ` <small style="text-decoration:line-through;color:var(--mute);font-weight:400;font-size:11px;">${fmtRp(p.price)}</small>` : ''}</span>
           ${sold ? `<span class="pc-sold">${soldText(sold)}</span>` : ''}
         </div>
         ${shopName ? `
@@ -121,7 +126,7 @@ function renderCard(p) {
 
 /** Data barang untuk keranjang, termasuk variasi terpilih. */
 function cartPayload(p, sel = {}) {
-  let price = Number(p.price) || 0;
+  let price = basePriceOf(p);
   let image = imageOf(p);
   const labels = [];
   (p.options || []).forEach(g => {
@@ -191,6 +196,14 @@ function bindGrid(grid, list) {
 }
 
 // ─── Data katalog ───────────────────────────────────────────────────────────
+function isShopEffectivelyActive(s) {
+  if (!s) return false;
+  if (s.effective_status) return s.effective_status === 'active';
+  if (s.status !== 'active') return false;
+  if (!s.rental_expires) return true;
+  return new Date(s.rental_expires).getTime() >= Date.now();
+}
+
 async function fetchCatalog() {
   const [prodRes, shopRes, txRes] = await Promise.all([
     fetch(`${BASE_URL}/products`).then(r => r.json()),
@@ -210,7 +223,13 @@ async function fetchCatalog() {
     });
   });
 
+  // Hanya tampilkan produk yang tidak disembunyikan admin dan dari ruko yang aktif (belum jatuh tempo)
   allProducts = (prodRes.data || [])
+    .filter(p => {
+      if (p.hidden) return false;
+      const shop = shopDetailCache[p.shop_id];
+      return !shop || isShopEffectivelyActive(shop);
+    })
     .filter((v, i, a) => a.findIndex(t => t.name.toLowerCase() === v.name.toLowerCase()) === i);
   return allProducts;
 }
@@ -267,7 +286,7 @@ export async function loadCatalogProducts(filter, shopQuery, { refetch = true } 
   if (filter !== undefined) state.filter = filter || 'all';
   if (shopQuery !== undefined) state.shop = shopQuery || null;
 
-  if (refetch || !allProducts.length) {
+  if (!allProducts.length) {
     grid.innerHTML = Array(10).fill(0).map(() => `
       <div class="product-card is-skeleton" aria-hidden="true">
         <div class="product-img-wrapper sk-block"></div>
@@ -445,10 +464,16 @@ function showProductDetailModal(p, { pickFor = null } = {}) {
             </button>
             <button class="btn-p-buy-now" id="modal-buy-now-btn" type="button" ${inStock ? '' : 'disabled'}>Beli sekarang</button>
           </div>
-          <p class="pd-assure">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
-            Dijual oleh merchant terverifikasi Vendora
-          </p>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:10px;">
+            <p class="pd-assure" style="margin:0;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
+              Dijual oleh merchant terverifikasi Vendora
+            </p>
+            <button type="button" id="pd-report-btn" class="link-plain" style="font-size:12px;color:#B91C1C;display:inline-flex;align-items:center;gap:4px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              Laporkan produk / toko
+            </button>
+          </div>
         </div>
       </div>
 
@@ -598,6 +623,63 @@ function showProductDetailModal(p, { pickFor = null } = {}) {
   body.querySelector('#pd-visit')?.addEventListener('click', () => goToShop(shopName));
   body.querySelector('#pd-more-all')?.addEventListener('click', () => goToShop(shopName));
   body.querySelector('#pd-chat')?.addEventListener('click', () => openChat(shop, shopName));
+  body.querySelector('#pd-report-btn')?.addEventListener('click', () => {
+    const session = getActiveSession();
+    const targetChoice = prompt(
+      `Apa yang ingin Anda laporkan?\nKetik 1 untuk Produk ("${p.name}")\nKetik 2 untuk Toko ("${shopName || 'Toko penjual'}")`,
+      '1'
+    );
+    if (!targetChoice) return;
+    const isShopReport = targetChoice.trim() === '2';
+    const reasonChoice = prompt(
+      `Pilih alasan laporan:\n` +
+      `1 = Barang palsu / tiruan\n` +
+      `2 = Barang terlarang / melanggar hukum\n` +
+      `3 = Deskripsi atau harga menyesatkan\n` +
+      `4 = Indikasi penipuan toko\n` +
+      `5 = Konten tidak pantas`,
+      '1'
+    );
+    if (!reasonChoice) return;
+    const reasonMap = {
+      '1': 'counterfeit',
+      '2': 'prohibited',
+      '3': 'misleading',
+      '4': 'scam',
+      '5': 'inappropriate'
+    };
+    const reason = reasonMap[reasonChoice.trim()] || 'other';
+    const description = prompt('Jelaskan detail pelanggaran yang Anda temukan (wajib diisi):', '');
+    if (!description || !description.trim()) {
+      showAlert('Keterangan laporan wajib diisi.', 'error');
+      return;
+    }
+
+    fetch(`${BASE_URL}/reports`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        reporter_id: session?.user?.id || '',
+        reporter_name: session?.user?.name || 'Pengguna Katalog',
+        target_type: isShopReport ? 'shop' : 'product',
+        target_id: isShopReport ? (p.shop_id || '') : p.id,
+        target_name: isShopReport ? (shopName || 'Toko') : p.name,
+        shop_id: p.shop_id || '',
+        shop_name: shopName || '',
+        reason,
+        description: description.trim()
+      })
+    })
+      .then(r => r.json())
+      .then(res => {
+        if (res.status === 200 || res.status === 201) {
+          showAlert(res.message || 'Laporan berhasil dikirim ke tim moderasi Vendora.', 'success');
+        } else {
+          showAlert(res.message || 'Gagal mengirim laporan.', 'error');
+        }
+      })
+      .catch(() => showAlert('Koneksi bermasalah saat mengirim laporan.', 'error'));
+  });
   body.querySelectorAll('.pd-mini').forEach(btn => btn.addEventListener('click', () => {
     const next = allProducts.find(x => x.id === btn.dataset.id);
     if (next) showProductDetailModal(next);
@@ -781,7 +863,7 @@ export function initSearch() {
     const prods = searchProducts(q).slice(0, 6);
     const nq = norm(q);
     const shops = Object.values(shopDetailCache)
-      .filter(s => s.status === 'active' && norm(s.name).includes(nq)).slice(0, 3);
+      .filter(s => isShopEffectivelyActive(s) && norm(s.name).includes(nq)).slice(0, 3);
     const cats = [];
     CATEGORIES.forEach(c => {
       if (norm(c.label).includes(nq)) cats.push({ filter: c.key, label: c.label, parent: '' });

@@ -1,4 +1,4 @@
-import { BASE_URL, getActiveSession } from "../config/api.js?v=5";
+import { BASE_URL, getActiveSession, authHeaders } from "../config/api.js?v=105";
 
 // Helper to show alert inside widget
 function showCSAlert(message, type) {
@@ -283,7 +283,7 @@ export function initSellerCSWidget() {
     // Send support ticket with Subject: "Pengaduan Seller"
     fetch(`${BASE_URL}/tickets`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         seller_id: session.user.id,
         subject: "Pengaduan Seller",
@@ -332,7 +332,7 @@ export function initSellerCSWidget() {
     const listContainer = document.getElementById('cs-chat-messages');
     if (!listContainer) return;
 
-    fetch(`${BASE_URL}/tickets?seller_id=${session.user.id}`)
+    fetch(`${BASE_URL}/tickets?seller_id=${session.user.id}`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => {
         const tickets = data.data || [];
@@ -410,7 +410,7 @@ export function initAdminTickets() {
 
       fetch(`${BASE_URL}/ticket/${ticketId}/reply`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ reply })
       })
       .then(res => res.json())
@@ -448,7 +448,7 @@ function loadAdminTicketsTable() {
   const tbody = document.getElementById('tickets-list-tbody');
   if (!tbody) return;
 
-  fetch(`${BASE_URL}/tickets`)
+  fetch(`${BASE_URL}/tickets`, { headers: authHeaders() })
     .then(res => res.json())
     .then(data => {
       const tickets = data.data || [];
