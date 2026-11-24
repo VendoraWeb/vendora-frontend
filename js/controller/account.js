@@ -1,6 +1,6 @@
 // ─── Halaman Pengaturan Akun (akun.html) ─────────────────────────────────────
-import { BASE_URL, getActiveSession, setActiveSession, clearActiveSession, authHeaders } from "../config/api.js?v=105";
-import { fmtDate } from "../ui.js?v=102";
+import { BASE_URL, getActiveSession, setActiveSession, logout } from "../config/api.js?v=20261114";
+import { fmtDate } from "../ui.js?v=20261114";
 
 const $ = (id) => document.getElementById(id);
 const ROLE_LABEL = { buyer: 'Pembeli', seller: 'Penjual', admin: 'Admin' };
@@ -50,23 +50,23 @@ export async function initAccountPage() {
   if (!session || !session.user) {
     $('account-locked').hidden = false;
     $('account-app').hidden = true;
+    $('acc-top-avatar').hidden = true; // tamu: jangan tampilkan lingkaran avatar kosong
     return;
   }
 
   // Data terbaru dari server (avatar, alamat, tanggal bergabung) melalui endpoint sesi /user/me
   let user = { ...session.user };
   try {
-    const res = await fetch(`${BASE_URL}/user/me`, { headers: authHeaders() });
+    const res = await fetch(`${BASE_URL}/me`);
     const data = await res.json();
-    if (res.ok && data.data) {
-      user = { ...user, ...data.data };
-    }
+    if (res.ok && data.data) user = { ...user, ...data.data };
   } catch (e) { /* tetap pakai data sesi */ }
 
   // Tautan kembali sesuai peran
   const back = $('account-back');
-  if (user.role === 'seller') { back.href = 'seller.html'; back.lastChild.textContent = ' Dashboard toko'; }
-  if (user.role === 'admin') { back.href = 'admin.html'; back.lastChild.textContent = ' Konsol admin'; }
+  const setBack = (href, label) => { back.href = href; back.querySelector('span').textContent = ' ' + label; back.setAttribute('aria-label', label); };
+  if (user.role === 'seller') setBack('seller.html', 'Dashboard toko');
+  if (user.role === 'admin') setBack('admin.html', 'Konsol admin');
 
   // Label alamat untuk penjual
   if (user.role === 'seller') {
@@ -108,27 +108,35 @@ export async function initAccountPage() {
   $('acc-name').value = user.name || '';
   $('acc-email').value = user.email || '';
   $('acc-phone').value = user.phone || '';
-  $('acc-address').value = user.address || '';
+  if ($('acc-address')) $('acc-address').value = user.address || '';
   let avatar = user.avatar || '';
   fillSummary();
 
   // Simpan — backend menimpa email, phone, address, avatar sekaligus,
-  // jadi selalu kirim keempatnya dari isi form saat ini.
+  // jadi selalu kirim semuanya dari isi form saat ini.
+  const currentAddress = () => ($('acc-address') ? $('acc-address').value.trim() : (user.address || ''));
   const snapshot = () => JSON.stringify([
-    $('acc-email').value.trim(), $('acc-phone').value.trim(), $('acc-address').value.trim(), avatar
+    $('acc-name').value.trim(), $('acc-email').value.trim(), $('acc-phone').value.trim(), currentAddress(), avatar
   ]);
   let saved = snapshot();
   const refreshDirty = () => {
     const dirty = snapshot() !== saved;
     document.querySelectorAll('[data-save]').forEach(b => { b.disabled = !dirty; });
   };
-  ['acc-email', 'acc-phone', 'acc-address'].forEach(id => $(id).addEventListener('input', refreshDirty));
+  ['acc-name', 'acc-email', 'acc-phone', 'acc-address'].forEach(id => {
+    const el = $(id);
+    if (el) el.addEventListener('input', refreshDirty);
+  });
   refreshDirty();
 
   async function save(btn) {
+    const name = $('acc-name').value.replace(/\s+/g, ' ').trim();
     const email = $('acc-email').value.trim();
     const phone = $('acc-phone').value.trim();
-    const address = $('acc-address').value.trim();
+    const address = currentAddress();
+    if (name.length < 2) {
+      toast('Nama minimal 2 huruf.', 'error'); $('acc-name').focus(); return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast('Format email belum benar.', 'error'); $('acc-email').focus(); return;
     }
@@ -141,14 +149,14 @@ export async function initAccountPage() {
     try {
       const res = await fetch(`${BASE_URL}/user/profile`, {
         method: 'PUT',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ user_id: user.id, email, phone, address, avatar })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, name, email, phone, address, avatar })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gagal menyimpan');
-      user = { ...user, email, phone, address, avatar };
+      if (!res.ok) throw new Error(data.error || data.message || 'Gagal menyimpan');
+      user = { ...user, name, email, phone, address, avatar };
       const s = getActiveSession();
-      if (s) { s.user = { ...s.user, email, phone, address, avatar }; setActiveSession(s); }
+      if (s) { s.user = { ...s.user, name, email, phone, address, avatar }; setActiveSession(s); }
       saved = snapshot();
       fillSummary();
       toast('Perubahan disimpan.', 'success');
@@ -212,8 +220,8 @@ export async function initAccountPage() {
     const os = /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Mac OS/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';
     return `${browser}${os ? ' di ' + os : ''}`;
   })();
-  $('acc-logout').addEventListener('click', () => {
-    clearActiveSession();
+  $('acc-logout').addEventListener('click', async () => {
+    await logout();
     window.location.href = 'index.html';
   });
 

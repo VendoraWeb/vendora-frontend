@@ -1,4 +1,4 @@
-import { BASE_URL, setActiveSession, getActiveSession } from "../config/api.js?v=105";
+import { BASE_URL, setActiveSession, getActiveSession } from "../config/api.js?v=20261114";
 
 // ─── Alert helper ──────────────────────────────────────────────────────────
 function showAlert(message, type) {
@@ -14,6 +14,12 @@ function showAlert(message, type) {
 
 // ─── Redirect after login ───────────────────────────────────────────────────
 function redirectByRole(role) {
+  // Halaman asal (mis. sesi berakhir saat checkout) — hanya halaman lokal, bukan URL luar
+  const next = new URLSearchParams(window.location.search).get('next') || '';
+  if (/^[a-z]+\.html([?#].*)?$/i.test(next) && !next.startsWith('login.html')) {
+    window.location.href = next;
+    return;
+  }
   const routes = { admin: 'admin.html', seller: 'seller.html', buyer: 'index.html' };
   window.location.href = routes[role] || 'index.html';
 }

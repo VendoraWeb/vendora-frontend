@@ -40,10 +40,12 @@ export const TX_STATUS = {
   cancelled: { label: 'Dibatalkan', long: 'Pesanan dibatalkan',          tone: 'bad' },
 };
 
-/** Satukan variasi status lama ke 4 status utama. */
+/** Satukan variasi status lama / perantara ke status utama. */
 export function normStatus(s) {
   if (s === 'pending_payment') return 'pending';
   if (s === 'processing') return 'paid';
+  if (s === 'success_pending_release') return 'success';
+  if (s === 'cancelling_auto') return 'cancelled';
   return s;
 }
 

@@ -1,6 +1,6 @@
-import { BASE_URL, getActiveSession, authHeaders } from "../config/api.js?v=105";
-import { esc } from "../ui.js?v=102";
-import { loadCatalogProducts }         from "./product.js?v=146";
+import { BASE_URL, getActiveSession } from "../config/api.js?v=20261114";
+import { esc } from "../ui.js?v=20261114";
+import { loadCatalogProducts }         from "./product.js?v=20261114";
 
 // ─── Alert helper ──────────────────────────────────────────────────────────
 function showAlert(message, type) {
@@ -284,7 +284,7 @@ export async function updateCartUI() {
           badge = document.createElement('span');
           badge.className = 'stock-warning-badge';
           badge.style = 'background:#EF4444; color:white; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-top:4px; display:inline-block;';
-          badge.textContent = 'Stok Habis';
+          badge.textContent = 'Stok habis';
           itemEl.querySelector('.cart-item-info').appendChild(badge);
         }
       } else if (stock < item.quantity) {
@@ -308,15 +308,19 @@ export async function updateCartUI() {
     });
 
     if (checkoutBtn) {
-      if (hasOutOfStock) {
+      const hasSelected = cart.some(item => item.selected);
+      if (!hasSelected) {
         checkoutBtn.disabled = true;
-        checkoutBtn.textContent = 'Ada Barang Habis';
+        checkoutBtn.innerHTML = 'Lanjut ke pembayaran <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+      } else if (hasOutOfStock) {
+        checkoutBtn.disabled = true;
+        checkoutBtn.textContent = 'Ada barang habis';
       } else if (hasInvalidQuantity) {
         checkoutBtn.disabled = true;
-        checkoutBtn.textContent = 'Stok Tidak Cukup';
+        checkoutBtn.textContent = 'Stok tidak cukup';
       } else {
         checkoutBtn.disabled = false;
-        checkoutBtn.textContent = 'Lanjut ke Pembayaran';
+        checkoutBtn.innerHTML = 'Lanjut ke pembayaran <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
       }
     }
 
@@ -370,12 +374,17 @@ export async function executeCheckout() {
     const subEl = document.getElementById('checkout-subtotal');
     if (subEl) subEl.textContent = 'Rp ' + totalAmount.toLocaleString('id-ID');
 
+    // Pesanan dipisah per toko, jadi ongkir dihitung per toko
     const courierSelect = document.getElementById('checkout-courier-select');
     const shipCostEl = document.getElementById('checkout-shipping-cost');
+    const shipLabelEl = document.getElementById('checkout-shipping-label');
+    const shopCount = new Set(selectedCart.map(item => item.shopId || item.shopName || item.id)).size || 1;
     const refreshGrandTotal = () => {
       const opt = courierSelect ? courierSelect.options[courierSelect.selectedIndex] : null;
-      const shipCost = opt ? (parseFloat(opt.dataset.cost || '18000') || 18000) : 18000;
+      const perShop = opt ? (parseFloat(opt.dataset.cost || '18000') || 18000) : 18000;
+      const shipCost = perShop * shopCount;
       if (shipCostEl) shipCostEl.textContent = 'Rp ' + shipCost.toLocaleString('id-ID');
+      if (shipLabelEl) shipLabelEl.textContent = shopCount > 1 ? `Ongkos kirim (${shopCount} toko)` : 'Ongkos kirim';
       snapAmountDisplay.textContent = 'Rp ' + (totalAmount + shipCost).toLocaleString('id-ID');
     };
     if (courierSelect) {
@@ -404,9 +413,8 @@ export async function executeCheckout() {
       try {
         const res  = await fetch(`${BASE_URL}/checkout`, {
           method:  'POST',
-          headers: authHeaders({ 'Content-Type': 'application/json' }),
-          body:    JSON.stringify({ 
-            buyer_id: session.user.id, 
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
             recipient_name: recName,
             shipping_address: recAddr,
             courier_code: chosenCourier,
@@ -417,9 +425,9 @@ export async function executeCheckout() {
         const data = await res.json();
         
         if (data.status === 201) {
-          const tx = data.data || {};
-          let methodName = method === 'QRIS' ? 'GoPay/OVO/Dana' : method === 'VA_BCA' ? 'BCA Virtual Account' : method === 'CARD' ? 'Kartu Kredit' : 'Indomaret/Alfamart';
-          showAlert(`Pembayaran via ${methodName} terverifikasi! Dana diamankan di Escrow Admin · Resi ${tx.tracking_number || chosenCourier}.`, 'success');
+          const methodName = method === 'QRIS' ? 'GoPay/OVO/Dana' : method === 'VA_BCA' ? 'BCA Virtual Account' : method === 'CARD' ? 'Kartu Kredit' : 'Indomaret/Alfamart';
+          const n = (data.data && data.data.count) || 1;
+          showAlert(`Pembayaran via ${methodName} berhasil. ${n > 1 ? `${n} pesanan (dipisah per toko)` : 'Pesanan'} diteruskan ke penjual; dana ditahan Vendora sampai paket kamu terima.`, 'success');
           snapModal.classList.remove('active');
           cart = cart.filter(item => !item.selected);
           saveCart(); updateCartUI(); loadCatalogProducts();
@@ -437,9 +445,9 @@ export async function executeCheckout() {
     
     const closeBtn = document.getElementById('snap-close-btn');
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
+      closeBtn.onclick = () => {
         snapModal.classList.remove('active');
-      }, { once: true });
+      };
     }
   }
 }

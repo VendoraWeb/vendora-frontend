@@ -678,7 +678,9 @@ footer.sf-footer .sf-footer-grid a:not(.nav-logo):not(.vlogo):hover { color: #ff
 }
 @media (max-width: 480px) {
   #main-navbar { gap: 8px !important; }
-  .nav-icon-btn[title="Notifikasi"], .nav-divider { display: none !important; }
+  .nav-divider { display: none !important; }
+  /* Tamu: lonceng disembunyikan agar Masuk/Daftar muat; pengguna masuk tetap melihat notifikasi */
+  body:not(.is-signed-in) .nav-icon-btn[title="Notifikasi"] { display: none !important; }
   .btn-nav-login { padding: 8px; }
   .sf-slide-title { font-size: 40px; }
   .sf-slide-desc { margin-bottom: 32px; }
@@ -842,8 +844,16 @@ footer.sf-footer .sf-footer-grid a:not(.nav-logo):not(.vlogo):hover { color: #ff
 #cart-drawer {
   background: #fff;
   border-left: 1px solid var(--line);
-  box-shadow: -24px 0 64px rgba(0, 0, 0, 0.12);
   width: min(420px, 100vw);
+  /* Tertutup: tanpa bayangan (dulu bocor jadi strip abu di tepi kanan) & tidak bisa difokus */
+  box-shadow: none;
+  visibility: hidden;
+  transition: transform 320ms var(--sf-ease, ease), box-shadow 320ms ease, visibility 0s linear 320ms;
+}
+#cart-drawer.active {
+  box-shadow: -24px 0 64px rgba(0, 0, 0, 0.12);
+  visibility: visible;
+  transition: transform 320ms var(--sf-ease, ease), box-shadow 320ms ease, visibility 0s;
 }
 .cart-drawer-header { padding: 20px 24px; border-bottom: 1px solid var(--line); background: #fff; }
 .cart-drawer-title { font-family: var(--font-body); font-size: 17px; font-weight: 600; color: var(--ink); gap: 10px; }
@@ -1784,3 +1794,43 @@ footer.sf-footer .sf-footer-grid a:not(.nav-logo):not(.vlogo):hover { color: #ff
 .pc-swatches { min-height: 12px; }
 .pd-guide-table th { text-transform: none; letter-spacing: 0; }
 .pd-guide-table tbody th { background: #FAFAF8; font-size: 13.5px; color: var(--ink); }
+
+/* ============================================================
+   PUTARAN 6 — menu HP, perbaikan tampilan HP
+   ============================================================ */
+
+/* Tombol menu (☰) tampil di HP dan dipindah ke kiri logo */
+@media (max-width: 992px) {
+  html body #main-navbar .nav-mobile-menu-btn {
+    display: inline-flex !important; order: -1; align-items: center; justify-content: center;
+    width: 40px; height: 40px; margin-left: -8px; border-radius: 8px; color: var(--ink);
+  }
+  #main-navbar.is-overlay .nav-mobile-menu-btn { color: #fff !important; }
+}
+
+/* Detail produk di HP: rentang harga tidak terpotong ("Rp" sendirian) */
+.pd-price { overflow-wrap: normal; }
+.pd-price .pd-amount { white-space: nowrap; }
+@media (max-width: 600px) {
+  .pd-price { font-size: 22px; line-height: 1.3; }
+  .pd-price-sep { margin: 0 2px; }
+}
+
+/* Target sentuh nama toko di kartu produk minimal 32px */
+.product-card .product-shop-tag { min-height: 32px; padding: 6px 0; }
+
+/* HP: keranjang jadi lembar bawah yang menempel ke dasar layar
+   (dulu berhenti 80px di atas dasar sehingga halaman terlihat di bawahnya). */
+@media (max-width: 768px) {
+  #cart-drawer { bottom: 0; padding-bottom: env(safe-area-inset-bottom); max-height: 85vh; }
+}
+
+/* ── Formulir laporan produk / toko ── */
+.report-modal { max-width: 460px; width: calc(100% - 32px); }
+.report-form { display: grid; gap: 14px; }
+.report-target { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; }
+.report-target legend { margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+.report-target label { display: flex; gap: 8px; align-items: baseline; font-size: 14px; line-height: 1.4; cursor: pointer; }
+.report-target b { font-weight: 600; overflow-wrap: anywhere; }
+.report-form .form-group { margin: 0; }
+.report-actions { display: flex; justify-content: flex-end; gap: 8px; }

@@ -1,7 +1,7 @@
-import { BASE_URL, authHeaders, getActiveSession } from "../config/api.js?v=105";
-import { esc } from "../ui.js?v=102";
-import { addToCart, updateCartUI, buyNow } from "./transaction.js?v=146";
-import { CATEGORIES, CATEGORY_BY_KEY, categoryOf, categoryLabel, matchesSub, SEARCH_SYNONYMS } from "../categories.js?v=101";
+import { BASE_URL, getActiveSession } from "../config/api.js?v=20261114";
+import { esc } from "../ui.js?v=20261114";
+import { addToCart, updateCartUI, buyNow } from "./transaction.js?v=20261114";
+import { CATEGORIES, CATEGORY_BY_KEY, categoryOf, categoryLabel, matchesSub, SEARCH_SYNONYMS } from "../categories.js?v=20261114";
 
 // ─── Alert helper ──────────────────────────────────────────────────────────
 function showAlert(message, type) {
@@ -38,17 +38,9 @@ function cleanDesc(text) {
   return String(text || '').replace(/\s*\[kategori:[^\]]*\]\s*/ig, ' ').trim();
 }
 
-// Pesanan lama produk contoh tersimpan sebagai "Produk Mockup (m1)". Listing itu
-// sekarang produk asli toko Apple, jadi diarahkan ke ID produk yang sama.
-const LEGACY_MOCK = {
-  m1: '6a48a951bc1d7146da66d384', // dulu iPhone 15 Pro Max → iPhone 18 Pro
-  m2: '6a48a951bc1d7146da66d385', // MacBook Pro
-  m3: '6a48a951bc1d7146da66d386', // iPad Pro
-  m4: '6a48a951bc1d7146da66d387', // AirPods Pro
-};
-export function mockIdFromName(name) {
-  const m = /^Produk Mockup \((m\d+)\)$/i.exec(String(name || '').trim());
-  return m ? (LEGACY_MOCK[m[1].toLowerCase()] || m[1]) : null;
+/** Pesanan lama berisi produk contoh ("Produk Mockup (m1)") yang sudah tidak dijual. */
+export function isLegacyMockName(name) {
+  return /^Produk Mockup \(m\d+\)$/i.test(String(name || '').trim());
 }
 
 const shopNameOf = (p) => p.shop_name || shopCache[p.shop_id] || '';
@@ -195,6 +187,89 @@ function bindGrid(grid, list) {
   });
 }
 
+// ─── Laporkan produk / toko ke moderator ─────────────────────────────────────
+const REPORT_REASONS = [
+  ['counterfeit', 'Barang palsu / tiruan'],
+  ['prohibited', 'Barang terlarang atau melanggar hukum'],
+  ['misleading', 'Deskripsi atau harga menyesatkan'],
+  ['scam', 'Indikasi penipuan'],
+  ['inappropriate', 'Konten tidak pantas'],
+  ['other', 'Lainnya'],
+];
+
+function openReportDialog(p, shopName) {
+  document.getElementById('report-modal')?.remove();
+  const wrap = document.createElement('div');
+  wrap.className = 'modal-overlay';
+  wrap.id = 'report-modal';
+  wrap.setAttribute('role', 'dialog');
+  wrap.setAttribute('aria-modal', 'true');
+  wrap.setAttribute('aria-labelledby', 'report-title');
+  wrap.innerHTML = `
+    <div class="modal-content report-modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="report-title">Laporkan pelanggaran</h3>
+        <button class="modal-close" type="button" data-close aria-label="Tutup">&times;</button>
+      </div>
+      <form class="modal-body report-form" novalidate>
+        <fieldset class="report-target">
+          <legend>Yang dilaporkan</legend>
+          <label><input type="radio" name="report-target" value="product" checked> Produk <b>${esc(p.name)}</b></label>
+          ${p.shop_id ? `<label><input type="radio" name="report-target" value="shop"> Toko <b>${esc(shopName || 'penjual')}</b></label>` : ''}
+        </fieldset>
+        <div class="form-group">
+          <label for="report-reason">Alasan</label>
+          <select id="report-reason" class="auth-input">${REPORT_REASONS.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select>
+        </div>
+        <div class="form-group">
+          <label for="report-desc">Ceritakan masalahnya</label>
+          <textarea id="report-desc" class="auth-input" rows="4" maxlength="1000" placeholder="Contoh: foto produk diambil dari toko lain, barang yang datang berbeda."></textarea>
+          <span class="form-hint">Laporan dikirim ke tim moderasi Vendora. Penjual tidak melihat siapa pelapornya.</span>
+        </div>
+        <div class="report-actions">
+          <button type="button" class="btn-line" data-close>Batal</button>
+          <button type="submit" class="btn-ink">Kirim laporan</button>
+        </div>
+      </form>
+    </div>`;
+  document.body.appendChild(wrap);
+  requestAnimationFrame(() => wrap.classList.add('active'));
+  const close = () => { wrap.classList.remove('active'); setTimeout(() => wrap.remove(), 250); };
+  wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-close]')) close(); });
+  wrap.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  const desc = wrap.querySelector('#report-desc');
+  desc.focus();
+
+  wrap.querySelector('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const description = desc.value.trim();
+    if (description.length < 5) { showAlert('Tulis keterangan laporan minimal 5 karakter.', 'error'); desc.focus(); return; }
+    const target = wrap.querySelector('input[name="report-target"]:checked').value;
+    const btn = wrap.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${BASE_URL}/reports`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target_type: target,
+          product_id: target === 'product' ? p.id : '',
+          shop_id: p.shop_id || '',
+          reason: wrap.querySelector('#report-reason').value,
+          description,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Gagal mengirim laporan.');
+      showAlert('Laporan terkirim ke tim moderasi Vendora. Terima kasih.', 'success');
+      close();
+    } catch (err) {
+      showAlert(err.message || 'Koneksi bermasalah saat mengirim laporan.', 'error');
+      btn.disabled = false;
+    }
+  });
+}
+
 // ─── Data katalog ───────────────────────────────────────────────────────────
 function isShopEffectivelyActive(s) {
   if (!s) return false;
@@ -205,23 +280,15 @@ function isShopEffectivelyActive(s) {
 }
 
 async function fetchCatalog() {
-  const [prodRes, shopRes, txRes] = await Promise.all([
+  const [prodRes, shopRes, soldRes] = await Promise.all([
     fetch(`${BASE_URL}/products`).then(r => r.json()),
     fetch(`${BASE_URL}/shops`).then(r => r.json()).catch(() => ({ data: [] })),
-    fetch(`${BASE_URL}/transactions`).then(r => r.json()).catch(() => ({ data: [] })),
+    // Jumlah terjual dihitung server (tanpa data pembeli; pesanan batal tidak dihitung)
+    fetch(`${BASE_URL}/products/sold`).then(r => r.json()).catch(() => ({ data: {} })),
   ]);
 
   (shopRes.data || []).forEach(s => { shopCache[s.id] = s.name; shopDetailCache[s.id] = s; });
-
-  // Jumlah terjual dari transaksi asli (pesanan dibatalkan tidak dihitung)
-  soldMap = {};
-  (txRes.data || []).forEach(t => {
-    if (t.status === 'cancelled') return;
-    (t.items || []).forEach(i => {
-      const key = mockIdFromName(i.name) || i.product_id;
-      soldMap[key] = (soldMap[key] || 0) + (i.quantity || 0);
-    });
-  });
+  soldMap = soldRes.data || {};
 
   // Hanya tampilkan produk yang tidak disembunyikan admin dan dari ruko yang aktif (belum jatuh tempo)
   allProducts = (prodRes.data || [])
@@ -230,7 +297,7 @@ async function fetchCatalog() {
       const shop = shopDetailCache[p.shop_id];
       return !shop || isShopEffectivelyActive(shop);
     })
-    .filter((v, i, a) => a.findIndex(t => t.name.toLowerCase() === v.name.toLowerCase()) === i);
+    .filter((v, i, a) => a.findIndex(t => `${t.shop_id || ''}::${t.name.toLowerCase()}` === `${v.shop_id || ''}::${v.name.toLowerCase()}`) === i);
   return allProducts;
 }
 
@@ -400,7 +467,7 @@ function showProductDetailModal(p, { pickFor = null } = {}) {
     ['Kategori', [catKey ? categoryLabel(catKey) : '', sub].filter((v, i, a) => v && a.indexOf(v) === i).join(' › ')],
     ...(p.specs || []).map(s => [s.label, s.value]),
     ['Stok', inStock ? `${p.stock} unit` : 'Habis'],
-    ['Dikirim dari', shop && shop.owner_address ? shop.owner_address : ''],
+    ['Dikirim dari', shop && shop.ship_from ? shop.ship_from : ''],
   ].filter(r => r[1]);
 
   const optionHTML = groups.map((g, gi) => {
@@ -446,7 +513,7 @@ function showProductDetailModal(p, { pickFor = null } = {}) {
           ${groups.length ? `<div class="pd-options" id="pd-options">${optionHTML}</div>` : ''}
 
           <dl class="pd-rows">
-            <div><dt>Pengiriman</dt><dd><b>Gratis ongkir</b>${shop && shop.owner_address ? `<small>Dikirim dari ${esc(shop.owner_address)}</small>` : ''}</dd></div>
+            <div><dt>Pengiriman</dt><dd><b>Kurir mulai Rp 18.000</b>${shop && shop.ship_from ? `<small>Dikirim dari ${esc(shop.ship_from)}</small>` : ''}</dd></div>
             <div><dt>Kuantitas</dt><dd class="pd-qty-row">
               <div class="qty-selector">
                 <button class="qty-btn" id="qty-minus" type="button" aria-label="Kurangi" ${inStock ? '' : 'disabled'}>−</button>
@@ -482,7 +549,9 @@ function showProductDetailModal(p, { pickFor = null } = {}) {
         <span class="pd-shop-avatar" aria-hidden="true">${esc(shopName.charAt(0).toUpperCase())}</span>
         <div class="pd-shop-id">
           <b>${esc(shopName)}</b>
-          <span class="v-status v-status--good">Merchant terverifikasi</span>
+          <span class="pd-shop-badges">
+            <span class="v-status v-status--good">Diverifikasi admin</span>
+          </span>
         </div>
         <dl class="pd-shop-stats">
           <div><dt>Produk</dt><dd>${shopList.length}</dd></div>
@@ -550,7 +619,7 @@ function showProductDetailModal(p, { pickFor = null } = {}) {
     if (allPicked || max === min) {
       priceEl.textContent = fmtRp(cartPayload(p, sel).price);
     } else {
-      priceEl.innerHTML = `${fmtRp(min)} <span class="pd-price-sep">–</span> ${fmtRp(max)}`;
+      priceEl.innerHTML = `<span class="pd-amount">${fmtRp(min)}</span> <span class="pd-price-sep">–</span> <span class="pd-amount">${fmtRp(max)}</span>`;
     }
   };
 
@@ -623,69 +692,14 @@ function showProductDetailModal(p, { pickFor = null } = {}) {
   body.querySelector('#pd-visit')?.addEventListener('click', () => goToShop(shopName));
   body.querySelector('#pd-more-all')?.addEventListener('click', () => goToShop(shopName));
   body.querySelector('#pd-chat')?.addEventListener('click', () => openChat(shop, shopName));
-  body.querySelector('#pd-report-btn')?.addEventListener('click', () => {
-    const session = getActiveSession();
-    const targetChoice = prompt(
-      `Apa yang ingin Anda laporkan?\nKetik 1 untuk Produk ("${p.name}")\nKetik 2 untuk Toko ("${shopName || 'Toko penjual'}")`,
-      '1'
-    );
-    if (!targetChoice) return;
-    const isShopReport = targetChoice.trim() === '2';
-    const reasonChoice = prompt(
-      `Pilih alasan laporan:\n` +
-      `1 = Barang palsu / tiruan\n` +
-      `2 = Barang terlarang / melanggar hukum\n` +
-      `3 = Deskripsi atau harga menyesatkan\n` +
-      `4 = Indikasi penipuan toko\n` +
-      `5 = Konten tidak pantas`,
-      '1'
-    );
-    if (!reasonChoice) return;
-    const reasonMap = {
-      '1': 'counterfeit',
-      '2': 'prohibited',
-      '3': 'misleading',
-      '4': 'scam',
-      '5': 'inappropriate'
-    };
-    const reason = reasonMap[reasonChoice.trim()] || 'other';
-    const description = prompt('Jelaskan detail pelanggaran yang Anda temukan (wajib diisi):', '');
-    if (!description || !description.trim()) {
-      showAlert('Keterangan laporan wajib diisi.', 'error');
-      return;
-    }
-
-    fetch(`${BASE_URL}/reports`, {
-      method: 'POST',
-      headers: authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({
-        reporter_id: session?.user?.id || '',
-        reporter_name: session?.user?.name || 'Pengguna Katalog',
-        target_type: isShopReport ? 'shop' : 'product',
-        target_id: isShopReport ? (p.shop_id || '') : p.id,
-        target_name: isShopReport ? (shopName || 'Toko') : p.name,
-        shop_id: p.shop_id || '',
-        shop_name: shopName || '',
-        reason,
-        description: description.trim()
-      })
-    })
-      .then(r => r.json())
-      .then(res => {
-        if (res.status === 200 || res.status === 201) {
-          showAlert(res.message || 'Laporan berhasil dikirim ke tim moderasi Vendora.', 'success');
-        } else {
-          showAlert(res.message || 'Gagal mengirim laporan.', 'error');
-        }
-      })
-      .catch(() => showAlert('Koneksi bermasalah saat mengirim laporan.', 'error'));
-  });
+  body.querySelector('#pd-report-btn')?.addEventListener('click', () => openReportDialog(p, shopName));
   body.querySelectorAll('.pd-mini').forEach(btn => btn.addEventListener('click', () => {
     const next = allProducts.find(x => x.id === btn.dataset.id);
     if (next) showProductDetailModal(next);
   }));
 
   body.scrollTop = 0;
+  document.title = `${p.name} — Vendora`;
   modal.classList.add('active');
 
   // Dibuka dari tombol kartu: arahkan langsung ke pilihan variasi
@@ -699,20 +713,28 @@ function showProductDetailModal(p, { pickFor = null } = {}) {
 }
 
 // Tutup modal detail
-document.addEventListener('DOMContentLoaded', () => {
+function bindProductDetailClose() {
   const closeBtn = document.getElementById('product-detail-close-btn');
   const modal = document.getElementById('product-detail-modal');
-  if (closeBtn && modal) {
-    closeBtn.addEventListener('click', () => modal.classList.remove('active'));
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+  if (closeBtn && modal && !modal.dataset.closeBound) {
+    modal.dataset.closeBound = '1';
+    const baseTitle = document.title;
+    const closeDetail = () => { modal.classList.remove('active'); document.title = baseTitle; };
+    closeBtn.addEventListener('click', closeDetail);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeDetail(); });
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
       const sheet = document.getElementById('pd-guide-sheet');
       if (sheet && !sheet.hidden) { sheet.hidden = true; return; }
-      modal.classList.remove('active');
+      if (modal.classList.contains('active')) closeDetail();
     });
   }
-});
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bindProductDetailClose);
+} else {
+  bindProductDetailClose();
+}
 
 // ─── Pencarian ──────────────────────────────────────────────────────────────
 const norm = (s) => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '');
@@ -913,7 +935,8 @@ export function initSearch() {
     const kind = el.dataset.sg;
     close();
     if (kind === 'product') {
-      pushRecent(input.value.trim() || '');
+      const q = input.value.trim();
+      if (q) pushRecent(q);
       if (document.getElementById('product-detail-modal')) openProductById(el.dataset.id);
       else window.location.href = `index.html?p=${encodeURIComponent(el.dataset.id)}`;
     } else if (kind === 'shop') {
@@ -925,7 +948,11 @@ export function initSearch() {
     } else if (kind === 'cat' || kind === 'filter') {
       const filter = kind === 'cat' ? el.dataset.cat : el.dataset.filter;
       clearSearch();
-      document.dispatchEvent(new CustomEvent('vendora:pick-category', { detail: { filter } }));
+      if (document.getElementById('catalog-filter-bar')) {
+        document.dispatchEvent(new CustomEvent('vendora:pick-category', { detail: { filter } }));
+      } else {
+        window.location.href = `index.html?cat=${encodeURIComponent(filter)}#catalog-anchor`;
+      }
     }
   };
 

@@ -11,9 +11,9 @@
   <link rel="apple-touch-icon" href="logo.png?v=102">
   <meta name="theme-color" content="#0E0E0D">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=114">
-  <link rel="stylesheet" href="css/theme.css?v=107">
-  <link rel="stylesheet" href="css/account.css?v=105">
+  <link rel="stylesheet" href="css/style.css?v=20261114">
+  <link rel="stylesheet" href="css/theme.css?v=20261114">
+  <link rel="stylesheet" href="css/account.css?v=20261114">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 </head>
@@ -24,10 +24,12 @@
       <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=103" alt="">EN</span>DORA</span>
     </a>
     <div class="acc-top-right">
-      <a href="index.html" class="acc-back">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg><span> Lanjut belanja</span>
+      <a href="index.html" class="acc-back" aria-label="Lanjut belanja">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg><span> Lanjut belanja</span>
       </a>
-      <a href="akun.html" class="acc-back"><span>Pengaturan akun</span></a>
+      <a href="akun.html" class="acc-back" aria-label="Pengaturan akun">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span> Pengaturan akun</span>
+      </a>
     </div>
   </header>
 
@@ -59,7 +61,7 @@
       <label class="orders-search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span class="visually-hidden">Cari pesanan</span>
-        <input type="search" id="orders-search" placeholder="Cari nama produk, toko, atau nomor pesanan" autocomplete="off">
+        <input type="search" id="orders-search" placeholder="Cari produk, toko, atau no. pesanan" aria-label="Cari pesanan" autocomplete="off">
       </label>
     </div>
 
@@ -118,6 +120,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/main.js?v=146"></script>
+  <script type="module" src="js/main.js?v=20261114"></script>
 </body>
 </html>

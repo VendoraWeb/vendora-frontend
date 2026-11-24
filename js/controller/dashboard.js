@@ -1,6 +1,21 @@
-import { BASE_URL, getActiveSession, authHeaders } from "../config/api.js?v=105";
-import { esc, fmtRp, fmtRpShort, fmtDate, fmtDateTime, shortId, TX_STATUS, normStatus, txStatusHTML } from "../ui.js?v=102";
-import { CATEGORIES, categoryOf } from "../categories.js?v=101";
+import { BASE_URL, getActiveSession, clearActiveSession, authHeaders } from "../config/api.js?v=20261114";
+import { esc, fmtRp, fmtRpShort, fmtDate, fmtDateTime, shortId, TX_STATUS, normStatus, txStatusHTML } from "../ui.js?v=20261114";
+import { CATEGORIES, categoryOf } from "../categories.js?v=20261114";
+import { loadMyShop, renderLeaseCard, initRentOnboarding } from "./ruko.js?v=20261114";
+import { isLegacyMockName } from "./product.js?v=20261114";
+
+let activeShopIdCache = '';
+function setActiveShopId(id) {
+  activeShopIdCache = id || '';
+  try { localStorage.setItem('vendora_active_shop_id', activeShopIdCache); } catch { /* abaikan */ }
+}
+function getActiveShopId() {
+  if (activeShopIdCache) return activeShopIdCache;
+  try { return localStorage.getItem('vendora_active_shop_id') || ''; } catch { return ''; }
+}
+
+/** Nama barang di pesanan; produk contoh lama ("Produk Mockup (m1)") diberi label yang jelas. */
+const itemName = (i) => isLegacyMockName(i.name) ? 'Produk contoh lama' : i.name;
 
 // ─── Kategori & variasi di form produk ──────────────────────────────────────
 function fillCategorySelects() {
@@ -59,7 +74,6 @@ function showAlert(message, type) {
 
 const $id = (id) => document.getElementById(id);
 const setHTML = (id, html) => { const el = $id(id); if (el) el.innerHTML = html; };
-const DAY_PRICE = 15000;
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80';
 
 function leaseInfo(expires) {
@@ -71,21 +85,24 @@ function leaseInfo(expires) {
 }
 const statusDot = (text, tone) => `<span class="v-status${tone ? ` v-status--${tone}` : ''}">${esc(text)}</span>`;
 
-// Hitung status efektif toko saat dibaca (effective_status) tanpa mengubah field status di database
+// Status efektif ruko saat dibaca (effective_status dari server) tanpa mengubah field status di database
+const SHOP_STATUS = {
+  active:    ['Aktif', 'good'],
+  pending:   ['Menunggu verifikasi admin', 'warn'],
+  expired:   ['Masa sewa habis', 'bad'],
+  suspended: ['Ditangguhkan', 'bad'],
+};
 function effectiveShopStatus(s) {
   if (!s) return 'suspended';
   if (s.effective_status) return s.effective_status;
-  if (s.status === 'suspended' || s.status !== 'active') return 'suspended';
+  if (s.status === 'pending' || s.status === 'suspended') return s.status;
   const lease = leaseInfo(s.rental_expires);
   if (lease.days !== null && lease.days < 0) return 'expired';
   return 'active';
 }
 
 function shopStatusBadge(s) {
-  const eff = effectiveShopStatus(s);
-  if (eff === 'active') return statusDot('Aktif', 'good');
-  if (eff === 'expired') return statusDot('Jatuh tempo', 'warn');
-  return statusDot('Ditangguhkan', 'bad');
+  return statusDot(...(SHOP_STATUS[effectiveShopStatus(s)] || SHOP_STATUS.suspended));
 }
 
 // Hitung subtotal barang TANPA ongkir: subtotal_amount -> sum(items[].price * qty) -> max(0, total_amount - shipping_cost)
@@ -202,29 +219,6 @@ function lastSixMonths() {
 }
 const monthKey = (iso) => { const d = new Date(iso); return `${d.getFullYear()}-${d.getMonth()}`; };
 
-// Pembayaran simulasi (dipakai sewa & perpanjang ruko)
-function openPayment(amount, onCancelMsg, onPaid) {
-  const snapModal = $id('snap-modal');
-  const amountEl = $id('snap-amount-display');
-  if (!snapModal || !amountEl) {
-    showAlert('Jalur pembayaran tidak termuat. Muat ulang halaman.', 'error');
-    return;
-  }
-  amountEl.textContent = fmtRp(amount);
-  snapModal.classList.add('active');
-  const closeBtn = $id('snap-close-btn');
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      snapModal.classList.remove('active');
-      showAlert(onCancelMsg, 'error');
-    };
-  }
-  window.snapProcess = (method) => {
-    snapModal.classList.remove('active');
-    onPaid(method);
-  };
-}
-
 // =================================================================
 // PENJUAL (seller.html)
 // =================================================================
@@ -232,7 +226,31 @@ let sellerOrders = [];          // [{ tx, items, revenue, status }]
 let sellerOrderFilter = 'all';
 let sellerProducts = [];
 
+// ─── Tabel di HP: tiap sel diberi label kolomnya (CSS menampilkannya sebagai kartu) ──
+function labelTableCells() {
+  document.querySelectorAll('table.data-table').forEach(table => {
+    const heads = [...table.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    table.querySelectorAll('tbody tr').forEach(tr => {
+      [...tr.children].forEach((td, i) => {
+        if (td.colSpan > 1 || td.hasAttribute('data-label')) return;
+        td.setAttribute('data-label', heads[i] || '');
+      });
+    });
+  });
+}
+let labelQueued = false;
+function autoLabelTables() {
+  labelTableCells();
+  const root = document.querySelector('.console-main') || document.body;
+  new MutationObserver(() => {
+    if (labelQueued) return;
+    labelQueued = true;
+    requestAnimationFrame(() => { labelQueued = false; labelTableCells(); });
+  }).observe(root, { childList: true, subtree: true });
+}
+
 export function initSellerDashboard() {
+  autoLabelTables();
   const session = getActiveSession();
   if (!session || session.user.role !== 'seller') {
     document.body.classList.add('is-locked');
@@ -246,49 +264,12 @@ export function initSellerDashboard() {
   setHTML('user-display', `<span class="console-avatar" aria-hidden="true">${esc(name.trim().charAt(0).toUpperCase())}</span>${esc(name)}`);
   $id('seller-auth-callout').style.display = 'none';
 
-  checkSellerShop(session.user.id);
+  checkSellerShop();
 
-  // ── Sewa ruko (belum punya toko) ──
+  // ── Sewa ruko baru ──
   const shopNameInput = $id('shop-name');
   if (shopNameInput && session.user.shop_name) shopNameInput.value = session.user.shop_name;
-
-  const rentForm = $id('rent-shop-form');
-  if (rentForm) {
-    rentForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = $id('shop-name').value.trim();
-      const description = $id('shop-desc').value.trim();
-      const rentalDays = parseInt($id('rental-days').value, 10);
-      if (!name || !description) { showAlert('Isi nama dan deskripsi toko dulu.', 'error'); return; }
-
-      openPayment(rentalDays * DAY_PRICE, 'Pembayaran sewa ruko dibatalkan.', (method) => {
-        showAlert(`Pembayaran via ${method} berhasil. Mengaktifkan ruko…`, 'success');
-        fetch(`${BASE_URL}/shop/rent`, {
-          method: 'POST',
-          headers: authHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ name, description, owner_id: session.user.id, rental_days: rentalDays })
-        })
-          .then(res => res.json())
-          .then(data => {
-            if (data.status === 201) {
-              showAlert('Ruko aktif. Selamat berjualan!', 'success');
-              setTimeout(() => {
-                checkSellerShop(session.user.id);
-                const updated = getActiveSession();
-                if (updated && updated.user) {
-                  updated.user.has_shop = true;
-                  updated.user.shop_id = data.data.id;
-                  localStorage.setItem('vendora_session', JSON.stringify(updated));
-                }
-              }, 1200);
-            } else {
-              showAlert(data.message || 'Gagal menyewa ruko.', 'error');
-            }
-          })
-          .catch(err => { console.error(err); showAlert('Koneksi bermasalah saat menyewa ruko.', 'error'); });
-      });
-    });
-  }
+  initRentOnboarding({ onDone: () => checkSellerShop() });
 
   // ── Tambah produk (modal) ──
   const addModal = $id('add-product-modal');
@@ -307,7 +288,7 @@ export function initSellerDashboard() {
   if (addProductForm) {
     addProductForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const shopId = localStorage.getItem('vendora_active_shop_id');
+      const shopId = getActiveShopId();
       if (!shopId) { showAlert('Data ruko belum termuat. Muat ulang halaman.', 'error'); return; }
       const submitBtn = addProductForm.querySelector('[type="submit"]');
       if (submitBtn) submitBtn.disabled = true;
@@ -358,7 +339,7 @@ export function initSellerDashboard() {
     editProductForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const id = $id('edit-prod-id').value;
-      const shopId = localStorage.getItem('vendora_active_shop_id');
+      const shopId = getActiveShopId();
       // Foto tambahan (mis. foto per warna) tetap disimpan; hanya foto utama yang diganti
       const firstImg = $id('edit-prod-image').value.trim();
       const restImgs = ((editingProduct && editingProduct.images) || []).slice(1).filter(u => u && u !== firstImg);
@@ -410,136 +391,96 @@ export function initSellerDashboard() {
   });
 }
 
-function checkSellerShop(ownerId) {
-  fetch(`${BASE_URL}/shops`)
-    .then(res => res.json())
-    .then(data => {
-      const myShop = (data.data || []).find(s => s.owner_id === ownerId);
-      if (!myShop) {
-        $id('rent-shop-section').style.display = 'block';
-        $id('active-shop-dashboard').style.display = 'none';
-        document.body.classList.add('is-onboarding');
-        return;
-      }
-      document.body.classList.remove('is-onboarding');
-      localStorage.setItem('vendora_active_shop_id', myShop.id);
-      const session = getActiveSession();
-      if (session && session.user) {
-        session.user.has_shop = true;
-        session.user.shop_id = myShop.id;
-        localStorage.setItem('vendora_session', JSON.stringify(session));
-      }
+async function checkSellerShop() {
+  const myShop = await loadMyShop();
+  if (!myShop) {
+    $id('rent-shop-section').style.display = 'block';
+    $id('active-shop-dashboard').style.display = 'none';
+    document.body.classList.add('is-onboarding');
+    return;
+  }
+  document.body.classList.remove('is-onboarding');
+  setActiveShopId(myShop.id);
 
-      $id('rent-shop-section').style.display = 'none';
-      $id('active-shop-dashboard').style.display = 'block';
+  $id('rent-shop-section').style.display = 'none';
+  $id('active-shop-dashboard').style.display = 'block';
 
-      // Kartu ruko
-      const lease = leaseInfo(myShop.rental_expires);
-      const active = myShop.status === 'active';
-      setHTML('seller-shop-chip', esc(myShop.name));
-      setHTML('dashboard-shop-name', esc(myShop.name));
-      setHTML('dashboard-shop-desc', esc(myShop.description || 'Belum ada deskripsi toko.'));
-      setHTML('shop-status-badge', active ? statusDot('Aktif', 'good') : statusDot('Ditangguhkan', 'bad'));
-      setHTML('shop-expires-badge', `${fmtDate(myShop.rental_expires)} ${statusDot(lease.text, lease.tone)}`);
-      setHTML('shop-price-badge', fmtRp(myShop.rental_price));
+  const lease = leaseInfo(myShop.rental_expires);
+  const status = effectiveShopStatus(myShop);
+  const [label, tone] = SHOP_STATUS[status] || SHOP_STATUS.active;
+  setHTML('seller-shop-chip', esc(myShop.name));
+  setHTML('dashboard-shop-name', esc(myShop.name));
+  setHTML('dashboard-shop-desc', esc(myShop.description || 'Belum ada deskripsi toko.'));
+  setHTML('shop-status-badge', statusDot(label, tone));
+  setHTML('shop-expires-badge', `${fmtDate(myShop.rental_expires)} ${statusDot(lease.text, lease.tone)}`);
 
-      // KPI sisa sewa
-      setHTML('seller-stat-days', lease.days === null ? '–' : lease.days >= 0 ? `${lease.days} hari` : 'Habis');
-      setHTML('seller-stat-days-sub', lease.days !== null && lease.days < 0
-        ? statusDot(`Lewat sejak ${fmtDate(myShop.rental_expires)}`, 'bad')
-        : lease.tone === 'warn'
-          ? statusDot(`Berakhir ${fmtDate(myShop.rental_expires)}`, 'warn')
-          : `Berakhir ${fmtDate(myShop.rental_expires)}`);
+  setHTML('seller-stat-days', lease.days === null ? '–' : lease.days >= 0 ? `${lease.days} hari` : 'Habis');
+  setHTML('seller-stat-days-sub', lease.days !== null && lease.days < 0
+    ? statusDot(`Lewat sejak ${fmtDate(myShop.rental_expires)}`, 'bad')
+    : lease.tone === 'warn' ? statusDot(`Berakhir ${fmtDate(myShop.rental_expires)}`, 'warn')
+      : `Berakhir ${fmtDate(myShop.rental_expires)}`);
 
-      // Ruko ditangguhkan
-      const banner = $id('shop-suspended-banner');
-      if (banner) banner.style.display = active ? 'none' : 'flex';
-      document.querySelectorAll('[data-open-add-product]').forEach(b => { b.disabled = !active; });
+  // Banner sesuai status; produk hanya bisa ditambah saat ruko aktif
+  ['suspended', 'pending', 'expired'].forEach(st => {
+    const el = $id(`shop-${st}-banner`);
+    if (el) el.style.display = status === st ? 'flex' : 'none';
+  });
+  document.querySelectorAll('[data-open-add-product]').forEach(b => {
+    b.disabled = status !== 'active';
+    b.title = status === 'active' ? '' : label;
+  });
 
-      loadSellerProducts(myShop.id);
-      loadSellerStats(myShop.id);
-
-      // Perpanjang sewa — dipasang sekali (sebelumnya bertambah tiap reload)
-      const renewBtn = $id('btn-renew-shop');
-      if (renewBtn && !renewBtn.dataset.bound) {
-        renewBtn.dataset.bound = '1';
-        renewBtn.addEventListener('click', () => {
-          const renewDays = parseInt($id('renew-days').value, 10);
-          const shopId = localStorage.getItem('vendora_active_shop_id');
-          openPayment(renewDays * DAY_PRICE, 'Perpanjangan sewa dibatalkan.', (method) => {
-            showAlert(`Pembayaran via ${method} berhasil. Memperpanjang sewa…`, 'success');
-            fetch(`${BASE_URL}/shop/${shopId}/renew`, {
-              method: 'PUT',
-              headers: authHeaders({ 'Content-Type': 'application/json' }),
-              body: JSON.stringify({ rental_days: renewDays })
-            })
-              .then(res => res.json())
-              .then(result => {
-                if (result.status === 200) {
-                  showAlert(`Sewa diperpanjang sampai ${result.data.new_expiry}.`, 'success');
-                  setTimeout(() => checkSellerShop(ownerId), 1200);
-                } else {
-                  showAlert(result.message || 'Gagal memperpanjang sewa.', 'error');
-                }
-              })
-              .catch(() => showAlert('Koneksi bermasalah saat memperpanjang sewa.', 'error'));
-          });
-        });
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      showAlert('Gagal memuat data ruko. Coba muat ulang.', 'error');
-    });
+  loadSellerProducts(myShop.id);
+  loadSellerStats(myShop.id);
+  renderLeaseCard(myShop, { onChange: () => checkSellerShop() });
 }
 
 function loadSellerStats(shopId) {
-  fetch(`${BASE_URL}/products?shop_id=${shopId}`)
-    .then(res => res.json())
-    .then(prodData => {
+  // Dompet & komplain dimuat bersamaan, tidak menunggu statistik pesanan
+  loadSellerWallet(shopId);
+  Promise.all([
+    fetch(`${BASE_URL}/products?shop_id=${shopId}`).then(res => res.json()),
+    fetch(`${BASE_URL}/transactions?shop_id=${shopId}`, { headers: authHeaders() }).then(res => res.json()),
+  ])
+    .then(([prodData, txData]) => {
       const myProductIds = new Set((prodData.data || []).map(p => p.id));
-      return fetch(`${BASE_URL}/transactions?shop_id=${shopId}`, { headers: authHeaders() })
-        .then(res => res.json())
-        .then(txData => {
-          sellerOrders = (txData.data || [])
-            .map(t => {
-              // hanya item milik toko ini
-              const items = (t.items || []).filter(i => i.shop_id === shopId || myProductIds.has(i.product_id));
-              return { tx: t, items, status: normStatus(t.status),
-                       revenue: items.reduce((s, i) => s + i.price * i.quantity, 0) };
-            })
-            .filter(o => o.items.length > 0)
-            .sort((a, b) => new Date(b.tx.created_at) - new Date(a.tx.created_at));
+      sellerOrders = (txData.data || [])
+        .map(t => {
+          // hanya item milik toko ini
+          const items = (t.items || []).filter(i => i.shop_id === shopId || myProductIds.has(i.product_id));
+          return { tx: t, items, status: normStatus(t.status),
+                   revenue: items.reduce((s, i) => s + i.price * i.quantity, 0) };
+        })
+        .filter(o => o.items.length > 0)
+        .sort((a, b) => new Date(b.tx.created_at) - new Date(a.tx.created_at));
 
-          const live = sellerOrders.filter(o => o.status !== 'cancelled');
-          const revenue = live.reduce((s, o) => s + o.revenue, 0);
-          const pending = sellerOrders.filter(o => o.status === 'pending').length;
-          const done = sellerOrders.filter(o => o.status === 'success').length;
+      const live = sellerOrders.filter(o => o.status !== 'cancelled');
+      const revenue = live.reduce((s, o) => s + o.revenue, 0);
+      const pending = sellerOrders.filter(o => o.status === 'pending').length;
+      const done = sellerOrders.filter(o => o.status === 'success').length;
 
-          setHTML('seller-stat-orders', sellerOrders.length.toLocaleString('id-ID'));
-          setHTML('seller-stat-orders-sub', pending
-            ? statusDot(`${pending} perlu dikonfirmasi`, 'warn')
-            : sellerOrders.length ? `${done} selesai` : 'Belum ada pesanan');
-          setHTML('seller-stat-revenue', fmtRp(revenue));
-          setHTML('seller-stat-revenue-sub', live.length
-            ? `Dari ${live.length} pesanan, tanpa yang dibatalkan`
-            : 'Belum ada pendapatan');
+      setHTML('seller-stat-orders', sellerOrders.length.toLocaleString('id-ID'));
+      setHTML('seller-stat-orders-sub', pending
+        ? statusDot(`${pending} perlu dikonfirmasi`, 'warn')
+        : sellerOrders.length ? `${done} selesai` : 'Belum ada pesanan');
+      setHTML('seller-stat-revenue', fmtRp(revenue));
+      setHTML('seller-stat-revenue-sub', live.length
+        ? `Dari ${live.length} pesanan, tanpa yang dibatalkan`
+        : 'Belum ada pendapatan');
 
-          // Tab: jumlah per status
-          const counts = { all: sellerOrders.length };
-          sellerOrders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
-          document.querySelectorAll('#order-tabs [data-status]').forEach(t => {
-            const c = t.querySelector('.tab-count');
-            if (c) c.textContent = counts[t.dataset.status] || 0;
-          });
-          const navBadge = $id('nav-pending-badge');
-          if (navBadge) navBadge.textContent = pending || '';
+      // Tab: jumlah per status
+      const counts = { all: sellerOrders.length };
+      sellerOrders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
+      document.querySelectorAll('#order-tabs [data-status]').forEach(t => {
+        const c = t.querySelector('.tab-count');
+        if (c) c.textContent = counts[t.dataset.status] || 0;
+      });
+      const navBadge = $id('nav-pending-badge');
+      if (navBadge) navBadge.textContent = pending || '';
 
-          renderSellerRecent();
-          renderSellerTopProducts();
-          renderSellerOrders();
-          loadSellerWallet(shopId);
-        });
+      renderSellerRecent();
+      renderSellerTopProducts();
+      renderSellerOrders();
     })
     .catch(() => {
       setHTML('seller-orders-tbody', `<tr><td colspan="6" class="table-error">Gagal memuat pesanan.</td></tr>`);
@@ -619,7 +560,7 @@ function loadSellerWallet(shopId) {
 }
 
 function orderItemsText(o) {
-  return o.items.map(i => `${i.name} ×${i.quantity}`).join(', ');
+  return o.items.map(i => `${itemName(i)} ×${i.quantity}`).join(', ');
 }
 
 function renderSellerRecent() {
@@ -638,6 +579,7 @@ function renderSellerTopProducts() {
   const tally = {};
   sellerOrders.filter(o => o.status !== 'cancelled').forEach(o => o.items.forEach(i => {
     // kelompokkan per nama: ada produk yang pernah dibuat ulang dengan ID berbeda
+    if (isLegacyMockName(i.name)) return; // produk contoh lama sudah tidak dijual
     const key = (i.name || i.product_id || '').trim().toLowerCase();
     tally[key] = tally[key] || { name: i.name, qty: 0, revenue: 0 };
     tally[key].qty += i.quantity;
@@ -718,7 +660,7 @@ window.updateOrderStatus = function (orderId, status, selectEl) {
     .then(result => {
       if (result.status === 200) {
         showAlert(`Status pesanan diubah menjadi "${label}".`, 'success');
-        const shopId = localStorage.getItem('vendora_active_shop_id');
+        const shopId = getActiveShopId();
         if (shopId) loadSellerStats(shopId);
       } else {
         showAlert(result.message || 'Gagal mengubah status pesanan.', 'error');
@@ -838,7 +780,7 @@ function loadSellerProducts(shopId) {
             .then(resData => {
               if (resData.status === 200) {
                 showAlert('Produk dihapus dari katalog.', 'success');
-                loadSellerProducts(localStorage.getItem('vendora_active_shop_id'));
+                loadSellerProducts(getActiveShopId());
               } else {
                 showAlert(resData.message || 'Gagal menghapus produk.', 'error');
                 delBtn.disabled = false;
@@ -870,6 +812,7 @@ let cachedAdminModProducts = [];
 let cachedAdminReports = [];
 
 export function initAdminDashboard() {
+  autoLabelTables();
   const session = getActiveSession();
   const lockAdminView = (msg, headTitle = 'Akses ditolak') => {
     document.body.classList.add('is-locked');
@@ -899,8 +842,7 @@ export function initAdminDashboard() {
   fetch(`${BASE_URL}/admin/verify`, { headers: authHeaders() })
     .then(async res => {
       if (res.status === 401) {
-        sessionStorage.removeItem('vendora_session');
-        localStorage.removeItem('vendora_session');
+        clearActiveSession();
         window.location.replace('login.html');
         return null;
       }
@@ -1108,7 +1050,7 @@ function renderAdminTransactionsTable() {
   const pageItems = txs.slice((adminTxPage - 1) * ADMIN_TX_PAGE_SIZE, adminTxPage * ADMIN_TX_PAGE_SIZE);
 
   tbody.innerHTML = pageItems.map(t => {
-    const items = (t.items || []).map(i => `${i.name} ×${i.quantity}`).join(', ') || '–';
+    const items = (t.items || []).map(i => `${itemName(i)} ×${i.quantity}`).join(', ') || '–';
     const buyerName = usersMap[t.buyer_id] || t.recipient_name || 'Pembeli';
     const buyerTooltip = t.buyer_id ? `ID Pembeli: ${t.buyer_id}` : '';
     const shopList = [...new Set((t.items || []).map(i => shopsMap[i.shop_id]).filter(Boolean))];
@@ -1165,8 +1107,7 @@ window.cancelStalePendingOrders = function (count) {
   })
     .then(async res => {
       if (res.status === 401) {
-        sessionStorage.removeItem('vendora_session');
-        localStorage.removeItem('vendora_session');
+        clearActiveSession();
         window.location.href = 'login.html';
         return null;
       }
@@ -1195,8 +1136,7 @@ function loadAdminUsers(roleFilter) {
   fetch(url, { headers: authHeaders() })
     .then(async res => {
       if (res.status === 401) {
-        sessionStorage.removeItem('vendora_session');
-        localStorage.removeItem('vendora_session');
+        clearActiveSession();
         window.location.href = 'login.html';
         return null;
       }
@@ -1469,6 +1409,7 @@ function renderRecentActivities(transactions, users, disputes) {
 function updateActionNeededPanel(shops, transactions, disputes, reports) {
   const openDisputes = (disputes || []).filter(d => d.status === 'open').length;
   const expiredShops = (shops || []).filter(s => effectiveShopStatus(s) === 'expired').length;
+  const pendingShops = (shops || []).filter(s => effectiveShopStatus(s) === 'pending').length;
   const staleOrders = (transactions || []).filter(t => isStalePendingOrder(t, 24)).length;
   const openReports = (reports || cachedAdminReports || []).filter(r => r.status === 'open').length;
 
@@ -1485,10 +1426,10 @@ function updateActionNeededPanel(shops, transactions, disputes, reports) {
     sideDisputesBadge.style.color = openDisputes > 0 ? '#fff' : 'var(--ink)';
   }
 
-  setHTML('action-count-expired-shops', expiredShops);
-  setHTML('action-desc-expired-shops', expiredShops > 0
-    ? statusDot(`${expiredShops} ruko melewati masa sewa`, 'warn')
-    : statusDot('Semua masa sewa ruko aktif', 'good'));
+  setHTML('action-count-expired-shops', pendingShops + expiredShops);
+  setHTML('action-desc-expired-shops', pendingShops + expiredShops > 0
+    ? statusDot([pendingShops && `${pendingShops} menunggu verifikasi`, expiredShops && `${expiredShops} jatuh tempo`].filter(Boolean).join(' · '), pendingShops ? 'bad' : 'warn')
+    : statusDot('Tidak ada ruko yang perlu ditinjau', 'good'));
 
   setHTML('action-count-stale-orders', staleOrders);
   setHTML('action-desc-stale-orders', staleOrders > 0
@@ -1541,8 +1482,7 @@ function loadAdminEcosystem() {
   ])
     .then(([shopRes, txRes, userRes, walletRes, disputeRes]) => {
       if ((walletRes && walletRes.__unauthorized) || (userRes && userRes.__unauthorized)) {
-        sessionStorage.removeItem('vendora_session');
-        localStorage.removeItem('vendora_session');
+        clearActiveSession();
         window.location.href = 'login.html';
         return;
       }
@@ -1653,7 +1593,9 @@ function loadAdminEcosystem() {
         // Tombol aksi sesuai status efektif:
         // jatuh tempo -> Perpanjang, ditangguhkan -> Aktifkan, aktif -> Tangguhkan
         let statusBtn = '';
-        if (eff === 'expired') {
+        if (eff === 'pending') {
+          statusBtn = `<button class="btn-sm btn-sm--ink btn-toggle-status" data-id="${esc(s.id)}" data-status="active" type="button">Setujui</button>`;
+        } else if (eff === 'expired') {
           statusBtn = `<button class="btn-sm btn-sm--ink btn-renew-shop" data-id="${esc(s.id)}" data-name="${esc(s.name)}" type="button">Perpanjang</button>`;
         } else if (eff === 'suspended') {
           statusBtn = `<button class="btn-sm btn-sm--ink btn-toggle-status" data-id="${esc(s.id)}" data-status="active" type="button">Aktifkan</button>`;
@@ -1688,7 +1630,8 @@ function loadAdminEcosystem() {
             showAlert('Jumlah hari perpanjangan tidak valid.', 'error');
             return;
           }
-          if (!confirm(`Perpanjang masa sewa "${shopName}" selama ${rentalDays} hari (${fmtRp(rentalDays * DAY_PRICE)})?`)) return;
+          if (rentalDays > 365) { showAlert('Perpanjangan maksimal 365 hari.', 'error'); return; }
+          if (!confirm(`Perpanjang masa sewa "${shopName}" selama ${rentalDays} hari tanpa pembayaran (mis. kompensasi)?`)) return;
           renewBtn.disabled = true;
           fetch(`${BASE_URL}/shop/${renewBtn.dataset.id}/renew`, {
             method: 'PUT',
@@ -1698,7 +1641,7 @@ function loadAdminEcosystem() {
             .then(res => res.json())
             .then(result => {
               if (result.status === 200) {
-                showAlert(`Sewa "${shopName}" diperpanjang hingga ${result.data?.new_expiry || ''}.`, 'success');
+                showAlert(`Sewa "${shopName}" diperpanjang sampai ${fmtDate(result.data?.rental_expires)}.`, 'success');
                 loadAdminEcosystem();
               } else {
                 showAlert(result.message || 'Gagal memperpanjang sewa ruko.', 'error');
@@ -1718,7 +1661,7 @@ function loadAdminEcosystem() {
             .then(res => res.json())
             .then(result => {
               if (result.status === 200) {
-                showAlert(nextStatus === 'active' ? 'Ruko diaktifkan.' : 'Ruko ditangguhkan.', 'success');
+                showAlert(nextStatus === 'active' ? 'Ruko disetujui dan aktif.' : 'Ruko ditangguhkan.', 'success');
                 loadAdminEcosystem();
               } else {
                 showAlert(result.message || 'Gagal mengubah status ruko.', 'error');
@@ -1771,14 +1714,15 @@ const DISPUTE_STATUS = {
 
 function disputeCardHTML(d, role) {
   const st = DISPUTE_STATUS[d.status] || { label: d.status, tone: '' };
-  const evidenceList = (d.evidence || []).filter(Boolean);
+  const isSafeEvidenceUrl = (u) => /^https?:\/\//i.test(String(u || '').trim());
+  const evidenceList = (d.evidence || []).filter(isSafeEvidenceUrl);
   const evidenceHTML = evidenceList.length
     ? `<div style="margin-top:8px;">
          <div style="font-size:11px;color:var(--mute);margin-bottom:4px;">Bukti foto dari pembeli (${evidenceList.length}):</div>
          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
            ${evidenceList.map((u, idx) => `
-             <a href="${esc(u)}" target="_blank" rel="noopener" title="Buka bukti foto ${idx + 1}" style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:#FAFAFA;font-size:12px;text-decoration:none;color:var(--ink);">
-               <img src="${esc(u)}" alt="Bukti ${idx + 1}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid rgba(0,0,0,.08);" onerror="this.style.display='none'">
+             <a href="${esc(u.trim())}" target="_blank" rel="noopener noreferrer" title="Buka bukti foto ${idx + 1}" style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:#FAFAFA;font-size:12px;text-decoration:none;color:var(--ink);">
+               <img src="${esc(u.trim())}" alt="Bukti ${idx + 1}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid rgba(0,0,0,.08);" onerror="this.style.display='none'">
                <span>Foto #${idx + 1} ↗</span>
              </a>`).join('')}
          </div>
@@ -1898,6 +1842,8 @@ function loadDisputes(targetId, role, countId) {
       }).then(r => r.json()).then(out => {
         showAlert(out.status === 200 ? 'Tanggapan terkirim ke admin.' : (out.message || 'Gagal mengirim tanggapan.'), out.status === 200 ? 'success' : 'error');
         loadDisputes(targetId, role, countId);
+      }).catch(() => {
+        showAlert('Koneksi bermasalah saat mengirim tanggapan.', 'error');
       });
     }
     if (res) {
@@ -1914,8 +1860,12 @@ function loadDisputes(targetId, role, countId) {
         body: JSON.stringify({ decision, note: note.trim() })
       }).then(r => r.json()).then(out => {
         showAlert(out.status === 200 ? 'Keputusan tersimpan.' : (out.message || 'Gagal menyimpan keputusan.'), out.status === 200 ? 'success' : 'error');
+        if (out.status !== 200) res.disabled = false;
         loadDisputes(targetId, role, countId);
         if (out.status === 200) { loadAdminEcosystem(); loadAdminTransactions($id('tx-filter-status')?.value || ''); }
+      }).catch(() => {
+        res.disabled = false;
+        showAlert('Koneksi bermasalah saat menyimpan keputusan.', 'error');
       });
     }
   });
@@ -1941,8 +1891,7 @@ function exportAdminTransactionsCSV(btnEl) {
   fetch(url, { headers: authHeaders() })
     .then(async res => {
       if (res.status === 401) {
-        sessionStorage.removeItem('vendora_session');
-        localStorage.removeItem('vendora_session');
+        clearActiveSession();
         window.location.href = 'login.html';
         return null;
       }
@@ -2025,11 +1974,14 @@ function renderAdminReportsTable() {
         : statusDot('Ditolak / Diabaikan', 'warn');
 
     const targetLabel = r.target_type === 'shop' ? 'Toko' : 'Produk';
+    const targetName = r.target_type === 'shop'
+      ? (r.shop_name || r.shop_id || r.target_name || r.target_id || '')
+      : (r.product_name || r.product_id || r.target_name || r.target_id || r.shop_name || '');
     const reasonText = REPORT_REASON_LABEL[r.reason] || r.reason || 'Pelanggaran';
     const actionsHTML = isOpen
       ? `<div class="row-actions">
-           <button type="button" class="btn-sm btn-sm--ink" data-report-resolve="${esc(r.id)}" data-report-status="resolved" data-target-name="${esc(r.target_name || '')}">Tindak lanjuti</button>
-           <button type="button" class="btn-sm" data-report-resolve="${esc(r.id)}" data-report-status="dismissed" data-target-name="${esc(r.target_name || '')}">Abaikan</button>
+           <button type="button" class="btn-sm btn-sm--ink" data-report-resolve="${esc(r.id)}" data-report-status="resolved" data-target-name="${esc(targetName)}">Tindak lanjuti</button>
+           <button type="button" class="btn-sm" data-report-resolve="${esc(r.id)}" data-report-status="dismissed" data-target-name="${esc(targetName)}">Abaikan</button>
          </div>`
       : `<span class="muted" style="font-size:12px;">${esc(r.admin_note || 'Selesai')}</span>`;
 
@@ -2039,8 +1991,8 @@ function renderAdminReportsTable() {
         <td><span class="strong">${esc(r.reporter_name || 'Pengguna')}</span></td>
         <td>
           <span class="role-tag">${esc(targetLabel)}</span>
-          <span class="strong" style="margin-left:4px;">${esc(r.target_name || r.target_id)}</span>
-          ${r.shop_name ? `<span class="sub">Toko: ${esc(r.shop_name)}</span>` : ''}
+          <span class="strong" style="margin-left:4px;">${esc(targetName || '-')}</span>
+          ${r.target_type !== 'shop' && r.shop_name ? `<span class="sub">Toko: ${esc(r.shop_name)}</span>` : ''}
         </td>
         <td>
           <span class="strong">${esc(reasonText)}</span>
@@ -2068,7 +2020,7 @@ function renderAdminReportsTable() {
     fetch(`${BASE_URL}/admin/report/${reportId}/resolve`, {
       method: 'PUT',
       headers: authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ status: nextStatus, admin_note: note.trim() })
+      body: JSON.stringify({ status: nextStatus, note: note.trim() })
     })
       .then(r => r.json())
       .then(res => {
@@ -2132,6 +2084,8 @@ function renderAdminModerationProducts() {
     if (p.hidden) {
       statusHTML = statusDot('Disembunyikan admin', 'bad') +
         (p.moderation_note ? `<span class="sub">Alasan: ${esc(p.moderation_note)}</span>` : '');
+    } else if (p.shop_status === 'pending') {
+      statusHTML = statusDot('Tersembunyi (Menunggu verifikasi)', 'warn');
     } else if (p.shop_status === 'expired') {
       statusHTML = statusDot('Tersembunyi (Toko jatuh tempo)', 'warn');
     } else if (p.shop_status === 'suspended') {

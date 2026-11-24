@@ -11,9 +11,9 @@
   <link rel="apple-touch-icon" href="logo.png?v=102">
   <meta name="theme-color" content="#0E0E0D">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=114">
-  <link rel="stylesheet" href="css/theme.css?v=107">
-  <link rel="stylesheet" href="css/console.css?v=107">
+  <link rel="stylesheet" href="css/style.css?v=20261114">
+  <link rel="stylesheet" href="css/theme.css?v=20261114">
+  <link rel="stylesheet" href="css/console.css?v=20261114">
 </head>
 <body class="console-page">
 
@@ -39,6 +39,10 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
           <span class="item-text">Pesanan</span>
           <span class="nav-badge" id="nav-pending-badge" aria-label="pesanan perlu dikonfirmasi"></span>
+        </button>
+        <button class="sidebar-item" id="menu-ruko" type="button" data-sub="Masa sewa dan perpanjangan">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 01-6 0 3 3 0 01-6 0 3 3 0 01-6 0z"/><path d="M5 13v8h14v-8"/><path d="M10 21v-5h4v5"/></svg>
+          <span class="item-text">Sewa ruko</span>
         </button>
       </nav>
 
@@ -66,6 +70,9 @@
           <p id="seller-page-sub" class="console-sub">Ringkasan toko kamu hari ini</p>
         </div>
         <div class="console-header-meta">
+          <button type="button" class="console-icon-btn" data-notif-btn aria-label="Notifikasi">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </button>
           <span id="seller-shop-chip" class="console-shop-chip"></span>
           <span id="user-display" class="console-user"></span>
         </div>
@@ -92,11 +99,11 @@
 
             <form id="rent-shop-form" class="onboard-form" novalidate>
               <h1>Sewa ruko virtual</h1>
-              <p>Biaya sewa Rp 15.000 per hari. Pilih durasi, isi data toko, lalu bayar untuk mengaktifkan ruko.</p>
+              <p>Rp 15.000 per hari. Ruko tampil di katalog setelah diverifikasi admin.</p>
 
               <div class="form-group">
                 <label for="shop-name">Nama toko</label>
-                <input type="text" id="shop-name" class="form-control" placeholder="contoh: Sepatu Lokal Bandung" required>
+                <input type="text" id="shop-name" class="form-control" placeholder="contoh: Sepatu Lokal Bandung" required maxlength="60">
               </div>
               <div class="form-group">
                 <label for="shop-desc">Deskripsi toko</label>
@@ -105,19 +112,14 @@
 
               <fieldset class="plan-picker">
                 <legend>Durasi sewa</legend>
-                <label class="plan"><input type="radio" name="rent-plan" value="30" checked><span><b>30 hari</b><small>Rp 450.000</small></span></label>
-                <label class="plan"><input type="radio" name="rent-plan" value="90"><span><b>90 hari</b><small>Rp 1.350.000</small></span></label>
-                <label class="plan"><input type="radio" name="rent-plan" value="365"><span><b>365 hari</b><small>Rp 5.475.000</small></span></label>
+                <label class="plan"><input type="radio" name="rent-plan" value="30" checked><span><b>30 hari</b><small>–</small></span></label>
+                <label class="plan"><input type="radio" name="rent-plan" value="90"><span><b>90 hari</b><small>–</small></span></label>
+                <label class="plan"><input type="radio" name="rent-plan" value="365"><span><b>365 hari</b><small>–</small></span></label>
               </fieldset>
-              <!-- dashboard.js membaca nilai dari select ini; disinkronkan dari pilihan paket -->
-              <select id="rental-days" hidden>
-                <option value="30">30</option>
-                <option value="90">90</option>
-                <option value="365">365</option>
-              </select>
 
-              <div class="onboard-total"><span>Total bayar</span><b id="rent-total">Rp 450.000</b></div>
+              <div class="onboard-total"><span>Total bayar</span><b id="rent-total">–</b></div>
               <button type="submit" class="btn-ink">Lanjut ke pembayaran</button>
+
             </form>
           </div>
         </section>
@@ -129,7 +131,21 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <div>
               <h3>Ruko kamu sedang ditangguhkan</h3>
-              <p>Produkmu disembunyikan dari katalog dan kamu belum bisa menambah produk baru. Hubungi admin lewat tombol chat di kanan bawah untuk verifikasi ulang.</p>
+              <p>Produkmu disembunyikan dari katalog dan kamu belum bisa menambah produk baru. Hubungi admin lewat <a href="bantuan.html#hubungi">Pusat bantuan</a> untuk verifikasi ulang.</p>
+            </div>
+          </div>
+          <div id="shop-pending-banner" class="notice notice--warn" style="display: none;" role="status">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div>
+              <h3>Ruko menunggu verifikasi admin</h3>
+              <p>Admin memeriksa data rukomu sebelum tampil di katalog. Setelah disetujui, kamu bisa menambah produk. Kamu akan mendapat notifikasi di ikon lonceng.</p>
+            </div>
+          </div>
+          <div id="shop-expired-banner" class="notice" style="display: none;" role="alert">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div>
+              <h3>Masa sewa ruko sudah habis</h3>
+              <p>Produkmu disembunyikan dari katalog. Perpanjang sewa di menu <button type="button" class="link-btn" data-goto="menu-ruko">Sewa ruko</button> supaya produkmu tampil lagi.</p>
             </div>
           </div>
 
@@ -178,20 +194,8 @@
                 <dl class="info-rows">
                   <div><dt>Status</dt><dd id="shop-status-badge">–</dd></div>
                   <div><dt>Berlaku sampai</dt><dd id="shop-expires-badge">–</dd></div>
-                  <div><dt>Biaya sewa terakhir</dt><dd id="shop-price-badge">–</dd></div>
                 </dl>
-                <p class="renew-hint">Perpanjang sewa sebelum habis supaya produkmu tetap tampil.</p>
-                <div class="renew-row">
-                  <label class="select-wrap">
-                    <span class="visually-hidden">Durasi perpanjangan</span>
-                    <select id="renew-days">
-                      <option value="30">+30 hari · Rp 450.000</option>
-                      <option value="90">+90 hari · Rp 1.350.000</option>
-                      <option value="365">+365 hari · Rp 5.475.000</option>
-                    </select>
-                  </label>
-                  <button id="btn-renew-shop" type="button" class="btn-ink">Perpanjang</button>
-                </div>
+                <button type="button" class="btn-ink btn-block" data-goto="menu-ruko">Perpanjang sewa</button>
               </div>
             </div>
 
@@ -260,6 +264,11 @@
             </div>
           </section>
 
+          <!-- ── Sewa ruko: masa sewa & perpanjangan ── -->
+          <section id="view-ruko" class="console-section" style="display: none;">
+            <div class="card lease-card" id="lease-card"><div class="table-empty">Memuat data sewa…</div></div>
+          </section>
+
           <!-- ── Pesanan ─────────────────────────────────── -->
           <section id="view-pesanan" class="console-section card card--flush" style="display: none;">
             <div class="tabs" id="order-tabs" role="tablist" aria-label="Filter status pesanan">
@@ -267,6 +276,7 @@
               <button class="tab" type="button" role="tab" aria-selected="false" data-status="pending">Menunggu <span class="tab-count">0</span></button>
               <button class="tab" type="button" role="tab" aria-selected="false" data-status="paid">Dikemas <span class="tab-count">0</span></button>
               <button class="tab" type="button" role="tab" aria-selected="false" data-status="shipped">Dikirim <span class="tab-count">0</span></button>
+              <button class="tab" type="button" role="tab" aria-selected="false" data-status="disputed">Komplain <span class="tab-count">0</span></button>
               <button class="tab" type="button" role="tab" aria-selected="false" data-status="success">Selesai <span class="tab-count">0</span></button>
               <button class="tab" type="button" role="tab" aria-selected="false" data-status="cancelled">Dibatalkan <span class="tab-count">0</span></button>
             </div>
@@ -429,7 +439,7 @@
   <div class="modal-overlay" id="snap-modal" role="dialog" aria-modal="true" aria-labelledby="snap-title">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title" id="snap-title">Pembayaran sewa ruko</h3>
+        <h3 class="modal-title" id="snap-title">Pembayaran</h3>
         <button class="modal-close" id="snap-close-btn" type="button" aria-label="Tutup">&times;</button>
       </div>
       <div class="modal-body">
@@ -455,7 +465,8 @@
       var sections = {
         'menu-dashboard': document.getElementById('view-dashboard'),
         'menu-produk': document.getElementById('view-produk'),
-        'menu-pesanan': document.getElementById('view-pesanan')
+        'menu-pesanan': document.getElementById('view-pesanan'),
+        'menu-ruko': document.getElementById('view-ruko')
       };
       var titleEl = document.getElementById('seller-page-title');
       var subEl = document.getElementById('seller-page-sub');
@@ -480,17 +491,7 @@
       document.querySelectorAll('[data-goto]').forEach(function (btn) {
         btn.addEventListener('click', function () { showSection(btn.dataset.goto); });
       });
-      showSection('menu-dashboard');
-
-      // Paket sewa → select tersembunyi + total
-      var daysSelect = document.getElementById('rental-days');
-      var totalEl = document.getElementById('rent-total');
-      document.querySelectorAll('input[name="rent-plan"]').forEach(function (r) {
-        r.addEventListener('change', function () {
-          daysSelect.value = r.value;
-          totalEl.textContent = 'Rp ' + (parseInt(r.value, 10) * 15000).toLocaleString('id-ID');
-        });
-      });
+      showSection(location.hash === '#pesanan' ? 'menu-pesanan' : location.hash === '#ruko' ? 'menu-ruko' : 'menu-dashboard');
 
       // Pratinjau foto produk
       document.querySelectorAll('[data-preview]').forEach(function (input) {
@@ -514,6 +515,6 @@
     })();
   </script>
 
-  <script type="module" src="js/main.js?v=146"></script>
+  <script type="module" src="js/main.js?v=20261114"></script>
 </body>
 </html>

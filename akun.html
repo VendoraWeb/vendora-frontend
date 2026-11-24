@@ -11,9 +11,9 @@
   <link rel="apple-touch-icon" href="logo.png?v=102">
   <meta name="theme-color" content="#0E0E0D">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=114">
-  <link rel="stylesheet" href="css/theme.css?v=107">
-  <link rel="stylesheet" href="css/account.css?v=105">
+  <link rel="stylesheet" href="css/style.css?v=20261114">
+  <link rel="stylesheet" href="css/theme.css?v=20261114">
+  <link rel="stylesheet" href="css/account.css?v=20261114">
 </head>
 <body class="account-page">
 
@@ -22,8 +22,8 @@
       <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=103" alt="">EN</span>DORA</span>
     </a>
     <div class="acc-top-right">
-      <a href="index.html" class="acc-back" id="account-back">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg><span> Kembali ke katalog</span>
+      <a href="index.html" class="acc-back" id="account-back" aria-label="Kembali ke katalog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg><span> Kembali ke katalog</span>
       </a>
       <span class="acc-avatar acc-avatar--sm" id="acc-top-avatar" aria-hidden="true"></span>
     </div>
@@ -102,8 +102,8 @@
             <div class="acc-fields">
               <div class="form-group">
                 <label for="acc-name">Nama lengkap</label>
-                <input type="text" id="acc-name" class="form-control" disabled>
-                <span class="form-hint" id="acc-name-hint">Nama belum bisa diubah dari sini. Hubungi admin bila perlu diganti.</span>
+                <input type="text" id="acc-name" class="form-control" autocomplete="name" maxlength="60" required>
+                <span class="form-hint" id="acc-name-hint">Tampil ke penjual atau pembeli saat chat dan di pesanan.</span>
               </div>
               <div class="form-group">
                 <label for="acc-email">Email</label>
@@ -202,6 +202,6 @@
     </div>
   </main>
 
-  <script type="module" src="js/main.js?v=146"></script>
+  <script type="module" src="js/main.js?v=20261114"></script>
 </body>
 </html>

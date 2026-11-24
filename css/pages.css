@@ -3,18 +3,6 @@
    Dimuat setelah style.css, theme.css, storefront.css.
    ============================================================ */
 
-/* ── Navbar sederhana ─────────────────────────────────────── */
-.pg-nav { justify-content: space-between; }
-.pg-nav-links { display: flex; align-items: center; gap: 4px; margin-left: auto; }
-.pg-nav-links a {
-  padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: 500;
-  color: var(--mute); text-decoration: none; transition: color 160ms ease, background-color 160ms ease;
-}
-.pg-nav-links a:hover { color: var(--ink); background: var(--stage); }
-.pg-nav-links a[aria-current="page"] { color: var(--ink); }
-.pg-nav-cta { flex: none; }
-@media (max-width: 760px) { .pg-nav-links { display: none; } }
-
 /* ── Hero halaman ─────────────────────────────────────────── */
 .pg-hero { padding: clamp(48px, 7vw, 96px) 0 clamp(32px, 4vw, 56px); }
 .pg-eyebrow { margin: 0 0 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mute); }

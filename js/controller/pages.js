@@ -1,6 +1,6 @@
 // ─── Halaman konten: Tentang kami & Pusat bantuan ───────────────────────────
-import { BASE_URL, getActiveSession } from "../config/api.js?v=105";
-import { esc, fmtDateTime } from "../ui.js?v=102";
+import { BASE_URL, getActiveSession } from "../config/api.js?v=20261114";
+import { esc, fmtDateTime } from "../ui.js?v=20261114";
 
 const $ = (id) => document.getElementById(id);
 const alertMsg = (msg, type) => window.showAlert && window.showAlert(msg, type);

@@ -1,15 +1,16 @@
-import { initAuth }                                from "./controller/auth.js?v=146";
-import { loadCatalogProducts, initSearch, setCatalogSort, clearSearch, openProductById } from "./controller/product.js?v=146";
-import { initCart, updateCartUI }                   from "./controller/transaction.js?v=146";
-import { CATEGORIES, CATEGORY_BY_KEY, categoryImage } from "./categories.js?v=101";
-import { initChatDock }                           from "./controller/chat.js?v=146";
-import { initSellerDashboard, initAdminDashboard }  from "./controller/dashboard.js?v=146";
-import { getActiveSession, clearActiveSession, authHeaders, BASE_URL } from "./config/api.js?v=105";
-import { esc, fmtRp, fmtDateTime, shortId, normStatus, txStatusHTML } from "./ui.js?v=102";
-import { initAdminTickets }                       from "./controller/ticket.js?v=146";
-import { initAccountPage }                        from "./controller/account.js?v=146";
-import { initOrdersPage }                         from "./controller/orders.js?v=146";
-import { initAboutPage, initHelpPage }            from "./controller/pages.js?v=101";
+import { initAuth }                                from "./controller/auth.js?v=20261114";
+import { loadCatalogProducts, initSearch, setCatalogSort, clearSearch, openProductById } from "./controller/product.js?v=20261114";
+import { initCart, updateCartUI }                   from "./controller/transaction.js?v=20261114";
+import { CATEGORIES, CATEGORY_BY_KEY, categoryImage } from "./categories.js?v=20261114";
+import { initChatDock }                           from "./controller/chat.js?v=20261114";
+import { initSellerDashboard, initAdminDashboard }  from "./controller/dashboard.js?v=20261114";
+import { getActiveSession, BASE_URL, logout }                  from "./config/api.js?v=20261114";
+import { esc } from "./ui.js?v=20261114";
+import { initAdminTickets }                       from "./controller/ticket.js?v=20261114";
+import { initAccountPage }                        from "./controller/account.js?v=20261114";
+import { initOrdersPage }                         from "./controller/orders.js?v=20261114";
+import { initAboutPage, initHelpPage }            from "./controller/pages.js?v=20261114";
+import { initNotifications, initMobileMenu }      from "./controller/navkit.js?v=20261114";
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
 const $  = (sel, ctx = document) => ctx.querySelector(sel);
@@ -44,6 +45,7 @@ function initNavbarSession() {
   const guestEl  = $('#nav-auth-guest');
   const userEl   = $('#nav-auth-user');
   const logoutBtn = $('#nav-logout-btn');
+  document.body.classList.toggle('is-signed-in', !!(session && session.user));
 
   if (session && session.user) {
     const u = session.user;
@@ -100,15 +102,12 @@ function initNavbarSession() {
   }
 
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', (e) => {
+    logoutBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      clearActiveSession();
+      await logout();
       window.location.href = 'index.html';
     });
   }
-
-  initProfileModal();
-  initOrderHistoryModal();
 }
 
 // ─── Tombol "Bayar sekarang" (checkout & sewa ruko) ──────────────────────────
@@ -130,167 +129,6 @@ document.addEventListener('click', async (e) => {
     btn.textContent = label;
   }
 });
-
-// ─── Profile Update Modal ──────────────────────────────────────────────────
-function initProfileModal() {
-  const profileBtn = $('#nav-profile-btn');
-  const modal = $('#profile-modal');
-  const closeBtn = $('#profile-close-btn');
-  const saveBtn = $('#profile-save-btn');
-  const phoneInput = $('#profile-phone');
-  const addressInput = $('#profile-address');
-  const emailInput = $('#profile-email');
-  const avatarInput = $('#profile-avatar');
-
-  if (!profileBtn || !modal) return;
-
-  profileBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const session = getActiveSession();
-    if(session && session.user) {
-      phoneInput.value = session.user.phone || '';
-      addressInput.value = session.user.address || '';
-      if(emailInput) emailInput.value = session.user.email || '';
-      if(avatarInput) avatarInput.value = session.user.avatar || '';
-
-      // Teks dinamis berdasarkan role pembeli/penjual
-      const phoneLabelEl = $('#profile-phone-label');
-      const phoneHelpEl = $('#profile-phone-help');
-      const addressLabelEl = $('#profile-address-label');
-      const addressHelpEl = $('#profile-address-help');
-
-      if (session.user.role === 'seller') {
-        if (phoneLabelEl) phoneLabelEl.textContent = 'Nomor WhatsApp Toko';
-        if (phoneHelpEl) phoneHelpEl.textContent = '* Kontak resmi toko Anda untuk dihubungi pembeli & admin.';
-        if (addressLabelEl) addressLabelEl.textContent = 'Alamat Toko / Ruko Fisik';
-        if (addressHelpEl) addressHelpEl.textContent = '* Lokasi toko/gudang fisik ruko Anda. Juga digunakan sebagai alamat pengiriman jika Anda belanja dari toko lain.';
-      } else {
-        if (phoneLabelEl) phoneLabelEl.textContent = 'Nomor WhatsApp Penerima';
-        if (phoneHelpEl) phoneHelpEl.textContent = '* Digunakan kurir untuk menghubungi Anda saat pengiriman barang.';
-        if (addressLabelEl) addressLabelEl.textContent = 'Alamat Pengiriman Belanja';
-        if (addressHelpEl) addressHelpEl.textContent = '* Alamat utama pengiriman barang hasil belanja Anda.';
-      }
-    }
-    modal.classList.add('active');
-  });
-
-  closeBtn.addEventListener('click', () => modal.classList.remove('active'));
-
-  if(saveBtn) {
-    saveBtn.addEventListener('click', async () => {
-      const session = getActiveSession();
-      if(!session) return;
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Menyimpan...';
-
-      try {
-        const res = await fetch(`${BASE_URL}/user/profile`, {
-          method: 'PUT',
-          headers: authHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({
-            user_id: session.user.id,
-            email: session.user.email,
-            phone: phoneInput.value,
-            address: addressInput.value,
-            avatar: session.user.avatar
-          })
-        });
-        const data = await res.json();
-        if(res.ok) {
-          session.user.email = data.data.email;
-          session.user.phone = data.data.phone;
-          session.user.address = data.data.address;
-          session.user.avatar = data.data.avatar;
-          sessionStorage.setItem('vendora_session', JSON.stringify(session));
-          showAlert('Profil berhasil diperbarui', 'success');
-          modal.classList.remove('active');
-        } else {
-          showAlert(data.error || 'Gagal memperbarui', 'error');
-        }
-      } catch(err) {
-        showAlert('Terjadi kesalahan jaringan', 'error');
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Simpan Perubahan';
-      }
-    });
-  }
-}
-
-// ─── Hero Carousel ────────────────────────────────────────────────────────────
-function initHeroCarousel() {
-  const track   = $('#hero-track');
-  const dots    = $$('.hero-dot');
-  const prevBtn = $('#hero-prev');
-  const nextBtn = $('#hero-next');
-  if (!track) return;
-
-  const total = track.children.length;
-  let current = 0;
-  let autoTimer;
-
-  function goTo(idx) {
-    current = (idx + total) % total;
-    track.style.transform = `translateX(-${current * 100}%)`;
-    dots.forEach((d, i) => d.classList.toggle('active', i === current));
-  }
-
-  function startAuto() {
-    clearInterval(autoTimer);
-    autoTimer = setInterval(() => goTo(current + 1), 5000);
-  }
-
-  if (prevBtn) prevBtn.addEventListener('click', () => { goTo(current - 1); startAuto(); });
-  if (nextBtn) nextBtn.addEventListener('click', () => { goTo(current + 1); startAuto(); });
-  dots.forEach(d => d.addEventListener('click', () => { goTo(+d.dataset.idx); startAuto(); }));
-
-  // Touch swipe
-  let touchX = 0;
-  track.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
-  track.addEventListener('touchend',   e => {
-    const dx = touchX - e.changedTouches[0].clientX;
-    if (Math.abs(dx) > 40) { goTo(dx > 0 ? current + 1 : current - 1); startAuto(); }
-  });
-
-  startAuto();
-}
-
-// ─── Flash Sale Countdown ─────────────────────────────────────────────────────
-function initFlashSaleCountdown() {
-  const hoursEl   = $('#cd-hours');
-  const minutesEl = $('#cd-minutes');
-  const secondsEl = $('#cd-seconds');
-  if (!hoursEl) return;
-
-  // Set target: next midnight (or fixed duration)
-  const now    = new Date();
-  const target = new Date(now);
-  target.setHours(23, 59, 59, 0);
-  if (now >= target) target.setDate(target.getDate() + 1);
-
-  function pad(n) { return String(n).padStart(2, '0'); }
-
-  function tick() {
-    const diff  = target - new Date();
-    if (diff <= 0) { hoursEl.textContent = '00'; minutesEl.textContent = '00'; secondsEl.textContent = '00'; return; }
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-
-    const prev = { h: hoursEl.textContent, m: minutesEl.textContent, s: secondsEl.textContent };
-    hoursEl.textContent   = pad(h);
-    minutesEl.textContent = pad(m);
-    secondsEl.textContent = pad(s);
-
-    // Flip animation on change
-    if (pad(s) !== prev.s) { secondsEl.classList.add('flip'); setTimeout(() => secondsEl.classList.remove('flip'), 350); }
-    if (pad(m) !== prev.m) { minutesEl.classList.add('flip'); setTimeout(() => minutesEl.classList.remove('flip'), 350); }
-    if (pad(h) !== prev.h) { hoursEl.classList.add('flip');   setTimeout(() => hoursEl.classList.remove('flip'), 350); }
-  }
-
-  tick();
-  setInterval(tick, 1000);
-}
 
 // ─── Filter Chips ─────────────────────────────────────────────────────────────
 function scrollToCatalog() {
@@ -481,22 +319,6 @@ function initOpenShopLinks() {
   });
 }
 
-// ─── Smooth Scroll ────────────────────────────────────────────────────────────
-function initSmoothScroll() {
-  const lihatSemuaBtn = $('#link-lihat-semua');
-  if (lihatSemuaBtn) {
-    lihatSemuaBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const targetId = lihatSemuaBtn.getAttribute('href'); // '#product-list'
-      const targetEl = $(targetId);
-      if (targetEl) {
-        const offsetTop = targetEl.getBoundingClientRect().top + window.scrollY - 80;
-        window.scrollTo({ top: offsetTop, behavior: 'smooth' });
-      }
-    });
-  }
-}
-
 // ─── Cart Drawer ──────────────────────────────────────────────────────────────
 export function openCartDrawer() {
   const drawer  = $('#cart-drawer');
@@ -544,9 +366,12 @@ function initCartDrawer() {
   document.addEventListener('vendora:close-cart', closeCartDrawer);
 }
 
-// ─── Hero YouTube Video Cycler (DISABLED) ────────────────────────────────────────────────
-function initHeroVideoCycler() {
-  // Disabled in favor of direct iframe embed for reliability
+/** Halaman tanpa laci keranjang: tombol keranjang membuka keranjang di beranda. */
+function initCartLink() {
+  const btn = $('#cart-toggle-btn');
+  if (!btn) return;
+  updateCartUI(); // angka di lencana keranjang
+  btn.addEventListener('click', () => { window.location.href = 'index.html?cart=1'; });
 }
 
 // ─── Route init ───────────────────────────────────────────────────────────────
@@ -558,20 +383,21 @@ function initApp() {
 
   // Dock chat (pembeli & penjual) di semua halaman
   if (!isPage('login.html') && !isPage('admin.html')) initChatDock();
+  initMobileMenu();
+  initNotifications();
   initOpenShopLinks();
+  // Header lengkap (kategori, pencarian, keranjang) juga ada di halaman Tentang & Bantuan
+  initMegaMenuLinks();
+  initSearch();
+  if (!document.getElementById('cart-drawer')) initCartLink();
 
   // ── Homepage ─────────────────────────────────────────────────────────────
   if (isPage('index.html') || path === '/' || path.endsWith('/')) {
-    initHeroVideoCycler();
-    initFlashSaleCountdown();
     initFilterChips();
-    initMegaMenuLinks();
     initCategoryCarousel();
     initResultsBar();
-    initSmoothScroll();
     initCartDrawer();
     initCart();
-    initSearch();
 
     const urlParams = new URLSearchParams(window.location.search);
     const shopQuery = urlParams.get('shop');
@@ -603,7 +429,7 @@ function initApp() {
               <span class="shop-head-avatar" aria-hidden="true">${esc(shopQuery.charAt(0).toUpperCase())}</span>
               <div class="shop-head-id">
                 <h1>${esc(shopQuery)}</h1>
-                <span class="v-status v-status--good">Merchant terverifikasi</span>
+                <span class="shop-head-badges" id="sh-badges"><span class="v-status v-status--good">Diverifikasi admin</span></span>
                 <p class="shop-head-desc" id="sh-desc"></p>
               </div>
               <div class="shop-head-actions">
@@ -637,7 +463,7 @@ function initApp() {
           document.getElementById('sh-sold').textContent = sold.toLocaleString('id-ID');
           document.getElementById('sh-since').textContent = shopInfo && shopInfo.created_at
             ? new Date(shopInfo.created_at).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : '–';
-          document.getElementById('sh-addr').textContent = (shopInfo && shopInfo.owner_address) || 'Belum diisi';
+          document.getElementById('sh-addr').textContent = (shopInfo && shopInfo.ship_from) || '–';
           document.getElementById('sh-desc').textContent = (shopInfo && shopInfo.description) || '';
           if (!shopInfo) document.getElementById('banner-chat-btn').hidden = true;
 
@@ -678,31 +504,6 @@ function initApp() {
         if (pid) openProductById(pid);
       });
     }
-
-    // --- CACHE BUSTER DOM FIX ---
-    // If the old green WhatsApp button is still there, replace it dynamically
-    const oldWaBtn = document.getElementById('shop-modal-wa-btn');
-    if (oldWaBtn) {
-      const parent = oldWaBtn.parentNode;
-      const newChatBtn = document.createElement('button');
-      newChatBtn.id = 'shop-modal-chat-btn';
-      newChatBtn.style = "flex:1; text-align:center; padding:12px; background:var(--gold); color:var(--bg-1); border:none; border-radius:8px; font-weight:600; font-size:14px; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;";
-      newChatBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Chat Penjual`;
-      parent.replaceChild(newChatBtn, oldWaBtn);
-    }
-    const viewBtn = document.getElementById('shop-modal-view-btn');
-    if (viewBtn) {
-       // override the old inline onclick
-       viewBtn.removeAttribute('onclick');
-    }
-    const shopDetailClose = document.getElementById('shop-detail-close-btn');
-    if (shopDetailClose) {
-       shopDetailClose.addEventListener('click', () => {
-         const shopModal = document.getElementById('shop-detail-modal');
-         if (shopModal) shopModal.classList.remove('active');
-       });
-    }
-    
   }
 
   // ── Login ─────────────────────────────────────────────────────────────────
@@ -754,150 +555,4 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
 } else {
   initApp();
-}
-
-
-// ─── Shop Detail Modal Helper ──────────────────────────────────────────────
-window.showShopDetailModal = function(shop) {
-  const modal = document.getElementById('shop-detail-modal');
-  const nameEl = document.getElementById('shop-modal-name');
-  const descEl = document.getElementById('shop-modal-desc');
-  const addressEl = document.getElementById('shop-modal-address');
-  const waBtn = document.getElementById('shop-modal-wa-btn');
-  const initialEl = document.getElementById('shop-modal-initial');
-
-  if (!modal) return;
-
-  const shopName = shop.name || 'Detail Toko';
-  if (nameEl) nameEl.textContent = shopName;
-  if (initialEl) initialEl.textContent = shopName.charAt(0).toUpperCase();
-
-  const logoEl = document.getElementById('shop-modal-logo');
-  if (logoEl) {
-    logoEl.style.display = 'none';
-  }
-  if (initialEl) initialEl.style.display = 'block';
-
-  if (descEl) descEl.textContent = shop.description || 'Tidak ada deskripsi toko.';
-  const countEl = document.getElementById('shop-modal-products');
-  if (countEl) {
-    countEl.textContent = 'Memuat…';
-    if (shop.id) {
-      fetch(`${BASE_URL}/products?shop_id=${encodeURIComponent(shop.id)}`)
-        .then(r => r.json())
-        .then(d => { countEl.textContent = `${(d.data || []).length} produk`; })
-        .catch(() => { countEl.textContent = '–'; });
-    } else {
-      countEl.textContent = '–';
-    }
-  }
-  if (addressEl) addressEl.textContent = shop.owner_address || 'Belum diisi penjual';
-  
-  const viewBtn = document.getElementById('shop-modal-view-btn');
-
-  if (viewBtn) {
-    viewBtn.onclick = function() {
-      window.location.href = 'index.html?shop=' + encodeURIComponent(shopName);
-    };
-  }
-
-  const chatBtn = document.getElementById('shop-modal-chat-btn');
-  if (chatBtn) {
-    chatBtn.onclick = function() {
-      modal.classList.remove('active');
-      if (window.openShopChat) window.openShopChat(shop, shopName);
-    };
-  }
-
-  modal.classList.add('active');
-};
-
-
-
-// ─── Order History & Tracking Modal ──────────────────────────────────────────
-function initOrderHistoryModal() {
-  const historyBtn = document.getElementById('nav-history-btn');
-  const modal = document.getElementById('order-history-modal');
-  const closeBtn = document.getElementById('order-history-close-btn');
-  const listEl = document.getElementById('order-history-list');
-
-  if (!historyBtn || !modal || !listEl) return;
-
-  historyBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    const session = getActiveSession();
-    if (!session || !session.user) {
-      showAlert('Silakan login terlebih dahulu.', 'error');
-      return;
-    }
-
-    listEl.innerHTML = `<div class="order-empty"><p>Memuat riwayat belanja…</p></div>`;
-    modal.classList.add('active');
-
-    try {
-      const res = await fetch(`${BASE_URL}/transactions?buyer_id=${session.user.id}`, { headers: authHeaders() });
-      const data = await res.json();
-      if (!res.ok || data.status !== 200) {
-        listEl.innerHTML = `<div class="order-empty"><p>Gagal memuat riwayat belanja. Coba lagi.</p></div>`;
-        return;
-      }
-
-      const txs = (data.data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      if (!txs.length) {
-        listEl.innerHTML = `
-          <div class="order-empty">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-            <h4>Belum ada pesanan</h4>
-            <p>Pesanan yang kamu buat akan muncul di sini.</p>
-          </div>`;
-        return;
-      }
-
-      const STEPS = ['Dipesan', 'Diproses', 'Selesai'];
-      const stepIndex = { pending: 0, paid: 1, success: 2 };
-      const note = (st, resi) => ({
-        pending:   'Menunggu penjual mengonfirmasi pesanan.',
-        paid:      `Pesanan sedang dikemas penjual. Resi ${resi}.`,
-        success:   `Paket sudah diterima. Resi ${resi}.`,
-        cancelled: 'Pesanan ini dibatalkan.',
-      }[st] || '');
-
-      listEl.innerHTML = txs.map(t => {
-        const st = normStatus(t.status);
-        const resi = `VDR-EXP-${(t.id || '').slice(-8).toUpperCase()}`;
-        const items = (t.items || []).map(i => `
-          <li><span>${esc(i.name)} <em>×${i.quantity}</em></span><span>${fmtRp(i.price * i.quantity)}</span></li>`).join('');
-        const steps = st === 'cancelled' ? '' : `
-          <ol class="order-steps" aria-label="Progres pesanan">
-            ${STEPS.map((label, i) => `<li class="${i <= (stepIndex[st] ?? 0) ? 'done' : ''}">${label}</li>`).join('')}
-          </ol>`;
-        return `
-          <article class="order-card">
-            <header class="order-head">
-              <div>
-                <span class="order-id">${esc(shortId(t.id))}</span>
-                <span class="order-date">${fmtDateTime(t.created_at)}</span>
-              </div>
-              ${txStatusHTML(st, { long: true })}
-            </header>
-            <ul class="order-items">${items}</ul>
-            ${steps}
-            <p class="order-note">${esc(note(st, resi))}</p>
-            <footer class="order-foot">
-              <span class="order-ship">Dikirim ke <b>${esc(t.recipient_name || session.user.name || 'Pembeli')}</b>${t.shipping_address ? ` · ${esc(t.shipping_address)}` : ''}</span>
-              <span class="order-total">Total <b>${fmtRp(t.total_amount)}</b></span>
-            </footer>
-          </article>`;
-      }).join('');
-    } catch (err) {
-      console.error(err);
-      listEl.innerHTML = `<div class="order-empty"><p>Koneksi bermasalah. Coba lagi sebentar.</p></div>`;
-    }
-  });
-
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      modal.classList.remove('active');
-    });
-  }
 }

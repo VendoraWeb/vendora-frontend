@@ -3,7 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Syarat & Ketentuan - Vendora</title>
+  <title>Syarat &amp; Ketentuan — Vendora</title>
+  <meta name="description" content="Syarat dan ketentuan sewa ruko virtual, berjualan, dan berbelanja di Vendora.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Vendora">
+  <meta property="og:title" content="Syarat &amp; Ketentuan Vendora">
+  <meta property="og:description" content="Aturan sewa ruko virtual, berjualan, dan berbelanja di Vendora.">
+  <meta property="og:url" content="https://www.vendorashop.my.id/terms.html">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=630&q=80&auto=format&fit=crop">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://www.vendorashop.my.id/terms.html">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="icon" type="image/svg+xml" href="favicon.svg?v=102">
@@ -11,58 +20,263 @@
   <link rel="apple-touch-icon" href="logo.png?v=102">
   <meta name="theme-color" content="#0E0E0D">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=114">
-  <link rel="stylesheet" href="css/theme.css?v=107">
+  <link rel="stylesheet" href="css/style.css?v=20261114">
+  <link rel="stylesheet" href="css/theme.css?v=20261114">
+  <link rel="stylesheet" href="css/storefront.css?v=20261114">
+  <link rel="stylesheet" href="css/pages.css?v=20261114">
+  <script>document.documentElement.classList.add('js');</script>
   <style>
-    body { background: var(--surface-2); }
-    .terms-container {
-      max-width: 800px;
-      margin: 80px auto;
-      background: white;
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: var(--shadow-sm);
-    }
-    .terms-title { font-size: 28px; font-weight: 800; color: var(--text-main); margin-bottom: 24px; }
-    .terms-text { font-size: 15px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px; }
-    .terms-section { margin-bottom: 32px; }
-    .terms-section-title { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; }
+    .tc-wrap { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); align-items: start; padding-bottom: clamp(48px, 6vw, 96px); }
+    .tc-toc { position: sticky; top: calc(var(--sf-nav-h, 72px) + 24px); display: grid; gap: 2px; font-size: 14px; }
+    .tc-toc a { padding: 6px 10px; border-radius: 8px; color: var(--mute); text-decoration: none; }
+    .tc-toc a:hover { background: var(--stage); color: var(--ink); }
+    .tc-body section { scroll-margin-top: calc(var(--sf-nav-h, 72px) + 24px); padding-top: 28px; border-top: 1px solid var(--line); }
+    .tc-body section + section { margin-top: 28px; }
+    .tc-body h2 { margin: 0 0 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+    .tc-body p, .tc-body li { max-width: 72ch; font-size: 15px; line-height: 1.75; color: #3A3A38; }
+    .tc-body p { margin: 0 0 12px; }
+    .tc-body ul, .tc-body ol { margin: 0 0 12px; padding-left: 22px; }
+    .tc-body li + li { margin-top: 4px; }
+    .tc-updated { margin-top: 16px; font-size: 13px; color: var(--mute); }
+    @media (max-width: 860px) { .tc-wrap { grid-template-columns: 1fr; } .tc-toc { position: static; grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav id="main-navbar" style="border-bottom: 1px solid var(--border);">
+  <nav id="main-navbar">
     <a href="index.html" class="nav-logo vlogo" aria-label="Vendora — beranda">
       <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=103" alt="">EN</span>DORA</span>
     </a>
+
+    <div class="mega-menu-wrapper">
+      <button class="nav-category-btn" id="nav-cat-btn" type="button">
+        Kategori
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="mega-dropdown" role="menu" aria-label="Semua kategori"><!-- diisi main.js (categories.js) --></div>
+    </div>
+
+    <div class="nav-search">
+      <input type="search" id="nav-search-input" placeholder="Cari produk atau toko" autocomplete="off">
+      <svg class="nav-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+
+    <div class="nav-actions">
+      <button class="nav-icon-btn" id="cart-toggle-btn" title="Keranjang Belanja" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span class="nav-cart-badge" id="cart-count">0</span>
+      </button>
+      <button class="nav-icon-btn" title="Notifikasi" type="button" data-notif-btn aria-label="Notifikasi">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      </button>
+      <div class="nav-divider"></div>
+      <div id="nav-auth-guest" style="display:flex;align-items:center;gap:8px;">
+        <a href="login.html" class="btn-nav-login">Masuk</a>
+        <a href="login.html?tab=daftar" class="btn-nav-register">Daftar</a>
+      </div>
+      <div id="nav-auth-user" style="display:none;align-items:center;">
+        <div class="nav-profile-dropdown" id="nav-profile-dropdown">
+          <button class="nav-user" id="nav-user-panel" type="button" aria-haspopup="menu" aria-expanded="false">
+            <span class="nav-avatar" id="nav-avatar-text" aria-hidden="true">U</span>
+            <span class="nav-user-name" id="nav-user-name">Akun</span>
+            <svg class="nav-user-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="dropdown-menu" role="menu">
+            <div class="dropdown-head">
+              <span class="nav-avatar nav-avatar--lg" id="nav-avatar-lg" aria-hidden="true">U</span>
+              <div><b id="nav-dd-name">Akun</b><small id="nav-dd-email"></small></div>
+            </div>
+            <a href="pesanan.html" class="dropdown-item" id="nav-history-btn" role="menuitem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+              <span>Pesanan saya</span>
+            </a>
+            <a href="akun.html" class="dropdown-item" id="nav-profile-btn" role="menuitem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              <span>Pengaturan akun</span>
+            </a>
+            <a href="seller.html" class="dropdown-item" id="dropdown-shop-action" role="menuitem" style="display:none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 01-6 0 3 3 0 01-6 0 3 3 0 01-6 0z"/><path d="M5 13v8h14v-8"/></svg>
+              <span>Toko saya</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item danger" id="nav-logout-btn" role="menuitem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span>Keluar</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="nav-mobile-menu-btn" id="nav-mobile-menu-btn" type="button" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
   </nav>
 
-  <div class="terms-container">
-    <h1 class="terms-title">Syarat & Ketentuan Sewa Ruko Vendora</h1>
-    
-    <div class="terms-section">
-      <h2 class="terms-section-title">1. Program Sewa Ruko Virtual (Vendora Space Lease)</h2>
-      <p class="terms-text">Selamat datang di Vendora Space Lease Program. Setiap akun pengguna terdaftar berhak menyewa 1 (satu) ruko online virtual di dalam platform kami. Vendora menyediakan ruang digital premium bagi Anda untuk menjajakan produk dengan jangkauan nasional.</p>
-    </div>
+  <div id="alert-container"></div>
 
-    <div class="terms-section">
-      <h2 class="terms-section-title">2. Biaya Sewa & Pembayaran</h2>
-      <p class="terms-text">Biaya Sewa Flat berlaku per bulan yang disetorkan langsung ke rekening Admin untuk aktivasi slot database ruko. Pembayaran harus dikonfirmasi melalui mutasi oleh pihak internal Vendora sebelum ruko berstatus aktif.</p>
-    </div>
+  <main>
+    <section class="pg-hero">
+      <div class="sf-container">
+        <p class="pg-eyebrow">Syarat &amp; ketentuan</p>
+        <h1 class="pg-title">Aturan main di Vendora</h1>
+        <p class="pg-lead">Berlaku untuk semua pembeli dan penjual. Dengan membuat akun atau menyewa ruko, kamu menyetujui ketentuan di bawah ini.</p>
+        <p class="tc-updated">Terakhir diperbarui 14 November 2026</p>
+      </div>
+    </section>
 
-    <div class="terms-section">
-      <h2 class="terms-section-title">3. Hak Akses Eksklusif</h2>
-      <p class="terms-text">Ruko yang telah disetujui (Status: Active) diberikan akses penuh untuk melakukan manajemen CRUD (Create, Read, Update, Delete) produk tak terbatas. Penjual juga akan mendapatkan integrasi link WhatsApp otomatis ke calon pembeli, serta dasbor pencatatan transaksi masuk yang komprehensif.</p>
-    </div>
+    <div class="sf-container tc-wrap">
+      <nav class="tc-toc" aria-label="Daftar isi">
+        <a href="#akun">1. Akun</a>
+        <a href="#sewa">2. Sewa ruko</a>
+        <a href="#masa-sewa">3. Masa sewa</a>
+        <a href="#produk">4. Produk</a>
+        <a href="#pesanan">5. Pesanan</a>
+        <a href="#dana">6. Pembayaran &amp; dana</a>
+        <a href="#komplain">7. Komplain &amp; laporan</a>
+        <a href="#larangan">8. Larangan</a>
+        <a href="#penangguhan">9. Penangguhan</a>
+        <a href="#bantuan">10. Bantuan &amp; perubahan</a>
+      </nav>
 
-    <div class="terms-section">
-      <h2 class="terms-section-title">4. Penangguhan & Terminasi</h2>
-      <p class="terms-text">Jika masa sewa habis dan tidak dilakukan perpanjangan, maka status ruko secara otomatis akan diubah oleh sistem menjadi "Suspended". Semua produk dari ruko yang ditangguhkan tidak akan ditampilkan (disembunyikan) dari katalog utama Vendora hingga pembayaran bulan berikutnya diselesaikan.</p>
-    </div>
-    
-    <a href="index.html" class="auth-submit" style="display:inline-block; text-align:center; text-decoration:none; width:auto; padding:12px 24px;">Kembali ke Beranda</a>
-  </div>
+      <div class="tc-body">
+        <section id="akun">
+          <h2>1. Akun</h2>
+          <ul>
+            <li>Daftar sebagai <b>pembeli</b> untuk berbelanja, atau sebagai <b>penjual</b> untuk menyewa ruko dan berjualan.</li>
+            <li>Gunakan nama, email, dan nomor HP yang benar. Email atau nomor HP dipakai untuk masuk dan menerima kode verifikasi saat mengganti kata sandi.</li>
+            <li>Jaga kerahasiaan kata sandimu. Semua aktivitas dari akunmu menjadi tanggung jawabmu.</li>
+          </ul>
+        </section>
 
+        <section id="sewa">
+          <h2>2. Sewa ruko virtual</h2>
+          <ul>
+            <li>Satu akun penjual dapat menyewa satu ruko.</li>
+            <li>Biaya sewa <b>Rp 15.000 per hari</b>, dibayar di muka dengan pilihan 30, 90, atau 365 hari, lewat metode yang tersedia di halaman pembayaran.</li>
+            <li>Ruko baru berstatus <b>Menunggu verifikasi</b>. Admin memeriksa nama dan deskripsi toko sebelum ruko tampil di katalog. Produk baru bisa ditambahkan setelah ruko disetujui.</li>
+            <li>Nama ruko harus unik dan tidak boleh meniru merek atau toko lain tanpa izin.</li>
+          </ul>
+        </section>
+
+        <section id="masa-sewa">
+          <h2>3. Masa sewa &amp; perpanjangan</h2>
+          <ul>
+            <li>Masa sewa berjalan sejak ruko disewa. Sisa harinya terlihat di dashboard penjual.</li>
+            <li>Perpanjangan bisa dilakukan kapan saja dari menu <b>Sewa ruko</b>. Hari tambahan dihitung dari tanggal berakhir, atau dari hari perpanjangan bila masa sewa sudah lewat.</li>
+            <li>Saat masa sewa habis, produk ruko otomatis disembunyikan dari katalog. Data toko, produk, dan riwayat pesanan tetap tersimpan, dan produk tampil lagi setelah sewa diperpanjang.</li>
+          </ul>
+        </section>
+
+        <section id="produk">
+          <h2>4. Produk</h2>
+          <ul>
+            <li>Penjual bertanggung jawab atas kebenaran nama, foto, deskripsi, harga, variasi, dan stok produk.</li>
+            <li>Foto harus menggambarkan barang yang benar-benar dijual.</li>
+            <li>Harga di katalog adalah harga yang dibayar pembeli untuk variasi yang dipilih.</li>
+          </ul>
+        </section>
+
+        <section id="pesanan">
+          <h2>5. Pesanan</h2>
+          <ul>
+            <li>Barang dari beberapa toko dalam satu checkout dipisah menjadi satu pesanan per toko. Ongkos kirim sesuai kurir yang dipilih dan dihitung per toko.</li>
+            <li>Status pesanan: <b>Menunggu</b> → <b>Dikemas</b> → <b>Dikirim</b> → <b>Selesai</b>. Penjual memperbarui status sampai barang dikirim, lalu pembeli menandai pesanan diterima. Penjual tidak bisa menandai pesanan selesai sendiri.</li>
+            <li>Penjual wajib mengonfirmasi pesanan baru dalam 24 jam. Pesanan yang tidak dikonfirmasi dapat dibatalkan otomatis dan dananya dikembalikan.</li>
+            <li>Pembeli dapat membatalkan pesanan selama penjual belum memprosesnya. Penjual dapat membatalkan pesanan yang belum dikirim. Stok barang yang dibatalkan dikembalikan.</li>
+            <li>Gunakan chat penjual untuk menanyakan stok, ukuran, atau detail barang sebelum membeli.</li>
+          </ul>
+        </section>
+
+        <section id="dana">
+          <h2>6. Pembayaran &amp; dana penjual</h2>
+          <ul>
+            <li>Pembayaran pembeli ditahan Vendora (rekening bersama) dan belum bisa ditarik penjual.</li>
+            <li>Dana diteruskan ke saldo penjual setelah pembeli menekan <b>Pesanan diterima</b>, atau otomatis <b>7 hari</b> setelah pesanan dikirim bila tidak ada komplain.</li>
+            <li>Vendora memotong biaya layanan <b>2,5%</b> dari harga barang saat dana diteruskan. Ongkos kirim tidak dipotong.</li>
+            <li>Penjual dapat menarik saldo aktif minimal Rp 10.000 ke rekening bank atau dompet digital miliknya.</li>
+            <li>Bila pesanan dibatalkan sebelum dikirim, dana dikembalikan penuh ke pembeli.</li>
+          </ul>
+        </section>
+
+        <section id="komplain">
+          <h2>7. Komplain &amp; laporan</h2>
+          <ul>
+            <li>Pembeli dapat mengajukan komplain dari <b>Pesanan saya</b> selama pesanan berstatus Dikirim. Selama komplain berjalan, dana dibekukan dan pesanan tidak selesai otomatis.</li>
+            <li>Penjual dapat memberi tanggapan. Admin memutuskan apakah dana dikembalikan ke pembeli atau diteruskan ke penjual, dan keputusan admin bersifat final.</li>
+            <li>Siapa pun dapat melaporkan produk atau toko yang melanggar ketentuan. Admin dapat menyembunyikan produk tersebut dari katalog.</li>
+          </ul>
+        </section>
+
+        <section id="larangan">
+          <h2>8. Yang dilarang</h2>
+          <ul>
+            <li>Menjual barang ilegal, palsu, berbahaya, atau yang melanggar hak kekayaan intelektual.</li>
+            <li>Memberi informasi palsu, menipu pembeli, atau meminta pembayaran di luar Vendora.</li>
+            <li>Mengirim konten yang kasar, berbau SARA, atau mengganggu pengguna lain lewat chat.</li>
+          </ul>
+        </section>
+
+        <section id="penangguhan">
+          <h2>9. Penangguhan &amp; pemblokiran</h2>
+          <ul>
+            <li>Admin dapat menangguhkan ruko yang melanggar ketentuan. Selama ditangguhkan, produknya tidak tampil di katalog.</li>
+            <li>Akun yang melanggar berat atau berulang dapat diblokir sehingga tidak bisa masuk.</li>
+            <li>Jika merasa penangguhan keliru, hubungi kami lewat <a href="bantuan.html#hubungi">Pusat bantuan</a>.</li>
+          </ul>
+        </section>
+
+        <section id="bantuan">
+          <h2>10. Bantuan &amp; perubahan ketentuan</h2>
+          <p>Keluhan, pengembalian barang, dan pertanyaan lain bisa diajukan lewat <a href="bantuan.html">Pusat bantuan</a>. Ketentuan ini dapat diperbarui sewaktu-waktu. Perubahan penting akan diumumkan di situs, dan tanggal pembaruan tercantum di bagian atas halaman ini.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="sf-footer sf-section">
+    <div class="sf-container">
+      <div class="sf-footer-grid">
+        <div class="sf-footer-brand">
+          <a href="index.html" class="vlogo vlogo--stack" aria-label="Vendora — beranda">
+            <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=103" alt="">EN</span>DORA</span>
+            <span class="vlogo-tag">Your digital marketplace</span>
+          </a>
+          <p>Marketplace ruko virtual. Belanja dari merchant terverifikasi di seluruh Indonesia.</p>
+        </div>
+        <div>
+          <h4>Belanja</h4>
+          <a href="index.html?cat=fashion">Fashion</a>
+          <a href="index.html?cat=elektronik">Elektronik</a>
+          <a href="index.html?cat=kecantikan">Kecantikan</a>
+          <a href="index.html?cat=rumah">Rumah &amp; Taman</a>
+          <a href="index.html?cat=dapur">Dapur</a>
+        </div>
+        <div>
+          <h4>Vendora</h4>
+          <a href="tentang.html">Tentang kami</a>
+          <a href="login.html?tab=daftar&amp;role=seller" data-open-shop>Buka toko</a>
+          <a href="terms.html">Syarat &amp; ketentuan sewa ruko</a>
+        </div>
+        <div>
+          <h4>Bantuan</h4>
+          <a href="bantuan.html">Pusat bantuan</a>
+          <a href="pesanan.html">Lacak pesanan</a>
+          <a href="bantuan.html#pengembalian">Pengembalian</a>
+        </div>
+      </div>
+      <div class="sf-footer-bottom">
+        <span>&copy; 2026 Vendora Marketplace</span>
+        <span>Bahasa Indonesia &middot; IDR</span>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="js/main.js?v=20261114"></script>
+  <script src="js/storefront.js?v=20261114" defer></script>
 </body>
 </html>

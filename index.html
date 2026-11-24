@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vendora — Marketplace Premium Indonesia</title>
   <meta name="description" content="Platform e-commerce premium dengan konsep sewa ruko virtual. Temukan produk terbaik dari merchant terpercaya di Vendora.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Vendora">
+  <meta property="og:title" content="Vendora — Marketplace Ruko Virtual">
+  <meta property="og:description" content="Belanja dari ruko virtual yang diverifikasi admin. Penjual cukup menyewa ruko virtual untuk mulai berjualan.">
+  <meta property="og:url" content="https://www.vendorashop.my.id/">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=630&q=80&auto=format&fit=crop">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://www.vendorashop.my.id/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="icon" type="image/svg+xml" href="favicon.svg?v=102">
@@ -12,9 +20,9 @@
   <link rel="apple-touch-icon" href="logo.png?v=102">
   <meta name="theme-color" content="#0E0E0D">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=114">
-  <link rel="stylesheet" href="css/theme.css?v=107">
-  <link rel="stylesheet" href="css/storefront.css?v=115">
+  <link rel="stylesheet" href="css/style.css?v=20261114">
+  <link rel="stylesheet" href="css/theme.css?v=20261114">
+  <link rel="stylesheet" href="css/storefront.css?v=20261114">
   <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
@@ -45,7 +53,7 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
         <span class="nav-cart-badge" id="cart-count">0</span>
       </button>
-      <button class="nav-icon-btn" title="Notifikasi" type="button">
+      <button class="nav-icon-btn" title="Notifikasi" type="button" data-notif-btn aria-label="Notifikasi">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       </button>
       <div class="nav-divider"></div>
@@ -258,17 +266,17 @@
         <div class="sf-why-item" data-reveal>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
           <h3>Merchant terverifikasi</h3>
-          <p>Setiap toko melewati verifikasi identitas dan legalitas sebelum bisa berjualan.</p>
+          <p>Setiap ruko diperiksa admin sebelum tampil di katalog.</p>
         </div>
         <div class="sf-why-item" data-reveal>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           <h3>Pembayaran aman</h3>
-          <p>QRIS, virtual account, kartu, atau bayar di gerai. Dana diteruskan ke penjual setelah barang diterima.</p>
+          <p>QRIS, virtual account, kartu, atau bayar di gerai. Status pesanan bisa dipantau dari dikemas sampai diterima.</p>
         </div>
         <div class="sf-why-item" data-reveal>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
           <h3>Pengembalian mudah</h3>
-          <p>Barang tidak sesuai? Ajukan pengembalian dan uangmu kembali utuh.</p>
+          <p>Barang tidak sesuai? Ajukan lewat Pusat bantuan dan tim Vendora menengahi dengan penjual.</p>
         </div>
       </div>
     </div>
@@ -319,7 +327,7 @@
       </div>
       <div class="cart-summary-row">
         <span>Biaya Pengiriman</span>
-        <span style="color:var(--primary);font-weight:600;">Gratis</span>
+        <span style="color:var(--mute);font-weight:500;">Dihitung saat checkout</span>
       </div>
       <div class="cart-total-row">
         <span class="cart-total-label">Total</span>
@@ -327,7 +335,7 @@
       </div>
       <button class="btn-checkout" id="checkout-btn" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        Lanjut ke Pembayaran
+        Lanjut ke pembayaran
       </button>
     </div>
   </aside>
@@ -373,38 +381,6 @@
   <!-- ============================================================
        MODALS
        ============================================================ -->
-  <!-- Detail toko -->
-  <div class="modal-overlay" id="shop-detail-modal" role="dialog" aria-modal="true" aria-labelledby="shop-modal-name">
-    <div class="modal-content shop-modal">
-      <div class="shop-modal-head">
-        <div class="shop-modal-avatar">
-          <span id="shop-modal-initial">T</span>
-          <img id="shop-modal-logo" src="" alt="" style="display:none;">
-        </div>
-        <div class="shop-modal-title">
-          <h3 id="shop-modal-name">Nama toko</h3>
-          <span class="v-status v-status--good">Merchant terverifikasi</span>
-        </div>
-        <button class="modal-close" id="shop-detail-close-btn" type="button" aria-label="Tutup"
-                onclick="document.getElementById('shop-detail-modal').classList.remove('active');">&times;</button>
-      </div>
-      <div class="modal-body">
-        <dl class="shop-modal-info">
-          <div><dt>Produk di katalog</dt><dd id="shop-modal-products">–</dd></div>
-          <div><dt>Tentang toko</dt><dd id="shop-modal-desc">–</dd></div>
-          <div><dt>Dikirim dari</dt><dd id="shop-modal-address">–</dd></div>
-        </dl>
-      </div>
-      <div class="modal-footer shop-modal-actions">
-        <button id="shop-modal-chat-btn" type="button" class="btn-line">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-          Chat penjual
-        </button>
-        <button id="shop-modal-view-btn" type="button" class="btn-ink">Lihat produk toko</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Detail produk -->
   <div class="modal-overlay" id="product-detail-modal" role="dialog" aria-modal="true" aria-label="Detail produk">
     <div class="modal-content product-detail-modal-content">
@@ -436,17 +412,18 @@
               <span class="form-hint">Simpan alamat di <a href="akun.html">Pengaturan akun</a> supaya terisi otomatis.</span>
             </div>
             <div class="form-group" style="margin-bottom:0;">
-              <label for="checkout-courier-select">Pilih kurir ekspedisi & lacak peta</label>
+              <label for="checkout-courier-select">Kurir pengiriman</label>
               <select id="checkout-courier-select" class="auth-input">
                 <option value="JNE" data-cost="18000">JNE Reguler (2-3 Hari) — Rp 18.000</option>
                 <option value="JNT" data-cost="19000">J&amp;T Express EZ (2-3 Hari) — Rp 19.000</option>
                 <option value="SICEPAT" data-cost="22000">SiCepat BEST (1-2 Hari) — Rp 22.000</option>
                 <option value="INSTANT" data-cost="35000">Vendora Instant Same-Day (2-4 Jam) — Rp 35.000</option>
               </select>
+              <span class="form-hint">Ongkir dihitung per toko karena tiap toko mengirim paketnya sendiri.</span>
             </div>
           </section>
           <section class="checkout-section">
-            <h4><span class="step-no">2</span>Metode pembayaran (Dijamin Escrow)</h4>
+            <h4><span class="step-no">2</span>Metode pembayaran</h4>
           <div class="pay-methods" role="radiogroup" aria-label="Metode pembayaran">
             <label class="pay-method"><input type="radio" name="pay-method" value="QRIS" checked><span class="pay-icon">QRIS</span><span class="pay-text"><b>GoPay, OVO, Dana</b><small>Pindai kode QR</small></span></label>
             <label class="pay-method"><input type="radio" name="pay-method" value="VA_BCA"><span class="pay-icon">BCA</span><span class="pay-text"><b>BCA Virtual Account</b><small>Transfer otomatis</small></span></label>
@@ -460,18 +437,18 @@
           <ul id="checkout-items" class="checkout-items"></ul>
           <dl class="checkout-totals">
             <div><dt>Subtotal barang</dt><dd id="checkout-subtotal">Rp 0</dd></div>
-            <div><dt>Ongkos kirim kurir</dt><dd id="checkout-shipping-cost">Rp 18.000</dd></div>
+            <div><dt id="checkout-shipping-label">Ongkos kirim</dt><dd id="checkout-shipping-cost">Rp 18.000</dd></div>
             <div class="checkout-grand"><dt>Total bayar</dt><dd class="snap-amount" id="snap-amount-display">Rp 0</dd></div>
           </dl>
           <button type="button" class="btn-ink pay-now-btn" id="pay-now-btn">Bayar sekarang</button>
-          <p class="checkout-note">🔒 <b>Jaminan Keamanan Escrow Vendora:</b> Uang pembayaranmu ditahan oleh Admin dan baru dicairkan ke penjual setelah paket kamu terima.</p>
+          <p class="checkout-note">Pembayaran ditahan Vendora dan baru diteruskan ke penjual setelah paket kamu terima.</p>
         </aside>
       </div>
     </div>
   </div>
 
-  <script type="module" src="js/main.js?v=146"></script>
-  <script src="js/storefront.js?v=104" defer></script>
+  <script type="module" src="js/main.js?v=20261114"></script>
+  <script src="js/storefront.js?v=20261114" defer></script>
 
 
 </body>

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /seller.html
+Disallow: /admin.html
+Disallow: /akun.html
+Disallow: /pesanan.html
+Disallow: /login.html
+
+Sitemap: https://www.vendorashop.my.id/sitemap.xml

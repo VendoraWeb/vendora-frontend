@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tentang Kami — Vendora</title>
   <meta name="description" content="Vendora adalah marketplace ruko virtual: penjual menyewa toko online tanpa biaya tempat fisik, pembeli belanja dari merchant terverifikasi.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Vendora">
+  <meta property="og:title" content="Tentang Vendora">
+  <meta property="og:description" content="Marketplace ruko virtual: penjual menyewa ruko, pembeli belanja dari merchant terverifikasi.">
+  <meta property="og:url" content="https://www.vendorashop.my.id/tentang.html">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=630&q=80&auto=format&fit=crop">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://www.vendorashop.my.id/tentang.html">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="icon" type="image/svg+xml" href="favicon.svg?v=102">
@@ -12,25 +20,86 @@
   <link rel="apple-touch-icon" href="logo.png?v=102">
   <meta name="theme-color" content="#0E0E0D">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=114">
-  <link rel="stylesheet" href="css/theme.css?v=107">
-  <link rel="stylesheet" href="css/storefront.css?v=115">
-  <link rel="stylesheet" href="css/pages.css?v=101">
+  <link rel="stylesheet" href="css/style.css?v=20261114">
+  <link rel="stylesheet" href="css/theme.css?v=20261114">
+  <link rel="stylesheet" href="css/storefront.css?v=20261114">
+  <link rel="stylesheet" href="css/pages.css?v=20261114">
   <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
 
-  <nav id="main-navbar" class="pg-nav">
+  <nav id="main-navbar">
     <a href="index.html" class="nav-logo vlogo" aria-label="Vendora — beranda">
       <span class="vlogo-word">V<span class="vlogo-en"><img class="vlogo-mark" src="logo.svg?v=103" alt="">EN</span>DORA</span>
     </a>
-    <div class="pg-nav-links">
-      <a href="index.html">Belanja</a>
-      <a href="tentang.html" aria-current="page">Tentang kami</a>
-      <a href="bantuan.html">Pusat bantuan</a>
-      <a href="pesanan.html">Lacak pesanan</a>
+
+    <div class="mega-menu-wrapper">
+      <button class="nav-category-btn" id="nav-cat-btn" type="button">
+        Kategori
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="mega-dropdown" role="menu" aria-label="Semua kategori"><!-- diisi main.js (categories.js) --></div>
     </div>
-    <a href="index.html" class="btn-ink btn-ink--sm pg-nav-cta">Mulai belanja</a>
+
+    <div class="nav-search">
+      <input type="search" id="nav-search-input" placeholder="Cari produk atau toko" autocomplete="off">
+      <svg class="nav-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+
+    <div class="nav-actions">
+      <button class="nav-icon-btn" id="cart-toggle-btn" title="Keranjang Belanja" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span class="nav-cart-badge" id="cart-count">0</span>
+      </button>
+      <button class="nav-icon-btn" title="Notifikasi" type="button" data-notif-btn aria-label="Notifikasi">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      </button>
+      <div class="nav-divider"></div>
+      <div id="nav-auth-guest" style="display:flex;align-items:center;gap:8px;">
+        <a href="login.html" class="btn-nav-login">Masuk</a>
+        <a href="login.html?tab=daftar" class="btn-nav-register">Daftar</a>
+      </div>
+      <div id="nav-auth-user" style="display:none;align-items:center;">
+        <div class="nav-profile-dropdown" id="nav-profile-dropdown">
+          <button class="nav-user" id="nav-user-panel" type="button" aria-haspopup="menu" aria-expanded="false">
+            <span class="nav-avatar" id="nav-avatar-text" aria-hidden="true">U</span>
+            <span class="nav-user-name" id="nav-user-name">Akun</span>
+            <svg class="nav-user-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="dropdown-menu" role="menu">
+            <div class="dropdown-head">
+              <span class="nav-avatar nav-avatar--lg" id="nav-avatar-lg" aria-hidden="true">U</span>
+              <div><b id="nav-dd-name">Akun</b><small id="nav-dd-email"></small></div>
+            </div>
+            <a href="pesanan.html" class="dropdown-item" id="nav-history-btn" role="menuitem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+              <span>Pesanan saya</span>
+            </a>
+            <a href="akun.html" class="dropdown-item" id="nav-profile-btn" role="menuitem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              <span>Pengaturan akun</span>
+            </a>
+            <a href="seller.html" class="dropdown-item" id="dropdown-shop-action" role="menuitem" style="display:none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 01-6 0 3 3 0 01-6 0 3 3 0 01-6 0z"/><path d="M5 13v8h14v-8"/></svg>
+              <span>Toko saya</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item danger" id="nav-logout-btn" role="menuitem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span>Keluar</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="nav-mobile-menu-btn" id="nav-mobile-menu-btn" type="button" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
   </nav>
 
   <div id="alert-container"></div>
@@ -51,7 +120,7 @@
           <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80&auto=format&fit=crop" alt="Interior toko dengan rak sepatu, tas, dan pakaian">
           <div class="ab-hero-badge">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
-            <span><b>Merchant terverifikasi</b><small>Setiap ruko diaktifkan setelah diperiksa admin Vendora</small></span>
+            <span><b>Diverifikasi admin</b><small>Ruko baru tampil di katalog setelah diperiksa admin Vendora</small></span>
           </div>
         </div>
       </div>
@@ -62,7 +131,7 @@
         <div class="ab-stat"><dt>Toko aktif</dt><dd id="ab-shops">–</dd></div>
         <div class="ab-stat"><dt>Produk di katalog</dt><dd id="ab-products">–</dd></div>
         <div class="ab-stat"><dt>Kategori</dt><dd id="ab-categories">12</dd></div>
-        <div class="ab-stat"><dt>Ongkos kirim</dt><dd>Gratis</dd></div>
+        <div class="ab-stat"><dt>Pembayaran</dt><dd>Ditahan sampai paket diterima</dd></div>
       </dl>
     </section>
 
@@ -96,7 +165,7 @@
             <p>Mulai berjualan tanpa toko fisik.</p>
             <ol class="ab-steps">
               <li><div><b>Daftar sebagai penjual</b><span>Buat akun penjual dengan email dan nama toko.</span></div></li>
-              <li><div><b>Sewa ruko virtual</b><span>Pilih paket sewa di dashboard. Ruko aktif setelah pembayaran dikonfirmasi admin.</span></div></li>
+              <li><div><b>Sewa ruko</b><span>Rp 15.000 per hari dengan durasi 30, 90, atau 365 hari. Ruko aktif setelah diverifikasi admin.</span></div></li>
               <li><div><b>Kelola toko</b><span>Tambah produk dan variasinya, proses pesanan, dan balas chat pembeli.</span></div></li>
             </ol>
             <a href="login.html?tab=daftar&amp;role=seller" class="btn-line" data-open-shop>Buka toko</a>
@@ -111,7 +180,7 @@
           <div class="sf-why-item" data-reveal>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
             <h3>Merchant terverifikasi</h3>
-            <p>Setiap toko diperiksa admin sebelum bisa berjualan.</p>
+            <p>Setiap ruko diperiksa admin sebelum tampil di katalog.</p>
           </div>
           <div class="sf-why-item" data-reveal>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 20.5l1.4-4.6A8.4 8.4 0 0 1 3 11.5a8.5 8.5 0 0 1 9-8.4 8.5 8.5 0 0 1 9 8.4z"/></svg>
@@ -121,7 +190,7 @@
           <div class="sf-why-item" data-reveal>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
             <h3>Pengembalian mudah</h3>
-            <p>Barang tidak sesuai? Ajukan lewat <a href="bantuan.html#pengembalian">Pusat bantuan</a>.</p>
+            <p>Barang tidak sesuai? Ajukan komplain dari <a href="pesanan.html">Pesanan saya</a>; dananya dibekukan sampai admin memutuskan.</p>
           </div>
         </div>
       </div>
@@ -181,7 +250,7 @@
     </div>
   </footer>
 
-  <script type="module" src="js/main.js?v=146"></script>
-  <script src="js/storefront.js?v=104" defer></script>
+  <script type="module" src="js/main.js?v=20261114"></script>
+  <script src="js/storefront.js?v=20261114" defer></script>
 </body>
 </html>

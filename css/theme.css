@@ -579,3 +579,83 @@ html body .auth-mobile-logo.vlogo { --vl-size: 14px; }
 @media (prefers-reduced-motion: reduce) {
   .cdock-panel, .cm-bubble { animation: none; }
 }
+
+/* ============================================================
+   NAVIGASI BERSAMA — notifikasi & menu HP
+   ============================================================ */
+.notif-badge {
+  position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 9px; background: var(--status-bad); color: #fff; border: 2px solid #fff;
+  font-size: 10px; font-weight: 700; line-height: 14px; text-align: center; pointer-events: none;
+}
+.notif-badge[hidden] { display: none; }
+.notif-panel {
+  position: fixed; z-index: 1200; max-height: min(70vh, 520px); overflow: auto; overscroll-behavior: contain;
+  background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 20px 50px rgba(17, 17, 17, 0.16);
+  font-family: var(--font-body); color: var(--ink); animation: cd-in 180ms var(--sf-ease);
+}
+.notif-panel[hidden] { display: none; }
+.notif-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: #fff; }
+.notif-head b { font-size: 15px; }
+.notif-mark { background: none; border: none; font: inherit; font-size: 12.5px; color: var(--mute); text-decoration: underline; cursor: pointer; }
+.notif-list { list-style: none; margin: 0; padding: 6px; }
+.notif-item { display: flex; gap: 12px; padding: 10px; border-radius: 10px; color: var(--ink); text-decoration: none; position: relative; }
+.notif-item:hover, .notif-item:focus-visible { background: var(--stage); outline: none; }
+.notif-item.is-new::after { content: ""; position: absolute; top: 16px; right: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
+.notif-icon { width: 32px; height: 32px; flex: none; border-radius: 50%; background: var(--stage); display: inline-flex; align-items: center; justify-content: center; }
+.notif-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-right: 14px; }
+.notif-text b { font-size: 13.5px; font-weight: 600; line-height: 1.35; }
+.notif-text span { font-size: 12.5px; color: var(--mute); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.notif-text time { font-size: 11.5px; color: var(--mute); }
+.notif-empty { padding: 28px 18px; font-size: 13.5px; color: var(--mute); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; line-height: 1.55; }
+.console-icon-btn {
+  position: relative; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: #fff;
+  display: inline-flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer;
+}
+.console-icon-btn:hover { border-color: var(--ink); }
+
+/* Menu HP */
+.mnav { position: fixed; inset: 0; z-index: 1300; }
+.mnav[hidden] { display: none; }
+.mnav-backdrop { position: absolute; inset: 0; background: rgba(17, 17, 17, 0.4); opacity: 0; transition: opacity 240ms ease; }
+.mnav-panel {
+  position: absolute; top: 0; bottom: 0; left: 0; width: min(340px, 86vw); background: #fff; display: flex; flex-direction: column;
+  transform: translateX(-100%); transition: transform 260ms var(--sf-ease); font-family: var(--font-body);
+}
+.mnav.is-open .mnav-backdrop { opacity: 1; }
+.mnav.is-open .mnav-panel { transform: none; }
+.mnav-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line); }
+.mnav-user { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mnav-user b { display: block; font-size: 14.5px; }
+.mnav-user small { display: block; font-size: 12px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+.mnav-auth { display: flex; gap: 8px; }
+.mnav-close { width: 40px; height: 40px; border: none; background: none; border-radius: 50%; color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.mnav-close:hover { background: var(--stage); }
+.mnav-body { flex: 1; overflow: auto; padding: 8px 8px 16px; }
+.mnav-group { display: flex; flex-direction: column; }
+.mnav-group a, .mnav-cats summary, .mnav-cats a {
+  display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; font-size: 15px; color: var(--ink); text-decoration: none;
+}
+.mnav-group a:hover, .mnav-cats summary:hover, .mnav-cats a:hover { background: var(--stage); }
+.mnav-label { margin: 16px 12px 4px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
+.mnav-cats summary { cursor: pointer; list-style: none; justify-content: space-between; }
+.mnav-cats summary::-webkit-details-marker { display: none; }
+.mnav-cats summary::after { content: "+"; font-size: 18px; color: var(--mute); }
+.mnav-cats details[open] summary::after { content: "−"; }
+.mnav-cats a { min-height: 38px; padding-left: 26px; font-size: 14px; color: var(--mute); }
+.mnav-foot { display: flex; gap: 8px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+.mnav-foot > * { flex: 1; height: 44px; justify-content: center; }
+@media (prefers-reduced-motion: reduce) { .mnav-panel, .mnav-backdrop { transition: none; } }
+
+/* Lencana di kepala toko & detail produk */
+.pd-shop-badges, .shop-head-badges { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.muted { color: var(--mute); }
+
+/* Chat: label "Pesan otomatis" */
+.cm-from { display: block; font-size: 11px; font-weight: 600; opacity: 0.7; margin-bottom: 2px; }
+
+/* Tombol chat disembunyikan selama modal / laci keranjang terbuka:
+   dulu menutupi tombol "Beli sekarang", "Simpan produk", dan "Lanjut ke pembayaran". */
+body:has(.modal-overlay.active) .cdock:not(.is-open),
+body:has(#cart-drawer.active) .cdock:not(.is-open),
+body:has(.mnav.is-open) .cdock:not(.is-open) { display: none; }

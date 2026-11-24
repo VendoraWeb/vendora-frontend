@@ -1,10 +1,30 @@
 // ─── Halaman "Pesanan saya" (pesanan.html) ───────────────────────────────────
-import { BASE_URL, getActiveSession, authHeaders } from "../config/api.js?v=105";
-import { esc, fmtRp, fmtDateTime, shortId, TX_STATUS, normStatus, txStatusHTML } from "../ui.js?v=102";
-import { loadCatalogData, mockIdFromName, cartItemFor } from "./product.js?v=146";
-import { addToCart } from "./transaction.js?v=146";
+import { BASE_URL, getActiveSession } from "../config/api.js?v=20261114";
+import { esc, fmtRp, fmtDateTime, shortId, TX_STATUS, normStatus, txStatusHTML } from "../ui.js?v=20261114";
+import { loadCatalogData, isLegacyMockName, cartItemFor } from "./product.js?v=20261114";
+import { addToCart } from "./transaction.js?v=20261114";
 
 const $ = (id) => document.getElementById(id);
+const notify = (msg, type) => { if (window.showAlert) window.showAlert(msg, type); };
+
+/** Kurir & resi hanya untuk pesanan yang sudah diproses penjual. */
+const TRACKABLE = new Set(['paid', 'shipped', 'disputed', 'success']);
+function shipInfo(status, t) {
+  if (!TRACKABLE.has(status)) return '';
+  const kurir = t.courier_service ? ` Kurir: <b>${esc(t.courier_service)}</b>.` : '';
+  const resi = t.tracking_number && status !== 'paid' ? ` Resi: <b>${esc(t.tracking_number)}</b>.` : '';
+  return kurir + resi;
+}
+
+/** Status dana pembeli (escrow). Pesanan lama tanpa escrow tidak diberi label. */
+function escrowBadge(status, escrow) {
+  if (!escrow || escrow === 'unpaid') return '';
+  const [text, tone] = status === 'disputed' ? ['Dana dibekukan, menunggu keputusan admin', 'warn']
+    : escrow === 'released' ? ['Dana diteruskan ke penjual', 'good']
+    : escrow === 'refunded' ? ['Dana dikembalikan ke kamu', 'bad']
+    : ['Dana ditahan aman oleh Vendora', 'warn'];
+  return `<span class="escrow-chip escrow-chip--${tone}">${text}</span>`;
+}
 const STEPS = [
   { key: 'pending', label: 'Dipesan' },
   { key: 'paid',    label: 'Dikemas' },
@@ -28,13 +48,15 @@ let catalog = { products: [], shops: {} };
 
 function enrich(t) {
   const items = (t.items || []).map(i => {
-    const mockId = mockIdFromName(i.name);
-    const p = catalog.products.find(x => x.id === i.product_id || (mockId && x.id === mockId));
+    const legacy = isLegacyMockName(i.name);
+    const p = legacy ? null : catalog.products.find(x => x.id === i.product_id);
     const shop = catalog.shops[i.shop_id] || (p && catalog.shops[p.shop_id]);
     return {
       ...i,
       // nama/foto dari katalog bila produk masih ada; kalau tidak, pakai data di pesanan
-      displayName: p ? p.name : i.name,
+      // Nama yang tersimpan saat membeli; produk contoh lama diberi label jelas
+      displayName: legacy ? 'Produk contoh lama (sudah tidak dijual)' : i.name || (p && p.name) || 'Produk',
+      legacy,
       // foto variasi yang dibeli (disimpan saat checkout), lalu foto katalog
       image: i.image || (p ? catalog.imageOf(p) : ''),
       shopName: (shop && shop.name) || (p && catalog.shopNameOf(p)) || '',
@@ -125,11 +147,8 @@ function renderList() {
           ${NOTE[o.status] || ''}
           ${o.status === 'shipped' && t.auto_complete_at ? ` Jika tidak ada konfirmasi atau komplain, pesanan selesai otomatis pada <b>${fmtDateTime(t.auto_complete_at)}</b>.` : ''}
           ${t.auto_completed ? ' (Diselesaikan otomatis oleh sistem.)' : ''}
-          ${t.courier_service ? ` Kurir: <b>${esc(t.courier_service)}</b>.` : ''}
-          ${t.tracking_number ? ` Resi: <b>${esc(t.tracking_number)}</b>.` : (o.status === 'shipped' || o.status === 'success') ? ` Resi: <b>JNE-${esc((t.id || '').slice(-8).toUpperCase())}</b>.` : ''}
-          <span style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;background:${o.status === 'success' ? '#DCFCE7;color:#166534' : o.status === 'cancelled' ? '#FEE2E2;color:#991B1B' : '#FEF3C7;color:#92400E'};">
-            ${o.status === 'success' ? 'Escrow Cair ke Penjual' : o.status === 'cancelled' ? 'Dana Escrow Dikembalikan' : o.status === 'disputed' ? 'Dana Dibekukan — Menunggu Keputusan Admin' : 'Uang Dijamin di Escrow Admin'}
-          </span>
+          ${shipInfo(o.status, t)}
+          ${escrowBadge(o.status, t.escrow_status)}
         </p>
 
         <footer class="order-bottom">
@@ -142,9 +161,10 @@ function renderList() {
             <b>${fmtRp(t.total_amount)}</b>
           </div>
           <div class="order-actions">
-            ${o.status !== 'cancelled' ? `<button type="button" class="btn-line btn-line--sm" data-track="${esc(t.id)}">Lacak Peta & Resi</button>` : ''}
-            ${o.status === 'shipped' ? `<button type="button" class="btn-ink btn-ink--sm" data-confirm-received="${esc(t.id)}">Pesanan Diterima</button><button type="button" class="btn-line btn-line--sm" data-dispute="${esc(t.id)}">Ajukan Komplain</button>` : ''}
-            ${canBuyAgain ? `<button type="button" class="btn-line btn-line--sm" data-again="${esc(t.id)}">Beli lagi</button>` : ''}
+            ${TRACKABLE.has(o.status) && t.tracking_history ? `<button type="button" class="btn-line btn-line--sm" data-track="${esc(t.id)}">Lacak paket</button>` : ''}
+            ${o.status === 'shipped' ? `<button type="button" class="btn-ink btn-ink--sm" data-confirm-received="${esc(t.id)}">Pesanan diterima</button><button type="button" class="btn-line btn-line--sm" data-dispute="${esc(t.id)}">Ajukan komplain</button>` : ''}
+            ${o.status === 'pending' ? `<button type="button" class="btn-line btn-line--sm" data-cancel="${esc(t.id)}">Batalkan</button>` : ''}
+            ${canBuyAgain && o.status !== 'shipped' ? `<button type="button" class="btn-line btn-line--sm" data-again="${esc(t.id)}">Beli lagi</button>` : ''}
             ${o.groups[0] && o.groups[0].shopName ? `<a class="btn-line btn-line--sm" href="index.html?shop=${encodeURIComponent(o.groups[0].shopName)}">Lihat toko</a>` : ''}
           </div>
         </footer>
@@ -167,7 +187,7 @@ export async function initOrdersPage() {
 
   async function reloadOrders() {
     const [txRes, cat] = await Promise.all([
-      fetch(`${BASE_URL}/transactions?buyer_id=${encodeURIComponent(session.user.id)}`, { headers: authHeaders() }).then(r => r.json()),
+      fetch(`${BASE_URL}/transactions?mine=1`).then(r => r.json()),
       loadCatalogData(),
     ]);
     catalog = cat;
@@ -197,6 +217,35 @@ export async function initOrdersPage() {
   }));
   $('orders-search').addEventListener('input', (e) => { query = e.target.value; renderList(); });
 
+  // Pembeli: batalkan pesanan yang belum diproses penjual
+  $('orders-list').addEventListener('click', async (e) => {
+    const act = e.target.closest('[data-cancel]');
+    if (!act) return;
+    const id = act.dataset.cancel;
+    const status = 'cancelled';
+    if (!confirm('Batalkan pesanan ini? Dana dikembalikan dan stok dikembalikan ke penjual.')) return;
+    act.disabled = true;
+    try {
+      const res = await fetch(`${BASE_URL}/transaction/${id}/status`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Gagal memperbarui pesanan');
+      const o = orders.find(x => x.tx.id === id);
+      if (o) {
+        o.status = status;
+        o.tx.status = status;
+        if (o.tx.escrow_status === 'held') o.tx.escrow_status = 'refunded';
+      }
+      if (window.showAlert) window.showAlert('Pesanan dibatalkan. Dana dikembalikan ke kamu.', 'success');
+      renderTabs();
+      renderList();
+    } catch (err) {
+      act.disabled = false;
+      if (window.showAlert) window.showAlert(err.message, 'error');
+    }
+  });
+
   // Form komplain / retur
   const disputeModal = $('dispute-modal');
   const closeDispute = () => disputeModal?.classList.remove('active');
@@ -211,7 +260,7 @@ export async function initOrdersPage() {
     try {
       const res = await fetch(`${BASE_URL}/disputes`, {
         method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           transaction_id: $('dispute-tx-id').value,
           reason: $('dispute-reason').value,
@@ -222,12 +271,12 @@ export async function initOrdersPage() {
       if (res.status === 201) {
         closeDispute();
         await reloadOrders();
-        alert('Komplain terkirim. Dana kamu ditahan aman di Escrow sampai admin memutuskan.');
+        notify('Komplain terkirim. Dana kamu ditahan aman sampai admin memutuskan.', 'success');
       } else {
-        alert(res.message || 'Gagal mengirim komplain.');
+        notify(res.message || 'Gagal mengirim komplain.', 'error');
       }
     } catch (err) {
-      alert('Gagal terhubung ke server.');
+      notify('Gagal terhubung ke server.', 'error');
     } finally {
       submit.disabled = false;
     }
@@ -248,7 +297,7 @@ export async function initOrdersPage() {
       $('track-meta-box').innerHTML = '<span>Memuat data kurir & peta…</span>';
       $('track-history-list').innerHTML = '';
       try {
-        const res = await fetch(`${BASE_URL}/transaction/${encodeURIComponent(txId)}/track`, { headers: authHeaders() }).then(r => r.json());
+        const res = await fetch(`${BASE_URL}/transaction/${encodeURIComponent(txId)}/track`, {}).then(r => r.json());
         const d = res.data || {};
         $('track-meta-box').innerHTML = `
           <div><small style="color:var(--mute);display:block;">Kurir Ekspedisi</small><b>${esc(d.courier_service || 'JNE Reguler')}</b></div>
@@ -297,18 +346,19 @@ export async function initOrdersPage() {
     const confirmBtn = e.target.closest('[data-confirm-received]');
     if (confirmBtn) {
       const txId = confirmBtn.dataset.confirmReceived;
-      if (!confirm('Konfirmasi bahwa pesanan sudah kamu terima dengan baik? Dana di Escrow Admin akan dicairkan ke Penjual.')) return;
+      if (!confirm('Pesanan sudah kamu terima dengan baik? Dana akan diteruskan ke penjual dan pesanan tidak bisa dikomplain lagi.')) return;
       confirmBtn.disabled = true;
       try {
-        const res = await fetch(`${BASE_URL}/transaction/${encodeURIComponent(txId)}/confirm-received`, { method: 'POST', headers: authHeaders() }).then(r => r.json());
+        const res = await fetch(`${BASE_URL}/transaction/${encodeURIComponent(txId)}/confirm-received`, { method: 'POST' }).then(r => r.json());
         if (res.status === 200) {
+          notify('Terima kasih! Pesanan selesai dan dana diteruskan ke penjual.', 'success');
           await reloadOrders();
         } else {
-          alert(res.message || 'Gagal mengonfirmasi pesanan.');
+          notify(res.message || 'Gagal mengonfirmasi pesanan.', 'error');
           confirmBtn.disabled = false;
         }
       } catch (err) {
-        alert('Gagal terhubung ke server.');
+        notify('Gagal terhubung ke server.', 'error');
         confirmBtn.disabled = false;
       }
       return;

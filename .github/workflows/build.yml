@@ -10,15 +10,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Use Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18.x'
+        node-version: '20.x'
 
-    - name: Check HTML syntax
+    - name: Validate HTML and JS syntax
       run: |
-        echo "No build step required for static HTML/CSS/JS frontend."
-        echo "Validating structure..."
-        test -f index.html
+        for f in index.html login.html seller.html admin.html akun.html pesanan.html bantuan.html tentang.html terms.html; do
+          test -f "$f" || { echo "Missing $f"; exit 1; }
+        done
+        find js -name "*.js" -print0 | xargs -0 -n1 node --check
+        echo "All frontend HTML entries and JS modules passed syntax checks."

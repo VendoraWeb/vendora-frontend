@@ -3,8 +3,8 @@
 // daftar percakapan → utas pesan, kirim teks & foto, centang terkirim/dibaca.
 // "Real-time" lewat polling 2 detik (backend Vercel tidak mendukung WebSocket),
 // berhenti otomatis saat tab tidak aktif agar hemat kuota.
-import { BASE_URL, getActiveSession, authHeaders } from "../config/api.js?v=105";
-import { esc } from "../ui.js?v=102";
+import { BASE_URL, getActiveSession } from "../config/api.js?v=20261114";
+import { esc } from "../ui.js?v=20261114";
 
 const POLL_THREAD = 2000;
 const POLL_LIST = 5000;
@@ -97,14 +97,14 @@ function openLightbox(src) {
 
 // ─── API ────────────────────────────────────────────────────────────────────
 async function getJSON(url) {
-  const res = await fetch(url, { headers: authHeaders() });
+  const res = await fetch(url);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || 'Gagal memuat chat');
   return data.data;
 }
 async function postJSON(path, body) {
   const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body),
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || 'Pesan gagal terkirim');
@@ -116,6 +116,8 @@ async function postJSON(path, body) {
  * conv: { myId, buyerId, shopId, receiverId (kosong = pemilik toko), title, subtitle }
  */
 function createThread(root, conv, { onActivity } = {}) {
+  const side = new Set([conv.myId]);
+  const isMine = (m) => side.has(m.sender_id);
   const box = root.querySelector('.cm-messages');
   const rendered = new Map();       // id pesan → elemen baris
   let lastDay = '';
@@ -136,8 +138,10 @@ function createThread(root, conv, { onActivity } = {}) {
     const status = pending ? `<span class="cm-tick is-pending" title="Mengirim">${ICON.clock}</span>`
       : mine ? `<span class="cm-tick${m.read_at ? ' is-read' : ''}" title="${m.read_at ? 'Dibaca' : 'Terkirim'}">${m.read_at ? ICON.ticks : ICON.tick}</span>` : '';
     const img = m.image || m._preview;
+    const label = m.auto ? '<span class="cm-from">Pesan otomatis</span>' : '';
     return `
       <div class="cm-bubble${img ? ' has-photo' : ''}${img && !m.text ? ' photo-only' : ''}">
+        ${label}
         ${img ? `<button type="button" class="cm-photo" data-full="${esc(m._preview || mediaUrl(m.image))}" aria-label="Lihat foto"><img src="${esc(m._preview || mediaUrl(m.image))}" alt="Foto" loading="lazy"></button>` : ''}
         ${m.text ? `<p class="cm-text">${richText(m.text)}</p>` : ''}
         <span class="cm-meta"><time datetime="${esc(m.created_at)}">${clock(d)}</time>${status}</span>
@@ -155,7 +159,7 @@ function createThread(root, conv, { onActivity } = {}) {
   }
 
   function append(m, { pending = false } = {}) {
-    const mine = m.sender_id === conv.myId;
+    const mine = isMine(m);
     addDayIfNeeded(new Date(m.created_at));
     const row = document.createElement('div');
     row.className = `cm-row ${mine ? 'cm-row--me' : 'cm-row--them'}`;
@@ -180,7 +184,7 @@ function createThread(root, conv, { onActivity } = {}) {
       const existing = rendered.get(m.id);
       if (existing) {
         // Perbarui centang biru bila pesan kita sudah dibaca
-        if (m.sender_id === conv.myId && m.read_at && !existing.dataset.read) {
+        if (isMine(m) && m.read_at && !existing.dataset.read) {
           existing.dataset.read = '1';
           const tick = existing.querySelector('.cm-tick');
           if (tick) { tick.classList.add('is-read'); tick.innerHTML = ICON.ticks; tick.title = 'Dibaca'; }
@@ -189,12 +193,12 @@ function createThread(root, conv, { onActivity } = {}) {
       }
       box.querySelector('.cm-empty')?.remove();
       rendered.set(m.id, append(m));
-      if (m.sender_id !== conv.myId) incoming = true;
+      if (!isMine(m)) incoming = true;
     });
     if (wasBottom) requestAnimationFrame(toBottom);
     if (incoming && !firstLoad && !wasBottom) root.querySelector('.cm-jump')?.removeAttribute('hidden');
     firstLoad = false;
-    return incoming || list.some(m => m.sender_id !== conv.myId && !m.read_at);
+    return incoming || list.some(m => !isMine(m) && !m.read_at);
   }
 
   async function refresh() {
@@ -205,7 +209,7 @@ function createThread(root, conv, { onActivity } = {}) {
       const unreadIncoming = renderAll(list || []);
       loaded = true;
       if (unreadIncoming && document.visibilityState === 'visible') {
-        postJSON('/chat/read', { reader_id: conv.myId, buyer_id: conv.buyerId, shop_id: conv.shopId })
+        postJSON('/chat/read', { buyer_id: conv.buyerId, shop_id: conv.shopId })
           .then(() => onActivity && onActivity()).catch(() => {});
       }
     } catch (e) {
@@ -233,13 +237,14 @@ function createThread(root, conv, { onActivity } = {}) {
     try {
       const isFirst = loaded && rendered.size === 0;
       const msg = await postJSON('/chat/send', {
-        sender_id: conv.myId, receiver_id: conv.receiverId || '', shop_id: conv.shopId, text, image: image || '',
+        receiver_id: conv.receiverId || '', shop_id: conv.shopId, text, image: image || '',
       });
       row.classList.remove('is-pending');
       row.innerHTML = rowHTML({ ...msg, _preview: image || '' }, true);
       rendered.set(msg.id, row);
       onActivity && onActivity();
-      if (isFirst && conv.autoReply) conv.autoReply();
+      // Pesan pertama: salam otomatis toko dibuat server → tampilkan segera
+      if (isFirst) setTimeout(() => refresh(), 600);
       return true;
     } catch (e) {
       row.classList.add('is-failed');
@@ -272,13 +277,13 @@ function createThread(root, conv, { onActivity } = {}) {
 // ─── Dock chat (daftar + utas) ──────────────────────────────────────────────
 let dock = null;
 
-function shopIdOfSeller(session) {
-  try {
-    const active = localStorage.getItem('vendora_active_shop_id');
-    if (active && active !== '000000000000000000000000') return active;
-  } catch { /* abaikan */ }
-  const id = session.user.shop_id;
-  return id && id !== '000000000000000000000000' ? id : '';
+let myShopPromise = null;
+/** Ruko milik pengguna, atau null. */
+function loadMyShop() {
+  if (!myShopPromise) {
+    myShopPromise = fetch(`${BASE_URL}/shop/mine`).then(r => r.json()).then(d => d.data || null).catch(() => null);
+  }
+  return myShopPromise;
 }
 
 export function initChatDock() {
@@ -396,23 +401,35 @@ export function initChatDock() {
 
   async function loadList() {
     try {
-      let data;
+      const mapBuyerInbox = (list) => (list || []).map(x => ({
+        name: x.shop_name || 'Toko', avatar: '', text: x.last_message || '', isImage: x.last_is_image,
+        fromMe: x.last_from_me, unread: x.unread || 0, updated_at: x.updated_at,
+        conv: { myId: me.id, buyerId: me.id, shopId: x.shop_id, receiverId: '', title: x.shop_name || 'Toko', subtitle: 'Penjual · diverifikasi admin' },
+      }));
+
       if (isSeller) {
-        const shopId = shopIdOfSeller(getActiveSession() || session);
-        if (!shopId) { items = []; listEl.innerHTML = '<div class="cm-loading">Buka ruko dulu untuk menerima chat pembeli.</div>'; return; }
-        data = await getJSON(`${BASE_URL}/chat/inbox?shop_id=${encodeURIComponent(shopId)}`);
-        items = (data || []).map(x => ({
+        const myShop = await loadMyShop();
+        const reqs = [getJSON(`${BASE_URL}/chat/inbox?buyer_id=${encodeURIComponent(me.id)}`).catch(() => [])];
+        if (myShop) reqs.unshift(getJSON(`${BASE_URL}/chat/inbox?shop_id=${encodeURIComponent(myShop.id)}`).catch(() => []));
+        const results = await Promise.all(reqs);
+        const shopInbox = myShop ? results[0] : [];
+        const buyerInbox = myShop ? results[1] : results[0];
+        const shopItems = (shopInbox || []).map(x => ({
           name: x.buyer_name || 'Pembeli', avatar: x.buyer_avatar || '', text: x.last_message || '', isImage: x.last_is_image,
           fromMe: x.last_from_me, unread: x.unread || 0, updated_at: x.updated_at,
-          conv: { myId: me.id, buyerId: x.buyer_id, shopId, receiverId: x.buyer_id, title: x.buyer_name || 'Pembeli', subtitle: 'Pembeli', emptyHint: 'Balas pertanyaan pembeli di sini.' },
+          conv: { myId: me.id, buyerId: x.buyer_id, shopId: myShop.id, receiverId: x.buyer_id,
+                  title: x.buyer_name || 'Pembeli', subtitle: 'Pembeli',
+                  emptyHint: 'Balas pertanyaan pembeli di sini.' },
         }));
+        const buyItems = mapBuyerInbox(buyerInbox);
+        items = [...shopItems, ...buyItems].sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+        if (!myShop && !items.length) {
+          listEl.innerHTML = '<div class="cm-loading">Buka ruko dulu untuk menerima chat pembeli.</div>';
+          return;
+        }
       } else {
-        data = await getJSON(`${BASE_URL}/chat/inbox?buyer_id=${encodeURIComponent(me.id)}`);
-        items = (data || []).map(x => ({
-          name: x.shop_name || 'Toko', avatar: '', text: x.last_message || '', isImage: x.last_is_image,
-          fromMe: x.last_from_me, unread: x.unread || 0, updated_at: x.updated_at,
-          conv: { myId: me.id, buyerId: me.id, shopId: x.shop_id, receiverId: '', title: x.shop_name || 'Toko', subtitle: 'Penjual · Merchant terverifikasi' },
-        }));
+        const data = await getJSON(`${BASE_URL}/chat/inbox?buyer_id=${encodeURIComponent(me.id)}`);
+        items = mapBuyerInbox(data);
       }
       renderList();
       const total = items.reduce((s, i) => s + i.unread, 0);
@@ -553,25 +570,18 @@ export function initChatDock() {
   // ── Dibuka dari halaman produk / toko ──
   window.openShopChat = (shop, name) => {
     if (!shop || !shop.id) return;
-    if (isSeller && shopIdOfSeller(session) === shop.id) {
-      if (window.showAlert) window.showAlert('Ini tokomu sendiri. Pesan pembeli ada di daftar chat.', 'error');
+    const mine = shop.owner_id === me.id;
+    if (mine) {
+      if (window.showAlert) window.showAlert('Ini rukomu sendiri. Pesan pembeli ada di daftar chat.', 'error');
       openPanel();
       return;
     }
     openPanel();
     openThread({
       myId: me.id, buyerId: me.id, shopId: shop.id, receiverId: '',
-      title: name || shop.name, subtitle: 'Penjual · Merchant terverifikasi',
-      autoReply: () => sendGreeting(shop),
+      title: name || shop.name, subtitle: 'Penjual · diverifikasi admin',
     });
   };
-
-  // Salam otomatis toko untuk pesan pertama kini ditangani langsung oleh backend
-  function sendGreeting() {
-    setTimeout(() => {
-      if (thread) thread.refresh();
-    }, 600);
-  }
 
   dock = { open: openPanel, close: closePanel };
 }
